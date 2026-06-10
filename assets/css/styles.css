@@ -154,6 +154,9 @@ ul { list-style: none; }
 .nav-links a { font-family: var(--mono); font-size: .95rem; font-weight: 400; letter-spacing: .02em; color: #fff; transition: color .2s; }
 .nav-links a:hover { color: var(--primary); }
 .nav-links a.active { color: var(--primary); }
+.nav-links a.nav-ext { display: inline-flex; align-items: center; gap: 5px; }
+.nav-ext-icon { width: 11px; height: 11px; opacity: .6; flex: 0 0 auto; }
+.nav-links a.nav-ext:hover .nav-ext-icon { opacity: 1; }
 
 /* Mobile menu toggle */
 .nav-toggle {
