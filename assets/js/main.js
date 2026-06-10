@@ -1,0 +1,257 @@
+/* =====================================================================
+   main.js — navigation, mobile menu, active-link, analytics helpers
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  /* ── Mobile nav toggle ──────────────────────────────────────── */
+  var nav = document.querySelector('.nav');
+  var toggle = document.querySelector('.nav-toggle');
+  if (toggle && nav) {
+    toggle.addEventListener('click', function () {
+      nav.classList.toggle('open');
+      var open = nav.classList.contains('open');
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // close menu after tapping a link
+    nav.querySelectorAll('.nav-links a').forEach(function (a) {
+      a.addEventListener('click', function () { nav.classList.remove('open'); });
+    });
+  }
+
+  /* ── Highlight current page in nav ──────────────────────────── */
+  var here = location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('.nav-links a').forEach(function (a) {
+    var target = a.getAttribute('href');
+    if (target === here || (here === 'index.html' && target === 'index.html')) {
+      a.classList.add('active');
+    }
+  });
+
+  /* ── Analytics helper: safe event wrapper ───────────────────── */
+  // Works whether or not gtag has loaded (queues to dataLayer); never throws.
+  window.track = function (name, params) {
+    try {
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', name, params || {});
+      }
+    } catch (e) { /* analytics must never break the page */ }
+  };
+
+  /* ── Automatic outbound + mailto link tracking ──────────────── */
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest && e.target.closest('a[href]');
+    if (!link) return;
+    var href = link.getAttribute('href') || '';
+    var isExternal = /^https?:\/\//i.test(href) && link.hostname !== location.hostname;
+    if (isExternal) {
+      window.track('outbound_click', { link_url: href, link_text: (link.textContent || '').trim().slice(0, 80) });
+    } else if (/^mailto:/i.test(href)) {
+      window.track('contact_click', { method: 'email' });
+    }
+  }, true);
+
+  /* ── Wavy scroll-driven headline ────────────────────────────── */
+  // Builds a long periodic wave path, fills it with repeated text, and
+  // drifts the whole thing left as the page scrolls down.
+  (function () {
+    var arc = document.querySelector('.arc-svg');
+    if (!arc) return;
+    var path  = arc.querySelector('#arcPath');
+    var tp    = arc.querySelector('.arc-text textPath');
+    if (!path || !tp) return;
+
+    // Build a smooth sine-like wave well beyond the viewBox on both sides.
+    var y = 110, amp = 34, half = 190, x0 = -1000, x1 = 3400;
+    var d = 'M ' + x0 + ',' + y, up = true, x = x0;
+    while (x < x1) {
+      var nx = x + half, cx = x + half / 2, cy = up ? y - amp : y + amp;
+      d += ' Q ' + cx + ',' + cy + ' ' + nx + ',' + y;
+      up = !up; x = nx;
+    }
+    path.setAttribute('d', d);
+
+    var phrase = 'The experiences a team delivers reflect the culture you build.  ';
+    tp.textContent = phrase.repeat(14);
+
+    // The path is static; we move the text ALONG it by shifting startOffset,
+    // so letters ride up and over the wave as they travel left on scroll.
+    var SPEED = 0.6, ticking = false;
+    function update() {
+      tp.setAttribute('startOffset', -(window.scrollY * SPEED));
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
+  })();
+
+  /* ── Nav background on scroll ───────────────────────────────── */
+  // The nav stays fixed and transparent at the top of the page (over
+  // the hero); as soon as the user scrolls, the blurred bg fades in.
+  (function () {
+    if (!nav) return;
+    var navTicking = false;
+    function setNavBg() {
+      nav.classList.toggle('scrolled', window.scrollY > 24);
+      navTicking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!navTicking) { requestAnimationFrame(setNavBg); navTicking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', setNavBg, { passive: true });
+    setNavBg();
+  })();
+
+  /* ── Hero hello pill: text comes from assets/hello.md ───────── */
+  (function () {
+    var pill = document.querySelector('[data-hello]');
+    if (!pill || !window.fetch) return;
+    fetch('assets/hello.md', { cache: 'no-cache' })
+      .then(function (r) { return r.ok ? r.text() : ''; })
+      .then(function (md) {
+        if (!md) return;
+        var line = md
+          .replace(/<!--[\s\S]*?-->/g, '')          // strip comments
+          .split('\n')
+          .map(function (l) { return l.trim(); })
+          .filter(function (l) { return l && l.charAt(0) !== '#'; })[0];
+        if (line) pill.textContent = line;
+      })
+      .catch(function () { /* keep the HTML fallback text */ });
+  })();
+
+  /* ── Timeline entries fade in as they enter the viewport ────── */
+  (function () {
+    var groups = document.querySelectorAll('.timeline-group');
+    if (!groups.length) return;
+    if (!('IntersectionObserver' in window)) {
+      groups.forEach(function (g) { g.classList.add('visible'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('visible');
+          io.unobserve(en.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.2 });
+    groups.forEach(function (g) { io.observe(g); });
+  })();
+
+  /* ── Card grids: staggered parallax on scroll ───────────────── */
+  // Every second card in a grid rides at an offset, drifting upward
+  // relative to its neighbor as the grid moves through the viewport.
+  (function () {
+    var grids = document.querySelectorAll('.card-grid');
+    if (!grids.length) return;
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var RANGE_LEFT = 20;  // left column: slow drift
+    var RANGE_RIGHT = 56; // right column: faster, offset drift
+
+    var cardTicking = false;
+    function updateCards() {
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      var twoCol = window.innerWidth > 860 && !reduce.matches;
+      grids.forEach(function (grid) {
+        var cards = grid.children;
+        var r = grid.getBoundingClientRect();
+        var p = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
+        for (var i = 0; i < cards.length; i++) {
+          if (!twoCol) { cards[i].style.removeProperty('--py'); continue; }
+          var range = (i % 2 === 0) ? RANGE_LEFT : RANGE_RIGHT;
+          cards[i].style.setProperty('--py', (range - p * range * 2).toFixed(1) + 'px');
+        }
+      });
+      cardTicking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!cardTicking) { requestAnimationFrame(updateCards); cardTicking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', updateCards, { passive: true });
+    updateCards();
+  })();
+
+  /* ── Fade in + up on scroll into view ───────────────────────── */
+  (function () {
+    var els = document.querySelectorAll('[data-reveal-up]');
+    if (!els.length) return;
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(function (e) { e.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+
+  /* ── Community gallery: seamless infinite leftward marquee ──── */
+  (function () {
+    var strip = document.querySelector('.community-strip');
+    if (!strip) return;
+    var track = strip.querySelector('.community-track');
+    if (!track) return;
+    // Respect reduced motion — leave it as a manual horizontal scroller.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var marquee = document.createElement('div');
+    marquee.className = 'community-marquee';
+    strip.insertBefore(marquee, track);
+    marquee.appendChild(track);
+    var clone = track.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    marquee.appendChild(clone);
+  })();
+
+  /* ── Parallax headers: pin, then fade as the next content scrolls over ── */
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var items = [].map.call(document.querySelectorAll('.phead-wrap'), function (w) {
+      return {
+        pin: w.querySelector('.phead'),
+        head: w.querySelector('[data-phead]'),
+        body: w.querySelector('.phead-body'),
+        grid: w.querySelector('.cs-grid')
+      };
+    }).filter(function (i) { return i.pin && i.head && i.body; });
+    if (!items.length) return;
+
+    var ticking = false;
+    function update() {
+      ticking = false;
+      if (reduce.matches) return;
+      items.forEach(function (it) {
+        // Measure the (transform-free) sticky wrapper; the inner header carries the transform.
+        var r = it.pin.getBoundingClientRect();
+        var h = r.height || 1;
+        var bodyTop = it.body.getBoundingClientRect().top;
+        // 0 while the body sits below the pinned header, 1 once it has scrolled fully over it.
+        var fade = Math.max(0, Math.min(1, (r.bottom - bodyTop) / h));
+        it.head.style.opacity = (1 - fade).toFixed(3);
+        it.head.style.transform = 'translateY(' + (-fade * 36).toFixed(1) + 'px)';
+        if (it.grid) {
+          // Grid behind the case-study cards: fade in as the section enters, out as it leaves.
+          var vh = window.innerHeight || document.documentElement.clientHeight;
+          var b = it.body.getBoundingClientRect();
+          var fIn = Math.max(0, Math.min(1, (vh - b.top) / (vh * 0.5)));
+          var fOut = Math.max(0, Math.min(1, b.bottom / (vh * 0.5)));
+          it.grid.style.opacity = (Math.min(fIn, fOut) * 0.5).toFixed(3);
+        }
+      });
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
+  })();
+
+  /* ── Current year in footer ─────────────────────────────────── */
+  document.querySelectorAll('[data-year]').forEach(function (el) {
+    el.textContent = new Date().getFullYear();
+  });
+})();
