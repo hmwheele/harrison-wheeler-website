@@ -272,6 +272,14 @@ ul { list-style: none; }
 }
 .belief p.body { font-family: 'Merriweather', Georgia, serif; font-weight: 300; line-height: 1.6; color: var(--text-muted); max-width: 40em; margin-bottom: 16px; }
 .belief-more { margin-top: 14px; }
+/* Company / project logos in the "What I'm about" section */
+.belief-logos { margin: 30px 0 6px; }
+.belief-logos-label { margin-bottom: 14px; }
+.belief-logos-row { display: flex; flex-wrap: wrap; gap: 12px; }
+.belief-logos-row img {
+  width: 52px; height: 52px; border-radius: 12px; display: block;
+  border: 1px solid var(--border);
+}
 
 /* Career timeline beside the belief statement.
    Left column pins while the timeline scrolls past it. */
