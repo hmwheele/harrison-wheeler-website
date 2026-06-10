@@ -306,6 +306,9 @@ ul { list-style: none; }
 
 /* ── Card grids ─────────────────────────────────────────────────── */
 .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+/* Leadership + Projects are two groups under one "Select work" header — keep them tight */
+#leadership { padding-bottom: 56px; }
+#projects { padding-top: 0; }
 .card {
   position: relative; display: flex; flex-direction: column;
   border-radius: 0; overflow: hidden;   /* sharp corners — reinforce the grid motif */
