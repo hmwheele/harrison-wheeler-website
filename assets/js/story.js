@@ -21,14 +21,26 @@
       return;
     }
 
+    // Reveal each row's photo + text (and year) together. Observing the whole
+    // row instead of each element keeps them in sync — important on mobile, where
+    // the row is stacked and per-element timing looks disjointed against the scroll.
+    function setIn(target, on) {
+      if (target.hasAttribute('data-reveal')) target.classList.toggle('in', on);
+      target.querySelectorAll('[data-reveal]').forEach(function (r) { r.classList.toggle('in', on); });
+    }
+
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         // Toggling on AND off gives the fade-in / fade-out both directions.
-        en.target.classList.toggle('in', en.isIntersecting);
+        setIn(en.target, en.isIntersecting);
       });
-    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
 
-    els.forEach(function (el) { io.observe(el); });
+    var observed = [];
+    els.forEach(function (el) {
+      var target = el.closest('.tl-row') || el;   // group reveals by their row
+      if (observed.indexOf(target) === -1) { observed.push(target); io.observe(target); }
+    });
   })();
 
   /* ── 1b. Blurred image behind each card: duplicate + parallax ── */

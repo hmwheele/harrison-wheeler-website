@@ -967,15 +967,16 @@ body.cs-lock { overflow: hidden; }
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .timeline-rail { padding: 40px 20px; }
-  .timeline-rail::before { left: 18px; }
-  .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 16px; padding-left: 48px; margin-bottom: 104px; }
+  .timeline-rail::before { display: none; }   /* drop the detached/floating spine on mobile */
+  .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 14px; padding-left: 0; margin-bottom: 104px; }
   .tl-hold { height: 170vh; }
-  /* stack again on mobile — undo the single-row pin */
+  /* stack as: year → photo → text (no spine to attach to) */
   .tl-media, .tl-card, .tl-node { grid-column: 1 !important; grid-row: auto !important; }
-  .tl-card { padding-top: 0; }
-  /* node collapses onto the left spine */
-  .tl-node { grid-column: 1; position: absolute; left: 18px; top: 4px; transform: translateX(-50%); }
-  .tl-year { padding: 4px 8px; }
+  .tl-node  { position: static; left: auto; top: auto; transform: none; justify-self: start; align-items: flex-start; order: 0; }
+  .tl-media { order: 1; }
+  .tl-card  { padding-top: 0; order: 2; }
+  .tl-card::before { display: none; }   /* drop the blurred parallax backdrop on mobile (it overflowed the card) */
+  .tl-year { padding: 2px 0; background: none; }
   .story-head-grid { grid-template-columns: 1fr; gap: 32px; }
   .story-head-media { aspect-ratio: 16 / 10; max-width: 440px; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }
