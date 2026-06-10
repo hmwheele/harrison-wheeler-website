@@ -308,7 +308,7 @@ ul { list-style: none; }
 .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
 .card {
   position: relative; display: flex; flex-direction: column;
-  border-radius: var(--radius); overflow: hidden;
+  border-radius: 0; overflow: hidden;   /* sharp corners — reinforce the grid motif */
   background: var(--surface); border: 1px solid var(--border);
   transition: border-color .2s;
   cursor: pointer;
