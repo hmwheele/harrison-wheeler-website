@@ -670,6 +670,9 @@ body.cs-lock { overflow: hidden; }
   .nav-toggle { display: block; }
   html:has(.nav.open) { overflow: hidden; }   /* lock page scroll while menu is open */
 
+  /* Scale the wavy "on a path" arc text 2x on mobile (section clips the overflow) */
+  .arc svg { width: 200%; margin-left: -50%; }
+
   .hero { padding-top: 120px; }
   .hero-grid { grid-template-columns: 1fr; gap: 32px; }
   .hero-photo { max-width: 280px; order: -1; }
