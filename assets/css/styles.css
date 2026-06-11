@@ -453,6 +453,10 @@ main > .phead-wrap { padding-top: var(--gap); }
 .footer-nav { display: flex; gap: 24px; }
 .footer-nav a { font-family: 'IBM Plex Mono', var(--mono); font-size: .85rem; color: var(--text-muted); }
 .footer-nav a:hover { color: var(--text); }
+/* Icon-ready: drop a brand-icon <svg> or <img> inside each footer link (it'll size
+   to 20px and inherit the link color); the aria-label keeps it accessible. */
+.footer-nav a:has(svg), .footer-nav a:has(img) { display: inline-flex; align-items: center; }
+.footer-nav a svg, .footer-nav a img { width: 20px; height: 20px; display: block; fill: currentColor; }
 
 /* ── Generic page header (About / listing pages) ────────────────── */
 .page-head { padding-top: 140px; padding-bottom: 20px; }
@@ -671,7 +675,6 @@ body.cs-lock { overflow: hidden; }
   }
   .nav.open .nav-links { transform: translateY(0); }
   .nav-links a { padding: 14px 8px; font-size: 1.5rem; }
-  .nav-links .nav-cta { margin-top: 20px; text-align: center; }
   .nav-logo, .nav-toggle { position: relative; z-index: 2; }   /* stay above the overlay */
   .nav-toggle { display: block; }
   html:has(.nav.open) { overflow: hidden; }   /* lock page scroll while menu is open */
