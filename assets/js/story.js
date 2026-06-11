@@ -285,6 +285,7 @@
     var LEGS = ROUTE.length - 1;
     var lastArcKey = '';
     var arcAlpha = 1, arcFading = false, arcFadeT = 0, ARC_FADE_MS = 700;
+    var arcDir = -1, arcFadeMs = ARC_FADE_MS;   // fade direction (-1 out / +1 in) and duration
     function fullRouteArcs() {
       var arcs = [];
       for (var i = 0; i < LEGS; i++) {
@@ -318,17 +319,24 @@
     // Free mode (at the footer): fade out markers + lines, slow auto-spin, draggable.
     var freeMode = false, freeLat = 0, freeLng = 0, dragging = false, lastX = 0, lastY = 0;
     var FREE_SPIN = 5;                       // free-mode auto-rotation (deg/sec)
+    var exitT = 0, EXIT_MS = 450;            // smooth glide-back when scrolling out of free mode
     function enterFree() {
       var pov = world.pointOfView();
       freeLat = pov.lat; freeLng = pov.lng;
       world.pointsData([]);                 // markers fade out
-      arcFading = true; arcFadeT = 0;       // flight line fades its alpha to 0 (not abrupt)
+      arcFading = true; arcDir = -1; arcFadeMs = ARC_FADE_MS;   // flight lines fade out (not abrupt)
+      arcFadeT = (1 - arcAlpha) * ARC_FADE_MS;
       lastArcKey = '__free__';
     }
-    function exitFree() {
-      arcFading = false; arcAlpha = 1;      // restore line opacity
+    function exitFree(toLat, toLng, toAlt) {
+      // Glide the camera from the free spin back to the docked orientation instead of snapping it.
+      world.pointOfView({ lat: toLat, lng: toLng, altitude: toAlt }, EXIT_MS);
+      exitT = EXIT_MS;
       world.pointsData(PLACES);             // markers return
-      lastArcKey = '';                      // force the route to rebuild on the next frame
+      arcFading = true; arcDir = 1; arcFadeMs = EXIT_MS;        // flight lines fade back in
+      arcFadeT = arcAlpha * EXIT_MS;        // continue from the current (faded) alpha
+      world.arcsData(fullRouteArcs());
+      lastArcKey = '__exit__';
     }
     // Drag to rotate (only while the earth is free at the footer).
     mount.addEventListener('pointerdown', function (e) {
@@ -397,9 +405,11 @@
       if (freeWanted) {                  // footer: let the controls (auto-rotate + drag) drive
         if (!freeMode) { enterFree(); freeMode = true; }
       } else {
-        if (freeMode) { exitFree(); freeMode = false; }
-        world.pointOfView({ lat: lat, lng: lng, altitude: alt }, 0);
-        setRouteArcs(rp);
+        if (freeMode) { exitFree(lat, lng, alt); freeMode = false; }
+        if (exitT <= 0) {                // not mid glide-back → drive the camera directly
+          world.pointOfView({ lat: lat, lng: lng, altitude: alt }, 0);
+          if (!arcFading) setRouteArcs(rp);
+        }
       }
       wrap.style.setProperty('--globe-shift', Math.round(shift) + 'px');
       wrap.classList.toggle('labels-on', showPlace);   // labels only during the journey
@@ -434,13 +444,21 @@
       // Idle: keep the globe slowly rotating over SF until the journey begins.
       if (curP < 0.02) { spin -= SPIN_DPS * dt / 1000; if (spin <= -360) spin += 360; }
       apply(curP);
-      if (freeMode) {                    // footer: slow auto-spin unless the user is dragging
-        if (arcFading) {                 // fade the flight line's alpha out, then clear it
-          arcFadeT += dt;
-          var fk = arcFadeT / ARC_FADE_MS;
-          if (fk >= 1) { arcFading = false; arcAlpha = 0; world.arcsData([]); }
-          else { arcAlpha = 1 - fk; world.arcsData(fullRouteArcs()); }
+      // Fade the flight lines out (entering free) or back in (scrolling out of free).
+      if (arcFading) {
+        arcFadeT += dt;
+        var fk = Math.min(1, arcFadeT / arcFadeMs);
+        arcAlpha = arcDir < 0 ? (1 - fk) : fk;
+        if (fk >= 1) {
+          arcFading = false;
+          if (arcDir < 0) { arcAlpha = 0; world.arcsData([]); }
+          else { arcAlpha = 1; lastArcKey = ''; }   // hand the route back to setRouteArcs
+        } else {
+          world.arcsData(fullRouteArcs());
         }
+      }
+      if (exitT > 0) exitT -= dt;          // let the glide-back tween finish
+      if (freeMode) {                      // footer: slow auto-spin unless the user is dragging
         if (!dragging) freeLng -= FREE_SPIN * dt / 1000;
         world.pointOfView({ lat: freeLat, lng: freeLng, altitude: DOCK_ALT }, 0);
       }
