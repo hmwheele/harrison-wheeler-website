@@ -157,13 +157,6 @@ ul { list-style: none; }
 .nav-links a.nav-ext { display: inline-flex; align-items: center; gap: 5px; }
 .nav-ext-icon { width: 11px; height: 11px; opacity: .6; flex: 0 0 auto; }
 .nav-links a.nav-ext:hover .nav-ext-icon { opacity: 1; }
-/* "Get in touch" CTA fades in from the left on load */
-@keyframes nav-cta-in {
-  from { opacity: 0; transform: translateX(-20px); }
-  to   { opacity: 1; transform: none; }
-}
-.nav-cta { animation: nav-cta-in .55s cubic-bezier(.22, 1, .36, 1) .35s both; }
-@media (prefers-reduced-motion: reduce) { .nav-cta { animation: none; } }
 
 /* Mobile menu toggle */
 .nav-toggle {
@@ -266,6 +259,12 @@ ul { list-style: none; }
 .hero-grid > div:first-child > *:nth-child(2) { animation-delay: .16s; }
 .hero-grid > div:first-child > *:nth-child(3) { animation-delay: .26s; }
 .hero-photo { animation-delay: .55s; }   /* image comes in after the left-side text */
+/* The hero "Get in touch" button slides in from the left instead of up */
+.hero-grid > div:first-child > .btn-hero { animation-name: hero-cta-left; }
+@keyframes hero-cta-left {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: none; }
+}
 
 /* ── Curved marquee headline ────────────────────────────────────── */
 .arc { padding-block: 40px 80px; overflow: hidden; }
