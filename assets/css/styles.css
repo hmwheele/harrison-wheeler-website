@@ -157,6 +157,13 @@ ul { list-style: none; }
 .nav-links a.nav-ext { display: inline-flex; align-items: center; gap: 5px; }
 .nav-ext-icon { width: 11px; height: 11px; opacity: .6; flex: 0 0 auto; }
 .nav-links a.nav-ext:hover .nav-ext-icon { opacity: 1; }
+/* "Get in touch" CTA fades in from the left on load */
+@keyframes nav-cta-in {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: none; }
+}
+.nav-cta { animation: nav-cta-in .55s cubic-bezier(.22, 1, .36, 1) .35s both; }
+@media (prefers-reduced-motion: reduce) { .nav-cta { animation: none; } }
 
 /* Mobile menu toggle */
 .nav-toggle {
