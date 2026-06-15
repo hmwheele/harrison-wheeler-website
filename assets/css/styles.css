@@ -327,6 +327,8 @@ ul { list-style: none; }
 .card:hover { border-color: #ffd8e4; transform: translateY(calc(var(--py, 0px) - 3px)); }
 .card-media { aspect-ratio: 16/10; background: linear-gradient(135deg, #2a2833, #3a3747); position: relative; }
 .card-media img { width: 100%; height: 100%; object-fit: cover; }
+.card-media--placeholder { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3a2a3f, #2a3347 55%, #1f2a3a); }
+.card-media-tag { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: #ffd8e4; border: 1px solid rgba(255,216,228,.35); border-radius: 999px; padding: 7px 16px; }
 .card-body { padding: 22px 24px 26px; }
 .card .eyebrow { margin-bottom: 10px; color: #ffd8e4; }
 .card h3 { font-size: 1.18rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; margin-bottom: 10px; }
@@ -573,24 +575,28 @@ main > .phead-wrap { padding-top: var(--gap); }
 
 .cs-main { min-width: 0; }
 .cs-main h1 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin-bottom: 18px; }
-.cs-deck { font-size: 1.15rem; color: var(--cs-muted); max-width: 36em; margin-bottom: 36px; }
+.cs-deck { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.15rem; line-height: 1.6; color: var(--cs-muted); max-width: 36em; margin-bottom: 36px; }
 /* ── Hero carousel ──────────────────────────────────────────────── */
 .cs-carousel { position: relative; margin: 0 0 56px; outline: none; }
 /* Bleed right into the empty third column; off-slides are clipped */
 @media (min-width: 1080px) {
   .cs-carousel { margin-right: calc(-240px - 64px); }
 }
-.cs-carousel-viewport { overflow: hidden; border-radius: 14px; }
+.cs-carousel-viewport { overflow: hidden; border-radius: 4px; }
 .cs-carousel-track { display: flex; gap: 16px; transition: transform .45s cubic-bezier(.22, 1, .36, 1); will-change: transform; }
 .cs-slide {
-  flex: 0 0 88%;
-  aspect-ratio: 16/9;
+  flex: 0 0 auto;
+  height: clamp(300px, 52vh, 500px);
+  width: auto;
   background: #e9e7ee;
-  border-radius: 14px;
+  border-radius: 4px;
   position: relative;
   overflow: hidden;
 }
-.cs-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* image/video slides size their width to the media's natural proportions */
+.cs-slide img, .cs-slide video { height: 100%; width: auto; object-fit: contain; display: block; }
+/* placeholder slides (no image) keep a 16:9 footprint so they don't collapse */
+.cs-slide:has(.cs-slide-tag) { aspect-ratio: 16 / 9; }
 .cs-slide-tag {
   position: absolute; left: 14px; bottom: 12px;
   font-family: var(--mono); font-size: .68rem; letter-spacing: .14em;
@@ -598,7 +604,7 @@ main > .phead-wrap { padding-top: var(--gap); }
 }
 .cs-figure {
   aspect-ratio: 16/9; max-width: 42em; margin: 8px 0 24px;
-  background: #e9e7ee; border: 1px solid var(--cs-border); border-radius: 14px;
+  background: #e9e7ee; border: 1px solid var(--cs-border); border-radius: 4px;
   display: grid; place-items: center; overflow: hidden;
 }
 .cs-figure span {
@@ -614,8 +620,9 @@ main > .phead-wrap { padding-top: var(--gap); }
 .cs-grid .cs-figure { aspect-ratio: 1/1; margin: 0; max-width: none; }
 @media (max-width: 560px) { .cs-grid { grid-template-columns: 1fr; } }
 
-.cs-carousel--portrait .cs-slide { flex-basis: 46%; aspect-ratio: 9/16; }
-@media (max-width: 560px) { .cs-carousel--portrait .cs-slide { flex-basis: 72%; } }
+.cs-carousel--portrait .cs-slide { aspect-ratio: auto; height: clamp(360px, 60vh, 560px); }
+.cs-carousel--portrait .cs-slide:has(.cs-slide-tag) { aspect-ratio: 9 / 16; }
+@media (max-width: 560px) { .cs-carousel--portrait .cs-slide { height: clamp(320px, 64vh, 480px); } }
 
 .cs-car-btn {
   position: absolute; top: 50%; transform: translateY(-50%);
@@ -633,14 +640,17 @@ main > .phead-wrap { padding-top: var(--gap); }
 
 .cs-main h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin: 52px 0 18px; scroll-margin-top: 80px; }
 .cs-main h3 { font-size: 1.05rem; font-weight: 700; margin: 28px 0 8px; }
-.cs-main p { color: #36333c; margin-bottom: 16px; max-width: 42em; }
-.cs-main ul.bullets { list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
+.cs-main p { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.75; color: #36333c; margin-bottom: 16px; max-width: 42em; }
+.cs-main ul.bullets { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.7; list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
 .cs-main ul.bullets li { margin-bottom: 6px; }
 .cs-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 8px 0 24px; }
 .cs-metric { background: #f6f5f8; border: 1px solid var(--cs-border); border-radius: 12px; padding: 20px; }
 .cs-metric .num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; color: var(--cs-accent); }
 .cs-metric .lbl { font-size: .85rem; color: var(--cs-muted); margin-top: 4px; }
 .cs-note { color: #9b97a3; font-size: .85rem; margin-top: 36px; }
+.cs-diagram { margin: 30px 0 8px; }
+.cs-diagram svg { width: 100%; height: auto; display: block; }
+.cs-diagram figcaption { font-size: .82rem; color: var(--cs-muted); margin-top: 14px; text-align: center; }
 
 /* ── Case-study tables ──────────────────────────────────────────── */
 .cs-table {
@@ -728,7 +738,7 @@ body.cs-lock { overflow: hidden; }
   .cs-layout { grid-template-columns: 1fr; gap: 24px; padding: 8px 22px 72px; }
   .cs-toc { display: none; }
   .cs-carousel { margin-right: 0; }
-  .cs-slide { flex-basis: 100%; }
+  .cs-slide { height: clamp(240px, 42vh, 380px); }
   .cs-car-btn { width: 40px; height: 40px; }
   /* Close button sits ABOVE the text on mobile (in normal flow, not floated) */
   .cs-close { position: static; margin: 0 0 18px 22px; }
