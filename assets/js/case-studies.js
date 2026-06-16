@@ -186,6 +186,7 @@ window.CASE_STUDIES = {
       '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
   '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
   '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
+    '<div class="cs-slide"><img src="assets/case_studies/events/events_hero.webp" alt="B2B Events — LinkedIn Live Events experience" loading="lazy"></div>' +
     '<div class="cs-slide"><span class="cs-slide-tag">Events circa 2021</span></div>' +
     '<div class="cs-slide"><span class="cs-slide-tag">The events lifecycle</span></div>' +
     '<div class="cs-slide"><span class="cs-slide-tag">Marketplace ecosystem</span></div>' +
@@ -267,12 +268,9 @@ window.CASE_STUDIES = {
       '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
   '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
   '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Chicago → SF → Kraków</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Talent brand</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Desktop ↔ mobile</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">The first design system</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Distributed workflow</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Impact</span></div>' +
+    '<div class="cs-slide" style="background:#fff"><img src="assets/case_studies/base_crm/base_crm_with_design_system.jpg" alt="The Base CRM desktop app — leads pipeline built on the design system" loading="lazy"></div>' +
+    '<div class="cs-slide" style="background:#fff"><img src="assets/case_studies/base_crm/iOS-Mobile.png" alt="The Base CRM iOS app — deals list, contact detail, and overview" loading="lazy"></div>' +
+    '<div class="cs-slide" style="background:#fff"><img src="assets/case_studies/base_crm/design-sytem.webp" alt="Base design system components" loading="lazy"></div>' +
   '</div></div>' +
   '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
 '</div>',
@@ -315,7 +313,7 @@ window.CASE_STUDIES = {
       '<div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/base_crm/iOS-Mobile.png" alt="The Base CRM iOS app — deals list, contact detail, and deals overview screens" style="height:auto;object-fit:contain" loading="lazy"></div>',
       '<h3>Affordance through interaction</h3>',
       '<p>Building a CRM that was fully functional on mobile was already a challenge, given how much information reps were used to entering on desktop. So simple and intuitive became the experience pillars. We didn\'t add interactions for their own sake; each one had to carry real affordance and tie back to the sales user journey. In the demo below, a rep navigates across won, lost, and unqualified deals — the motion itself communicates state and direction. During exploration I built the prototype in Sketch and prototyped the interaction in Principle.</p>',
-      '<div class="cs-figure" style="aspect-ratio:auto;background:#fff;padding:12px"><video autoplay loop muted playsinline aria-label="Mobile demo — navigating across won, lost, and unqualified deals" style="height:auto;max-height:600px;width:auto;max-width:100%;margin:0 auto"><source src="assets/case_studies/base_crm/affordance.webm" type="video/webm"><source src="assets/case_studies/base_crm/affordance.mp4" type="video/mp4"></video></div>',
+      '<div class="cs-figure" style="aspect-ratio:auto;background:#fff;padding:12px"><video autoplay loop muted playsinline aria-label="Mobile demo — navigating across won, lost, and unqualified deals" style="height:auto;max-height:600px;width:auto;max-width:100%;margin:0 auto"><source src="assets/case_studies/base_crm/affordance.webm" type="video/webm"></video></div>',
 
       '<h2 id="design-system">The first design system</h2>',
       '<p>There was no shared language for how the product should look or behave. Engineers in Kraków rebuilt components from scratch every time; designers redrew the same patterns in every mockup. As Base grew, the real constraint wasn\'t talent or tooling — it was that shared language. Designers were shipping good work, but developers and other stakeholders had no common vocabulary to push back on, build with, or extend.</p>',
@@ -331,7 +329,7 @@ window.CASE_STUDIES = {
       '<li><strong>Clear</strong> — concise content frames the experience, and visual affordances communicate what\'s possible.</li>',
       '<li><strong>Simple</strong> — keep the interface clean, understated, and focused on the essentials of what the user is trying to do.</li>',
       '</ul>',
-      '<div class="cs-figure"><span>Image — &ldquo;Useful&rdquo; in practice: GPS-assisted lead capture in the field</span></div>',
+      '<div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/base_crm/gps.webp" alt="&ldquo;Useful&rdquo; in practice — GPS-assisted lead capture: a Select location map with a Create a Lead pin" style="height:auto;object-fit:contain" loading="lazy"></div>',
 
       '<h2 id="culture">Building a culture of innovation</h2>',
       '<p>Innovation isn\'t a lightning strike — it\'s a process. An organization has to execute well on the fundamentals and stay disciplined enough to build trust in them. That belief shaped how I ran the team, and it came down to five things.</p>',
@@ -340,7 +338,7 @@ window.CASE_STUDIES = {
       '<p><strong>Implement faster.</strong> The design system centralized visual bugs and unlocked quicker MVPs we could validate with real data, and usability testing caught problems while they were still cheap to fix — far cheaper to iterate on a design than on a product that\'s already built.</p>',
       '<p><strong>Optimize through experimentation.</strong> Optimization was more than growth hacking; it was a sustainable rhythm of diverging and converging on ideas unique to our product. We tracked critical paths to find drop-off and churn, and A/B tested to challenge assumptions and try new concepts.</p>',
       '<p><strong>Protect time.</strong> Most importantly, none of it happens without time set aside for it. I budgeted design and research for future-facing concepts that weren\'t engineering-funded, which took the pressure off time-boxed deliverables — and, again, revisions in design cost far less than revisions in code.</p>',
-      '<div class="cs-figure"><span>Image — quarterly retrospective board (what worked · improve · new ideas · thanks)</span></div>',
+      '<div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/base_crm/innovation_diagram.webp" alt="Innovation pyramid — Budget Time, Understand, Conceptualize, Implement, Optimize from base to top" style="height:auto;object-fit:contain" loading="lazy"></div>',
 
       '<h2 id="solution">Product &amp; business impact</h2>',
       '<p>With the team and system in place, design started driving product and business outcomes directly. I built automated onboarding (a two-week email sequence with a survey at the end), developed a <strong>Data → Insights → Recommendations</strong> framework for the CRM experience, and partnered with the CEO and CPO on design-led enterprise proposals that drove multiple <strong>$1M+ ARR</strong> deals. I also budgeted innovation time for forward-looking concepts and ran cross-functional retros to keep the operating model improving.</p>',
@@ -378,7 +376,7 @@ window.CASE_STUDIES = {
   '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
   '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
     '<div class="cs-slide"><img src="assets/case_studies/dualcreatorcam/dualhero.webp" alt="Dual Creator Cam — one tap, two finished videos" loading="lazy"></div>' +
-    '<div class="cs-slide"><video autoplay loop muted playsinline aria-label="Rotating the phone and customizing the record button finish"><source src="assets/case_studies/dualcreatorcam/rotatingcustomization.webm" type="video/webm"><source src="assets/case_studies/dualcreatorcam/rotatingcustomization.mp4" type="video/mp4"></video></div>' +
+    '<div class="cs-slide"><video autoplay loop muted playsinline aria-label="Rotating the phone and customizing the record button finish"><source src="assets/case_studies/dualcreatorcam/rotatingcustomization.webm" type="video/webm"></video></div>' +
     '<div class="cs-slide"><span class="cs-slide-tag">Use-case survey</span></div>' +
     '<div class="cs-slide"><span class="cs-slide-tag">9:16 vs 16:9</span></div>' +
     '<div class="cs-slide"><span class="cs-slide-tag">Record-button finishes</span></div>' +
@@ -488,11 +486,11 @@ window.CASE_STUDIES = {
 <div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">
   <button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>
   <div class="cs-carousel-viewport"><div class="cs-carousel-track">
-    <div class="cs-slide"><span class="cs-slide-tag">Agent workspace</span></div>
-    <div class="cs-slide"><span class="cs-slide-tag">Client itinerary</span></div>
-    <div class="cs-slide"><span class="cs-slide-tag">Daily briefing</span></div>
-    <div class="cs-slide"><span class="cs-slide-tag">Live map</span></div>
-    <div class="cs-slide"><span class="cs-slide-tag">Shinkansen QR</span></div>
+    <div class="cs-slide"><img src="assets/case_studies/holiday/holiday_hero.webp" alt="Holiday — a traveler's daily itinerary view" loading="lazy"></div>
+    <div class="cs-slide"><img src="assets/case_studies/holiday/screen2.webp" alt="Holiday — app screen" loading="lazy"></div>
+    <div class="cs-slide"><img src="assets/case_studies/holiday/screen3.webp" alt="Holiday — app screen" loading="lazy"></div>
+    <div class="cs-slide"><img src="assets/case_studies/holiday/screen4.webp" alt="Holiday — app screen" loading="lazy"></div>
+    <div class="cs-slide"><img src="assets/case_studies/holiday/screen5.webp" alt="Holiday — app screen" loading="lazy"></div>
   </div></div>
   <button class="cs-car-btn next" type="button" aria-label="Next image">›</button>
 </div>

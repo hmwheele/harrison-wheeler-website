@@ -48,6 +48,13 @@
         topbar.classList.toggle('visible', show);
         var max = overlay.scrollHeight - overlay.clientHeight;
         progressFill.style.width = (max > 0 ? Math.min(100, (overlay.scrollTop / max) * 100) : 0) + '%';
+        // Bottom-of-page guard: a short final section never reaches the scrollspy
+        // band, so force the last TOC item active once we hit the bottom.
+        var tl = sheet.querySelectorAll('.cs-toc a');
+        if (tl.length && overlay.scrollTop + overlay.clientHeight >= overlay.scrollHeight - 4) {
+          tl.forEach(function (a) { a.classList.remove('active'); });
+          tl[tl.length - 1].classList.add('active');
+        }
         ticking = false;
       });
     }, { passive: true });
@@ -148,6 +155,18 @@
       });
       var onResize = function () { go(i); };
       window.addEventListener('resize', onResize, { passive: true });
+      // Slide widths depend on each image/video's natural size, so the first
+      // measurement can be wrong if the media hasn't loaded yet (arrows stay
+      // disabled until a manual resize). Re-measure once the media loads.
+      car.querySelectorAll('img').forEach(function (im) {
+        if (!im.complete) im.addEventListener('load', function () { go(i); }, { once: true });
+      });
+      car.querySelectorAll('video').forEach(function (v) {
+        v.addEventListener('loadedmetadata', function () { go(i); }, { once: true });
+      });
+      if (window.ResizeObserver) {
+        new ResizeObserver(function () { go(i); }).observe(track);
+      }
       // run after layout settles
       requestAnimationFrame(function () { go(0); });
     });

@@ -273,7 +273,7 @@ ul { list-style: none; }
 
 /* ── Belief statement ───────────────────────────────────────────── */
 .belief p.big {
-  font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 700; letter-spacing: -.02em;
+  font-size: clamp(1.5rem, 3.2vw, 2.4rem); font-weight: 700; letter-spacing: -.02em;
   line-height: 1.3; max-width: 22em; margin-bottom: 28px;
 }
 .belief p.body { font-family: 'Merriweather', Georgia, serif; font-weight: 300; line-height: 1.6; color: var(--text-muted); max-width: 40em; margin-bottom: 16px; }
@@ -317,22 +317,23 @@ ul { list-style: none; }
 #projects { padding-top: 0; }
 .card {
   position: relative; display: flex; flex-direction: column;
-  border-radius: 0; overflow: hidden;   /* sharp corners — reinforce the grid motif */
-  background: var(--surface); border: 1px solid var(--border);
-  transition: border-color .2s;
+  border-radius: 0; overflow: visible;
+  background: transparent; border: none;
+  transition: transform .2s;
   cursor: pointer;
   will-change: transform;
 }
 .card { transform: translateY(var(--py, 0px)); }
-.card:hover { border-color: #ffd8e4; transform: translateY(calc(var(--py, 0px) - 3px)); }
-.card-media { aspect-ratio: 16/10; background: linear-gradient(135deg, #2a2833, #3a3747); position: relative; }
+.card:hover { transform: translateY(calc(var(--py, 0px) - 3px)); }
+.card:hover h3 { color: #ffd8e4; }
+.card-media { aspect-ratio: 16/10; background: linear-gradient(135deg, #2a2833, #3a3747); position: relative; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 .card-media img { width: 100%; height: 100%; object-fit: cover; }
 .card-media--placeholder { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3a2a3f, #2a3347 55%, #1f2a3a); }
 .card-media-tag { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: #ffd8e4; border: 1px solid rgba(255,216,228,.35); border-radius: 999px; padding: 7px 16px; }
-.card-body { padding: 22px 24px 26px; }
+.card-body { padding: 16px 0 8px; text-align: left; }
 .card .eyebrow { margin-bottom: 10px; color: #ffd8e4; }
-.card h3 { font-size: 1.18rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; margin-bottom: 10px; }
-.card .meta { font-size: .85rem; color: var(--text-muted); }
+.card h3 { font-size: 1.3rem; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; margin-bottom: 10px; transition: color .2s; }
+.card .meta { font-size: 16px; color: var(--text-muted); }
 .news-all { color: var(--primary); font-weight: 600; text-decoration: none; }
 .news-all:hover { text-decoration: underline; }
 
@@ -558,20 +559,20 @@ main > .phead-wrap { padding-top: var(--gap); }
    elements bleed right into it on wide screens. */
 .cs-layout {
   display: grid;
-  grid-template-columns: 220px minmax(0, 720px) 240px;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 720px) minmax(180px, 1fr);
   justify-content: center;
   gap: 64px;
   padding: 8px 48px 110px;
 }
 /* Sticky table of contents */
-.cs-toc { position: sticky; top: 28px; align-self: start; height: max-content; }
+.cs-toc { position: sticky; top: 84px; align-self: start; height: max-content; }
 .cs-toc ul { display: flex; flex-direction: column; gap: 4px; }
 .cs-toc a {
-  display: block; padding: 6px 0; font-size: .9rem; color: var(--cs-muted);
+  display: block; padding: 6px 0; font-size: 1rem; color: var(--cs-muted);
   border-left: 2px solid transparent; padding-left: 12px; transition: color .2s, border-color .2s;
 }
 .cs-toc a:hover { color: var(--cs-text); }
-.cs-toc a.active { color: var(--cs-accent); border-color: var(--cs-accent); font-weight: 600; }
+.cs-toc a.active { color: var(--cs-text); border-color: transparent; font-weight: 600; }
 
 .cs-main { min-width: 0; }
 .cs-main h1 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin-bottom: 18px; }
@@ -644,6 +645,8 @@ main > .phead-wrap { padding-top: var(--gap); }
 .cs-main ul.bullets { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.7; list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
 .cs-main ul.bullets li { margin-bottom: 6px; }
 .cs-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 8px 0 24px; }
+/* blocks of exactly 4 stat cards stack 2×2 instead of a cramped single row */
+.cs-metrics:has(.cs-metric:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
 .cs-metric { background: #f6f5f8; border: 1px solid var(--cs-border); border-radius: 12px; padding: 20px; }
 .cs-metric .num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; color: var(--cs-accent); }
 .cs-metric .lbl { font-size: .85rem; color: var(--cs-muted); margin-top: 4px; }
@@ -754,8 +757,24 @@ body.cs-lock { overflow: hidden; }
    ===================================================================== */
 
 /* ── Page intro ─────────────────────────────────────────────────── */
-.story-head { padding-top: 150px; padding-bottom: 8px; text-align: left; }
-.story-head-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 56px; align-items: center; }
+.story-head {
+  position: relative;
+  max-width: none; padding: 128px 0 0; text-align: left;
+  /* tint dissolves into the page bg — no hard edge (matches the homepage hero) */
+  background: linear-gradient(#131217 0%, #131217 55%, var(--bg) 100%);
+}
+/* Subtle grid backdrop fading toward the bottom (matches the homepage hero). */
+.story-head::before {
+  content: ""; position: absolute; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(var(--border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: linear-gradient(#000 60%, transparent 100%);
+          mask-image: linear-gradient(#000 60%, transparent 100%);
+  opacity: .5; pointer-events: none;
+}
+.story-head-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: center; max-width: var(--max); margin: 0 auto; padding-inline: 32px; position: relative; z-index: 1; }
 .story-head .eyebrow { margin-bottom: 14px; }
 .story-head h1 {
   font-size: clamp(3rem, 7.5vw, 5.25rem); font-weight: 800;
@@ -763,14 +782,14 @@ body.cs-lock { overflow: hidden; }
 }
 .story-intro {
   max-width: 42em; margin: 0;
-  color: var(--text-muted); font-size: 1.15rem; line-height: 1.7;
+  font-family: 'Merriweather', Georgia, serif; font-weight: 300;
+  color: var(--light-pink); font-size: 1.15rem; line-height: 1.7;
 }
 .story-intro + .story-intro { margin-top: 18px; }
 /* Placeholder image in the right column */
 .story-head-media {
-  aspect-ratio: 4 / 5; border-radius: 4px; overflow: hidden;
-  border: 1px solid var(--border);
-  background: linear-gradient(135deg, #2a2833, #3a3747);
+  aspect-ratio: 4 / 5; border-radius: 4px 4px 0 0; overflow: hidden;
+  align-self: end;   /* anchor the portrait to the bottom edge of the hero */
 }
 .story-head-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -786,7 +805,11 @@ body.cs-lock { overflow: hidden; }
 .story-head-text > *:nth-child(2) { animation-delay: .13s; }
 .story-head-text > *:nth-child(3) { animation-delay: .21s; }
 .story-head-text > *:nth-child(4) { animation-delay: .27s; }
-.story-head-media { animation-delay: .17s; }
+@keyframes story-hero-right {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: none; }
+}
+.story-head-media { animation: story-hero-right .8s cubic-bezier(.22, 1, .36, 1) .17s both; }
 
 /* About / "what I've built" prose block under the intro */
 .story-about { padding-top: 82px; }   /* match the story-head → story-about gap to the story-about → story-band gap (≈90px) */
@@ -1032,8 +1055,8 @@ body.cs-lock { overflow: hidden; }
   .tl-card  { padding-top: 0; order: 2; }
   .tl-card::before { display: none; }   /* drop the blurred parallax backdrop on mobile (it overflowed the card) */
   .tl-year { padding: 2px 0; background: none; }
-  .story-head-grid { grid-template-columns: 1fr; gap: 32px; }
-  .story-head-media { aspect-ratio: 16 / 10; max-width: 440px; }
+  .story-head-grid { grid-template-columns: 1fr; gap: 32px; padding-inline: 20px; }
+  .story-head-media { aspect-ratio: 4 / 5; max-width: 320px; align-self: auto; justify-self: center; order: -1; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }
 }
 
