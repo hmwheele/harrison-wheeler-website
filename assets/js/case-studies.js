@@ -87,7 +87,6 @@ window.CASE_STUDIES = {
       '<p><strong>Product definitions calcify.</strong> The "ideal customer" wasn\'t wrong so much as incomplete — and the incomplete version was quietly costing us a growth segment. The hardest part of the work was updating a belief, not a screen.</p>',
       '<p><strong>Cross-team vision is a design-leadership artifact.</strong> Pods don\'t need alignment lectures; they need tools that make their own work easier to socialize. The lifecycle illustration and the systems narrative did more to move the org than any deck of arguments could have.</p>',
       '<p><strong>Foundations are unglamorous but necessary.</strong> A strong platform needs that baseline before anything else can stand on it — and the discipline to protect it once it exists.</p>',
-      '<p class="cs-note">Note: carousel slides are visual placeholders — drop in the compounding-debt frame, the day-1-to-90 lifecycle loop, the buy-in timeline, the Marketing Overview surface, and the outcomes board.</p>'
     ].join('')
   },
 
@@ -173,7 +172,6 @@ window.CASE_STUDIES = {
       '<p><strong>Morale is a systems signal, not a motivation problem.</strong> The team\'s low score wasn\'t about effort — it was about unclear priorities, invisible impact, and ambiguous roles. Fixing the system of work fixed the morale, and the score nearly inverted from an all-time low to an all-time high.</p>',
       '<p><strong>Speed comes from structure, not heroics.</strong> Facing a Q3 AI deadline, the instinct is to push harder. The leverage was the opposite — fewer, clearer projects and a federated priority structure let the team move faster precisely because it stopped trying to do everything at once.</p>',
       '<p><strong>A shared language is the real deliverable.</strong> Priority tiers, themes, and explicit roles gave pods a way to make their own decisions and socialize their own work. The org didn\'t need more alignment meetings; it needed a common vocabulary.</p>',
-      '<p class="cs-note">Note: carousel slides are visual placeholders — drop in the old-way request-queue frame, the P0/P1/P2 priority framework, the roles-and-rituals layout, the pod model diagram, and the outcomes board.</p>'
     ].join('')
   },
 
@@ -255,7 +253,6 @@ window.CASE_STUDIES = {
       '<p><strong>Vision-building under low trust is a narrative problem, not a design problem.</strong> The market data, the customer interest, and the lifecycle framing weren\'t new — they lived in different rooms. What unlocked funding was assembling them into one story that made the bet feel inevitable: the budgets are already being spent, the format already outperforms competitors, the customer is already willing, and LinkedIn is the only company sitting across consumer, marketing, and sales at this scale.</p>',
       '<p><strong>Make partners see themselves in the story.</strong> Framing the vision as an ecosystem of pillars teams already owned — Flagship, Campaign Manager, Sales Navigator — meant the strategy read as additive, not as a land grab. That\'s what turned potential blockers into advocates.</p>',
       '<p><strong>Pairing is what makes a vision read as strategy.</strong> A Senior PM owned the business framing while I owned the narrative and design direction, so the work never landed as a design exercise or a spreadsheet alone. That pairing is the thing I\'d bring into any zero-to-one work at this altitude.</p>',
-      '<p class="cs-note">Note: carousel slides are visual placeholders — drop in the 2021 events experience, the lifecycle loop, the marketplace ecosystem map, the event ad states, and the marketing &amp; sales insights dashboard.</p>'
     ].join('')
   },
 
@@ -362,7 +359,6 @@ window.CASE_STUDIES = {
       '<p><strong>Learn how to say no.</strong> No organization has infinite resources. If you\'re blocking work without being in the conversation with your engineering and product partners, the process is broken — and poor planning stresses everyone, which shows up in the product.</p>',
       '<p><strong>Appoint a culture champion.</strong> The people who have their peers\' respect and go beyond their daily tasks are force multipliers — they organize team-building, carry the product vision, and mentor newer designers as you scale.</p>',
       '<p><strong>And document as you build.</strong> The one thing I\'d do differently: too much institutional knowledge depended on me being in the room. That\'s the lesson I carried to LinkedIn — build the documentation alongside the system, not after.</p>',
-      '<p class="cs-note">Note: remaining visual placeholders — the relocation map (Chicago → Palo Alto, Kraków across the Atlantic), the talent-brand surfaces, and the before/after workflow diagram.</p>'
     ].join('')
   },
 
@@ -472,7 +468,6 @@ window.CASE_STUDIES = {
       '<p><strong>Ruthless prioritization is what ships things.</strong> Front dials, sectioned videos, and 60 FPS were all things I wanted, but cutting them is what let the core flow ship. The same instinct drove the architecture pivot — abandoning the impressive-but-flawed multi-cam approach for single-source dual-crop was a step backward on paper and the single best decision in the project.</p>',
       '<p><strong>It\'s easy to build anything — the hard part is not losing the purpose.</strong> When the tools let you make almost anything, the discipline is protecting the story you\'re telling, otherwise the app drifts into being just another barebones recorder.</p>',
       '<p><strong>I use my agents like a development team.</strong> I delegate, review, and redirect the same way I would with engineers, switching between models depending on the task. Treating them as a team rather than a single tool is what made the workflow scale.</p>',
-      '<p class="cs-note">Note: carousel slides are screenshot placeholders — drop in real captures (recording HUD, use-case survey, 9:16 vs 16:9 framing, record-button finishes, Figma scaffold, media library). Market and engagement figures are sourced in the full case-study writeup.</p>'
     ].join('')
   },
 
@@ -679,7 +674,6 @@ window.CASE_STUDIES = {
 <p><strong>The hardest shift was breaking away from the software-UI wrapper.</strong> For most of the build, value lived in screens and interactions. The daily preview was where that broke down — composing a perspective on a day isn't rendering a record, and it pushed the work toward augmentation rather than UI. But that move was only possible because the data layer underneath was organized and bounded. You can't build a trustworthy layer that reads context and responds unless the thing it reads — the agent's curation — is structured first. The interface stopped being the product and became one layer over the data.</p>
 <p><strong>The next version is native, not just responsive.</strong> Holiday is built almost entirely as a React web app — the right call for moving fast and keeping one codebase across both sides. But the traveler's context — abroad, on the move, often without reliable data — argues for supporting iOS and Android apps next. Native unlocks two things the web can't do well. <strong>Push notifications</strong> for the time-critical moments: an imminent reservation, a departure to catch, a change in the weather, a message from the agent — delivered when they matter rather than when the app happens to be open. And <strong>offline mode</strong>, so the itinerary, confirmations, and boarding passes are stored on the device and stay available with no signal and no SIM. Both map directly to the product's job: support the traveler when the agent — and the network — can't be reached.</p>
 <p>That points to a layered model: <strong>data</strong> (the agent's authoritative, bounded itinerary), <strong>software</strong> (the workspace and client view, largely built), and <strong>augmentation</strong> (the layer that reads context and responds — surfacing what's relevant now, deferring what isn't, providing depth on demand). The daily preview was the first instance. Augmentation is trustworthy only because the data beneath it is the agent's real work rather than inference; the system surfaces and extends the agent's judgment rather than replacing it. Protecting that judgment is also the competitive point — it's how the agent won the client and how they keep them, an experience the client couldn't get from anyone else. The goal is for a trip to be as good to experience as it was to plan.</p>
-<p class="cs-note">Note: carousel slides are screenshot placeholders — drop in real captures (agent workspace, client itinerary, daily briefing, live map, shinkansen QR). Market figures are directional, drawn from 2025 industry research.</p>
 `
   }
 };
