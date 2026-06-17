@@ -74,7 +74,7 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow-x: clip;   /* clip (not hidden) so it doesn't break position: sticky */
 }
 
 /* Subtle grid background — hero only (see .hero::before) */
@@ -774,7 +774,7 @@ body.cs-lock { overflow: hidden; }
 /* ── Page intro ─────────────────────────────────────────────────── */
 .story-head {
   position: relative;
-  max-width: none; padding: 128px 0 0; text-align: left;
+  max-width: none; padding: 128px 0 96px; text-align: left;
   /* tint dissolves into the page bg — no hard edge (matches the homepage hero) */
   background: linear-gradient(#131217 0%, #131217 55%, var(--bg) 100%);
 }
@@ -789,11 +789,24 @@ body.cs-lock { overflow: hidden; }
           mask-image: linear-gradient(#000 60%, transparent 100%);
   opacity: .5; pointer-events: none;
 }
-.story-head-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: center; max-width: var(--max); margin: 0 auto; padding-inline: 32px; position: relative; z-index: 1; }
+.story-head-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; max-width: var(--max); margin: 0 auto; padding-inline: 32px; position: relative; z-index: 1; }
+/* Radial halftone tucked behind the photo, lower-right of the hero header */
+.hero-halftone {
+  position: absolute; z-index: -1;
+  right: clamp(-300px, -13vw, -120px); top: 40vh;   /* bleeds past the right edge so it peeks out around the photo */
+  width: clamp(440px, 58vw, 820px); height: auto;
+  opacity: .55; pointer-events: none;
+}
+@media (max-width: 860px) { .hero-halftone { display: none; } }
 .story-head .eyebrow { margin-bottom: 14px; }
 .story-head h1 {
   font-size: clamp(3rem, 7.5vw, 5.25rem); font-weight: 800;
   letter-spacing: -.03em; line-height: 1.05; margin-bottom: 24px;
+}
+.story-tagline {
+  font-family: var(--font); font-weight: 700;
+  font-size: clamp(2.2rem, 5.5vw, 3.8rem); line-height: 1.1; letter-spacing: -.03em;
+  color: var(--text); max-width: 15em; margin: 0 0 26px;
 }
 .story-intro {
   max-width: 42em; margin: 0;
@@ -803,10 +816,10 @@ body.cs-lock { overflow: hidden; }
 .story-intro + .story-intro { margin-top: 18px; }
 /* Placeholder image in the right column */
 .story-head-media {
-  aspect-ratio: 4 / 5; border-radius: 4px 4px 0 0; overflow: hidden;
-  align-self: end;   /* anchor the portrait to the bottom edge of the hero */
+  height: calc(100vh - 132px); border-radius: 4px; overflow: hidden;   /* fills the hero down to the bottom edge */
+  position: sticky; top: 100px; align-self: start;   /* stay pinned while the text/prose scroll, until the timeline */
 }
-.story-head-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.story-head-media img { width: 100%; height: 100%; object-fit: cover; object-position: center top; display: block; }
 
 /* Hero content fades up from below on load (About page) */
 @keyframes story-hero-up {
@@ -828,16 +841,36 @@ body.cs-lock { overflow: hidden; }
 
 /* About / "what I've built" prose block under the intro */
 .story-about { padding-top: 82px; }   /* match the story-head → story-about gap to the story-about → story-band gap (≈90px) */
-.story-about .prose h2:first-child { margin-top: 0; }
+.story-about h2:first-child { margin-top: 0; }
+.story-about p { font-family: 'Merriweather', Georgia, serif; font-weight: 300; }
+/* Condensed facts list with bold accent leads + dividers */
+.about-list { margin-top: 8px; }
+.story-about .about-item {
+  margin: 0; max-width: none;
+  padding: 22px 0; border-top: 1px solid var(--border-soft);
+  font-family: var(--font); font-weight: 400; color: var(--text);
+  font-size: clamp(1.05rem, 1.5vw, 1.22rem); line-height: 1.5;
+}
+.story-about .about-item:first-child { border-top: 0; padding-top: 0; }
+.about-item strong { color: var(--primary); font-weight: 700; }
+/* Company logo lockup — small 1:1 squares, 2px rounded */
+.logo-lockup { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+.logo-chip {
+  width: 60px; aspect-ratio: 1 / 1; border-radius: 2px; overflow: hidden;
+  background: rgba(255,255,255,.05); border: 1px solid var(--border);
+  display: grid; place-items: center;
+}
+.logo-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* Centered "My story" band that opens the timeline */
 .story-band { text-align: center; padding-block: 90px 10px; }
 .story-band h2 {
-  font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; letter-spacing: -.02em;
+  font-size: clamp(3rem, 7.5vw, 5.25rem); font-weight: 700; line-height: 1; letter-spacing: -.02em;
 }
 .story-lead {
   max-width: 40em; margin: 28px auto 0; text-align: center;
-  font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 600; line-height: 1.4;
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 400; line-height: 1.5;
 }
 
 /* ── The rail ───────────────────────────────────────────────────── */
@@ -1020,7 +1053,7 @@ body.cs-lock { overflow: hidden; }
   color: var(--primary); margin-bottom: 16px;
 }
 .globe-intro h2 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
-.globe-intro .globe-sub { color: var(--text-muted); max-width: 34em; margin: 0 auto 18px; }
+.globe-intro .globe-sub { font-family: 'Merriweather', Georgia, serif; font-weight: 300; color: var(--text-muted); max-width: 34em; margin: 0 auto 18px; }
 .globe-scrollcue { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-dim); }
 
 /* Current-city label during the journey */
@@ -1071,7 +1104,7 @@ body.cs-lock { overflow: hidden; }
   .tl-card::before { display: none; }   /* drop the blurred parallax backdrop on mobile (it overflowed the card) */
   .tl-year { padding: 2px 0; background: none; }
   .story-head-grid { grid-template-columns: 1fr; gap: 32px; padding-inline: 20px; }
-  .story-head-media { aspect-ratio: 4 / 5; max-width: 320px; align-self: auto; justify-self: center; order: -1; }
+  .story-head-media { aspect-ratio: 4 / 5; height: auto; max-width: 320px; align-self: auto; justify-self: center; order: -1; position: static; }
   .footer-inner { justify-content: center; text-align: center; }
   .footer-nav { justify-content: center; width: 100%; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }

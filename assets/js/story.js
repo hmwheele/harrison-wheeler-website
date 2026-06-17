@@ -94,20 +94,22 @@
     update();
   })();
 
-  /* ── 1c. Street View backdrop for the 1996 chapter (fade in/out) ── */
+  /* ── 1c. Fade the hero intro as it scrolls up out of view ────── */
   (function () {
-    var bg = document.querySelector('[data-sv-bg]');
-    var row = document.querySelector('.tl-hold .tl-row') ||
-              document.querySelector('.timeline-rail .tl-row');   // the 1996 (Street View) row
-    if (!bg || !row) return;
-    function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+    if (reduceMotion) return;
+    var els = Array.prototype.slice.call(
+      document.querySelectorAll('.story-head-text > h1, .story-head-text > .story-tagline, .story-head-text > .story-intro'));
+    if (!els.length) return;
     var ticking = false;
     function update() {
       ticking = false;
-      var r = row.getBoundingClientRect();
-      var vh = window.innerHeight || document.documentElement.clientHeight;
-      var d = (r.top + r.height / 2 - vh / 2) / vh;   // 0 when the row is centred
-      bg.style.opacity = clamp01(1 - Math.abs(d) / 0.42).toFixed(3);
+      els.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        var start = 80;                          // fully visible until its top passes 80px from the top
+        if (r.top >= start) { if (el.style.opacity) el.style.opacity = ''; return; }
+        var o = (r.top + r.height) / (start + r.height);   // 1 at the threshold → 0 once above the top
+        el.style.opacity = (o < 0 ? 0 : o > 1 ? 1 : o).toFixed(3);
+      });
     }
     window.addEventListener('scroll', function () {
       if (!ticking) { requestAnimationFrame(update); ticking = true; }
@@ -362,7 +364,7 @@
     function apply(p) {
       var vh = window.innerHeight || document.documentElement.clientHeight;
       var lat, lng, alt, dark, introOp, shift, showPlace = false, cityIdx = 0, rp = 0, ctaUp = 1, freeWanted = false;
-      var down = vh * SHIFT_VH;
+      var down = vh * SHIFT_VH + 128;   // extra 128px of breathing room above the globe
 
       if (p < ZIN) {                        // arrive → slow spin over SF, then sweep into the first city
         var t = smooth(p / ZIN);

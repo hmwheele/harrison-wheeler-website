@@ -12,18 +12,6 @@ window.CASE_STUDIES = {
     body: [
       '<h1>Building a Surface for Growth</h1>',
       '<p class="cs-deck">How a self-serve mandate became the foundation for experimentation, lifecycle thinking, and a new audience for Campaign Manager — and how a usability problem everyone had deprioritized became the business case for a new top-level surface.</p>',
-      '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
-  '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
-  '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Compounding debt</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Marketing lifecycle</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">The buy-in journey</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Marketing Overview</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Outcomes</span></div>' +
-  '</div></div>' +
-  '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
-'</div>',
-
       '<h2 id="overview">Overview</h2>',
       '<p>LinkedIn Marketing Solutions was an enterprise product moving toward self-serve. Three things were true at the same time, and none of them were connected: there was a company-wide mandate to fix product quality, a company-wide bet on self-serve to bring in more customers, and proof — from campaign boosting on the consumer side — that self-serve actually worked. My job was to build the connective tissue between them: a single surface, grounded in how marketers actually work over time, that turned a backlog of usability complaints into a funded growth strategy.</p>',
       '<ul class="bullets">',
@@ -96,18 +84,6 @@ window.CASE_STUDIES = {
     body: [
       '<h1>Pods Over Silos: Restructuring to Build Faster</h1>',
       '<p class="cs-deck">Redesigning a design organization to build faster and collaborate through the AI shift — when a Q3 deadline for the company\'s flagship AI product met a team running on empty and a system of work that was already broken.</p>',
-      '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
-  '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
-  '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
-    '<div class="cs-slide"><span class="cs-slide-tag">The old way</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Define priorities</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Roles &amp; rituals</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">The pod model</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Outcomes</span></div>' +
-  '</div></div>' +
-  '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
-'</div>',
-
       '<h2 id="overview">Overview</h2>',
       '<p>LinkedIn Marketing Solutions was organized into product areas — Campaign Manager Growth, Ad Formats &amp; Placements, Audiences, Relevance &amp; Optimization, and Measurement — but the design team worked across them as a shared services pool, taking requests from every direction. When a company-wide mandate landed to build a flagship AI-assisted product for a Q3 debut, that model buckled. This is the story of restructuring the team into <strong>pods</strong> — cross-functional, theme-driven units with shared goals and a federated priority structure — so it could move faster without burning out.</p>',
       '<ul class="bullets">',
@@ -185,11 +161,6 @@ window.CASE_STUDIES = {
   '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
   '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
     '<div class="cs-slide"><img src="assets/case_studies/events/events_hero.webp" alt="B2B Events — LinkedIn Live Events experience" loading="lazy"></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Events circa 2021</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">The events lifecycle</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Marketplace ecosystem</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Event ad experience</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Marketing &amp; sales insights</span></div>' +
   '</div></div>' +
   '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
 '</div>',
@@ -373,11 +344,6 @@ window.CASE_STUDIES = {
   '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
     '<div class="cs-slide"><img src="assets/case_studies/dualcreatorcam/dualhero.webp" alt="Dual Creator Cam — one tap, two finished videos" loading="lazy"></div>' +
     '<div class="cs-slide"><video autoplay loop muted playsinline aria-label="Rotating the phone and customizing the record button finish"><source src="assets/case_studies/dualcreatorcam/rotatingcustomization.webm" type="video/webm"></video></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Use-case survey</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">9:16 vs 16:9</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Record-button finishes</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Figma scaffold</span></div>' +
-    '<div class="cs-slide"><span class="cs-slide-tag">Media library</span></div>' +
   '</div></div>' +
   '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
 '</div>',
@@ -425,7 +391,6 @@ window.CASE_STUDIES = {
 
       '<h2 id="craft">Craft &amp; Personalization</h2>',
       '<h3>Flows</h3>',
-      '<div class="cs-figure"><span>Photo — consent flow</span></div>',
       '<p>There are deliberately <strong>no accounts</strong> — analytics run on an anonymous per-install ID with no personal data attached. What the app does need is system permission across camera, microphone, and photo library, so I designed the consent flow to request these clearly and in context rather than dumping every prompt at once.</p>',
       '<p>A <strong>four-step onboarding</strong> orients people on dual recording, settings, where their media lives, and personalizing the record button — enough to communicate value, short enough to get out of the way.</p>',
       '<div class="cs-carousel cs-carousel--portrait" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Onboarding steps">' +
@@ -439,16 +404,9 @@ window.CASE_STUDIES = {
   '<button class="cs-car-btn next" type="button" aria-label="Next step">›</button>' +
 '</div>',
       '<h3>Personalization (the 2.0 centerpiece)</h3>',
-      '<div class="cs-grid">' +
-        '<div class="cs-figure"><span>Photo — Chrome finish</span></div>' +
-        '<div class="cs-figure"><span>Photo — Matte finish</span></div>' +
-        '<div class="cs-figure"><span>Photo — Gem finish</span></div>' +
-        '<div class="cs-figure"><span>Photo — Soccer ball finish</span></div>' +
-      '</div>',
       '<p>Traveling through Asia, I saw how big personalization is in creator culture — custom cases, themed accessories, character straps. Given how many apps look alike, and that women make up slightly over half of all creators (up to 76% on TikTok and 79% on Instagram), I made the one control you stare at the whole shoot yours: four record-button finishes — Chrome, Matte, a faceted gem (with its own Metal shader), and a soccer ball — plus color themes. 2.0 also added the ability to start a Dual or Single recording straight from the <strong>Lock Screen and Control Center</strong> without opening the app, and a redesigned capture HUD with a live timer and an at-a-glance format readout.</p>',
       '<div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/dualcreatorcam/personalization.png" alt="A customized faceted-gem record button while recording fireworks" style="height:auto;object-fit:contain" loading="lazy"></div>',
       '<h3>The hard problems</h3>',
-      '<div class="cs-figure"><span>Photo — dual-crop in the camera pipeline</span></div>',
       '<ul class="bullets">',
       '<li><strong>Cropping.</strong> The product hinges on cropping one source frame into two correct aspect ratios, every frame, in real time. I pulled that geometry into a single pure function (aspect-fill: given a source extent and a target size, return the scale and crop rect) so it could be unit-tested in isolation instead of debugged live through the camera pipeline.</li>',
       '<li><strong>Stabilization.</strong> Cinematic stabilization is what makes handheld travel footage watchable, but it doesn\'t behave identically across every capture configuration — so I built an automatic fallback rather than assume it was always available. Much of this could only be verified on real hardware, which is why the TestFlight phase mattered.</li>',

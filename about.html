@@ -43,40 +43,23 @@
   </header>
 
   <main>
-    <!-- Street View backdrop for the 1996 chapter — fades in/out on scroll.
-         Replace the placeholder with a real Street View still, e.g.:
-         <img src="assets/story/streetview-1996.jpg" alt="" /> -->
-    <div class="sv-bg" data-sv-bg aria-hidden="true">
-      <img src="assets/story/streetview-1996.jpg" alt="" onerror="this.style.display='none'" />
-      <span class="sv-bg-tag">Street View · W Appleton Ave, Milwaukee, WI</span>
-    </div>
-
     <!-- ── Intro ── -->
     <section class="story-head container">
       <div class="story-head-grid">
+        <img class="hero-halftone" src="assets/halftone-radial.svg" alt="" aria-hidden="true" />
         <div class="story-head-text">
-          <p class="eyebrow">About</p>
-          <h1>Hello, I'm Harrison</h1>
-          <p class="story-intro">For over a decade I've led and grown design organizations at companies like LinkedIn and Zendesk, shaping product strategy and shipping experiences used by more than a billion people.</p>
-          <p class="story-intro">My approach to leadership is grounded in a simple belief: if you want to create something of quality that positively impacts people, your actions, values, and work ethic have to reflect that goal. Quality isn't a phase at the end of a project — it's a strategy.</p>
+          <p class="story-tagline">I build and lead design organizations and the products they ship — making quality a business strategy.</p>
+          <div class="prose story-about">
+            <div class="about-list">
+              <p class="about-item"><strong>A decade leading design at LinkedIn and Zendesk</strong> — grew Marketing Solutions from 6 to 26 designers, shaped product strategy, and shipped experiences used by more than a billion people; built Facilitator (1,000+ facilitators) and launched LeadCraft.</p>
+              <p class="about-item"><strong>Lead through the human side</strong> — safe, inclusive feedback, helping people grow through change, and earning design a real seat in business strategy.</p>
+              <p class="about-item"><strong>A builder by nature</strong> — side projects, community events, and a podcast and writing practice on design, leadership, and craft.</p>
+            </div>
+          </div>
         </div>
         <div class="story-head-media">
           <img src="assets/story/hero.png" alt="Portrait of Harrison Wheeler" loading="lazy" onerror="this.style.display='none'" />
         </div>
-      </div>
-    </section>
-
-    <!-- ── About / what I've built ── -->
-    <section class="container story-about">
-      <div class="prose">
-        <h2>What I've built</h2>
-        <p>At LinkedIn, I grew the Marketing Solutions design team from 6 to 26 designers while shipping the products advertisers around the world rely on. Along the way I built Facilitator, a FigJam tool used by over a thousand facilitators, and launched LeadCraft, a platform for design leaders navigating an era where everything — including how we work with AI — is changing.</p>
-
-        <h2>How I lead</h2>
-        <p>I care about the human side of building teams: creating safe, inclusive environments for feedback, helping people grow through change, and getting design a real seat in business strategy conversations. I speak about these topics at conferences around the world.</p>
-
-        <h2>Beyond work</h2>
-        <p>I'm a builder by nature — I tinker with side projects, host community events, and have a podcast and writing practice where I think out loud about design, leadership, and craft.</p>
       </div>
     </section>
 
@@ -112,12 +95,14 @@
         </div>
       </article>
 
-      <!-- 1996 — Milwaukee — held (sticky) so the Street View chapter lingers -->
-      <div class="tl-hold">
-        <div class="tl-hold-sticky">
-        <article class="tl-row">
+      <!-- 1996 — Milwaukee -->
+      <article class="tl-row">
+        <div class="tl-media" data-reveal="left">
+          <img src="assets/story/streetview-1996.jpg" alt="Street View — W Appleton Ave, Milwaukee, WI" loading="lazy" onerror="this.style.display='none'" />
+        </div>
         <div class="tl-node" data-reveal>
-          <span class="tl-year">1996</span>        </div>
+          <span class="tl-year">1996</span>
+        </div>
         <div class="tl-card" data-reveal="right">
           <p class="tl-place">Milwaukee, Wisconsin</p>
           <h3>It started with what was taken away</h3>
@@ -125,9 +110,7 @@
             Growing up in Milwaukee, Wisconsin, my family's home was burglarized while we were away at summer camp. It was devastating. But in the aftermath, my father's organization donated a computer to our household. It was an old, unbranded machine running Windows — essentially a blank canvas. I started spending Fridays at Barnes &amp; Noble reading PC magazines, figuring out which parts I needed — a sound card, a graphics card, a 56K modem — until I had a machine that could run Microsoft Flight Simulator online and host my first website on Yahoo GeoCities.
           </p>
         </div>
-        </article>
-        </div>
-      </div><!-- /.tl-hold -->
+      </article>
 
       <!-- 1998 — Milwaukee -->
       <article class="tl-row reverse">
