@@ -901,7 +901,7 @@ body.cs-lock { overflow: hidden; }
 }
 
 /* ── The rail ───────────────────────────────────────────────────── */
-.timeline-rail { position: relative; max-width: var(--max); margin: 0 auto; padding: 24px 32px 80px; }
+.timeline-rail { position: relative; max-width: var(--max); margin: 0 auto; padding: 72px 32px 80px; }
 /* Continuous central spine */
 .timeline-rail::before {
   content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
@@ -1004,7 +1004,7 @@ body.cs-lock { overflow: hidden; }
   letter-spacing: .18em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;
 }
 .tl-card h3 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
-.tl-body { font-family: 'Merriweather', Georgia, serif; font-weight: 300; color: var(--text); line-height: 1.8; max-width: 34em; }
+.tl-body { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; color: #fff; line-height: 1.8; max-width: 34em; }
 
 /* Smaller blurred copy of the row's image, sitting behind the text and
    drifting on scroll (parallax). story.js sets --tl-card-img to the row's
@@ -1020,7 +1020,7 @@ body.cs-lock { overflow: hidden; }
   background: var(--tl-card-img, linear-gradient(135deg, #3a3747, #262430 55%, #18171f));
   background-size: cover; background-position: center;
   filter: blur(14px);
-  opacity: .55;
+  opacity: .32;
   pointer-events: none;
   will-change: transform;
 }
@@ -1080,7 +1080,7 @@ body.cs-lock { overflow: hidden; }
   color: var(--primary); margin-bottom: 16px;
 }
 .globe-intro h2 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
-.globe-intro .globe-sub { font-family: 'Merriweather', Georgia, serif; font-weight: 300; color: var(--text-muted); max-width: 34em; margin: 0 auto 18px; }
+.globe-intro .globe-sub { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; line-height: 1.8; color: #fff; max-width: 34em; margin: 0 auto 18px; }
 .globe-scrollcue { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-dim); }
 
 /* Current-city label during the journey */
@@ -1119,7 +1119,7 @@ body.cs-lock { overflow: hidden; }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 860px) {
-  .timeline-rail { padding: 16px 20px 56px; }
+  .timeline-rail { padding: 48px 20px 56px; }
   .timeline-rail::before { display: none; }   /* drop the detached/floating spine on mobile */
   .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 14px; padding-left: 0; margin-bottom: 104px; }
   .tl-hold { height: 170vh; }

@@ -177,7 +177,7 @@
         .width(mount.clientWidth)
         .height(mount.clientHeight)
         .backgroundColor('rgba(0,0,0,0)')
-        .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+        .globeImageUrl('assets/textures/earth-night-3600.jpg')   // 3600×1800 NASA Black Marble (vs the 2K example texture)
         .atmosphereColor(ACCENT)
         .atmosphereAltitude(0.18)
         // Glowing points at each city
