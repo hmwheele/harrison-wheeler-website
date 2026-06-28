@@ -262,6 +262,11 @@
     // Static fallback: reduced motion, mobile/touch, or the scrolly section is missing.
     if (reduceMotion || isMobile || !section) {
       if (section) section.classList.add('is-static');
+      // is-static resizes the wrap (e.g. 380px tall on mobile); the canvas was
+      // sized to the pre-static layout, so re-fit it to the new layout. Reading
+      // clientWidth in resize() forces the reflow, so do it now + on the next frame.
+      resize();
+      requestAnimationFrame(resize);
       world.pointOfView({ lat: 18, lng: 110, altitude: isMobile ? 2.4 : FAR }, 0);
       if (!reduceMotion) { controls.autoRotate = true; controls.autoRotateSpeed = 0.5; }
       // On mobile, don't let the globe capture touch — taps/drags should scroll the

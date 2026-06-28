@@ -404,6 +404,8 @@ ul { list-style: none; }
 }
 /* Section subtext under Community / Select work uses the light-pink accent */
 .head-sub.prose { color: var(--light-pink); }
+/* "Let's work together" CTA supporting text — white */
+.cta-section .head-sub, .globe-cta .head-sub { color: #fff; }
 
 /* Parallax header — pins to the top, then the following content scrolls up
    over it (z-index + opaque bg) while the header fades (opacity/translateY in main.js). */
