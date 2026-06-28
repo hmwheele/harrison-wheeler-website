@@ -250,6 +250,38 @@
     update();
   })();
 
+  /* ── Podcast: rows drift horizontally + tile field rises on scroll ─ */
+  (function () {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var section = document.querySelector('.podcast');
+    if (!section) return;
+    var guests = section.querySelector('[data-podcast-guests]');
+    var rows = section.querySelectorAll('.podcast-row');
+    if (!guests || !rows.length) return;
+    var ticking = false;
+    function update() {
+      var rect = section.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      // t: -1 entering from below, 0 centered, +1 leaving past the top.
+      var center = rect.top + rect.height / 2;
+      var t = (vh / 2 - center) / (vh / 2 + rect.height / 2);
+      t = Math.max(-1, Math.min(1, t));
+      // Whole tile field rises gently as you scroll down (parallax).
+      guests.style.transform = 'translate3d(0,' + (t * -28) + 'px,0)';
+      // Each row drifts sideways by its own amount/direction (set via data-px).
+      rows.forEach(function (row) {
+        var px = parseFloat(row.getAttribute('data-px')) || 0;
+        row.style.transform = 'translate3d(' + (t * px) + 'px,0,0)';
+      });
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
+  })();
+
   /* ── Current year in footer ─────────────────────────────────── */
   document.querySelectorAll('[data-year]').forEach(function (el) {
     el.textContent = new Date().getFullYear();

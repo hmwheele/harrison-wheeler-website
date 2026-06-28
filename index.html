@@ -51,19 +51,47 @@
   {
     "@context": "https://schema.org",
     "@type": "Person",
+    "@id": "https://www.harrisonwheeler.com/#person",
+    "mainEntityOfPage": "https://www.harrisonwheeler.com/",
     "name": "Harrison Wheeler",
+    "givenName": "Harrison",
+    "familyName": "Wheeler",
     "url": "https://www.harrisonwheeler.com/",
     "image": "https://www.harrisonwheeler.com/assets/og-image.jpg",
-    "jobTitle": "Design Leader",
+    "jobTitle": "Design Leader & Founder",
     "description": "Design leader who has spent over a decade leading design teams at companies like LinkedIn and Zendesk — scaling organizations and shipping products used by more than a billion people.",
+    "worksFor": {
+      "@type": "Organization",
+      "name": "LeadCraft"
+    },
+    "homeLocation": {
+      "@type": "Place",
+      "name": "San Francisco, California, United States"
+    },
+    "knowsAbout": [
+      "Product Design",
+      "Design Leadership",
+      "Design Systems",
+      "User Experience",
+      "Team Building",
+      "Facilitation",
+      "AI in Design"
+    ],
     "sameAs": [
       "https://www.linkedin.com/in/hmwheeler",
       "https://github.com/hmwheele",
       "https://medium.com/@hmwheele",
+      "https://technicallyspeakinghw.substack.com",
       "https://www.threads.com/@hmwheele",
       "https://bsky.app/profile/hmwheele.bsky.social",
       "https://www.youtube.com/@TechnicallySpeakingHW"
-    ]
+    ],
+    "subjectOf": {
+      "@type": "Article",
+      "name": "Amplitude Product 50: The Most Innovative People in Product",
+      "url": "https://amplitude.com/blog/product-50-winner-harrison-wheeler",
+      "publisher": { "@type": "Organization", "name": "Amplitude" }
+    }
   }
   </script>
 </head>
@@ -90,7 +118,10 @@
           <div>
             <h1>Design leader. Builder.<br />Community maker.</h1>
             <p class="lede">I've spent over a decade building products and teams at the intersection of consumer and enterprise, at companies like LinkedIn and Zendesk — scaling organizations, shaping product strategy, and shipping experiences used by more than a billion people.</p>
-            <a class="btn btn-hero" href="mailto:hello@harrisonwheeler.com">Get in touch →</a>
+            <div class="hero-actions">
+              <a class="btn btn-hero" href="mailto:hello@harrisonwheeler.com">Get in touch →</a>
+              <a class="btn btn-hero-ghost" href="https://www.linkedin.com/in/hmwheeler" target="_blank" rel="noopener">Connect on LinkedIn</a>
+            </div>
           </div>
           <div class="hero-photo">
             <span class="hello-pill" data-hello>Hello from San Francisco 🇺🇸</span>
@@ -247,8 +278,30 @@
       </div><!-- /.phead-body -->
     </div><!-- /.phead-wrap -->
 
+    <!-- ── Podcast (guest wall behind centered copy) ── -->
+    <section class="podcast section" aria-label="Podcast">
+      <div class="podcast-guests" data-podcast-guests aria-hidden="true">
+        <div class="podcast-row" data-px="-120">
+          <span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span>
+        </div>
+        <div class="podcast-row" data-px="70">
+          <span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span>
+        </div>
+        <div class="podcast-row" data-px="-60">
+          <span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span><span class="podcast-guest"></span>
+        </div>
+      </div>
+      <div class="podcast-overlay">
+        <div class="section-head head-display head-gt">
+          <h2>Podcast</h2>
+        </div>
+        <p class="prose head-sub">Technically Speaking — candid conversations with designers, builders, and leaders on craft, careers, and the human side of building products and teams.</p>
+        <a class="btn btn-primary podcast-cta" href="https://technicallyspeakinghw.com" target="_blank" rel="noopener">Listen now</a>
+      </div>
+    </section>
+
     <!-- ── Community (talks · writing · events — parallax header) ── -->
-    <section class="container section">
+    <section class="container section" data-reveal-up>
       <div class="phead-wrap">
         <div class="phead">
           <div data-phead>
@@ -330,7 +383,7 @@
       <p class="head-sub">I'm available for speaking engagements, leadership coaching, and advisory work with product and design teams.</p>
       <div class="cta-actions">
         <a class="btn btn-primary" href="mailto:hello@harrisonwheeler.com">Get in touch</a>
-        <a class="btn btn-ghost" href="https://www.joinleland.com/coach/harrison-w-1" target="_blank" rel="noopener">Book a coaching session</a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/hmwheeler" target="_blank" rel="noopener">Connect on LinkedIn</a>
       </div>
     </section>
   </main>

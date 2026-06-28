@@ -103,7 +103,7 @@ ul { list-style: none; }
   gap: 8px;
   font-family: var(--font);
   font-size: .9rem;
-  font-weight: 400;
+  font-weight: 600;
   padding: 11px 22px;
   border-radius: 100px;
   border: 1px solid transparent;
@@ -113,7 +113,7 @@ ul { list-style: none; }
 }
 .btn-primary { background: var(--primary); color: var(--on-primary); }
 .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
-.btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-ghost { background: transparent; color: var(--text); border-color: #fff; }
 .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
 /* Hero CTA — largest button on the page */
 .btn-hero {
@@ -127,6 +127,14 @@ ul { list-style: none; }
   font-weight: 500;
 }
 .btn-hero:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+/* Secondary hero CTA — same size as .btn-hero, ghost styling */
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.btn-hero-ghost {
+  background: transparent; color: var(--text);
+  border: 1px solid var(--border); border-radius: 48px;
+  padding: 1rem 2rem; font-family: var(--font); font-size: 1.25rem; font-weight: 500;
+}
+.btn-hero-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
 
 /* ── Nav ────────────────────────────────────────────────────────── */
 .nav {
@@ -174,6 +182,29 @@ ul { list-style: none; }
 
 /* ── Sections ───────────────────────────────────────────────────── */
 .section { padding-block: var(--gap); }
+/* ── Podcast: centered copy over a wall of placeholder guest tiles ── */
+.podcast { position: relative; overflow: hidden; text-align: center; min-height: 480px; display: grid; place-items: center; }
+.podcast-guests {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  display: flex; flex-direction: column; justify-content: center; gap: 16px;
+  will-change: transform;
+}
+.podcast-row { display: flex; gap: 16px; justify-content: center; flex-wrap: nowrap; will-change: transform; }
+.podcast-guest { flex: 0 0 auto; width: clamp(84px, 9vw, 118px); aspect-ratio: 1 / 1; border-radius: 6px; background: var(--surface-2); }
+/* Scrim so the centered copy stays readable over the tiles. */
+.podcast::before {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: radial-gradient(ellipse 58% 72% at 50% 50%, var(--bg) 0%, var(--bg) 32%, rgba(13, 12, 17, .72) 58%, transparent 100%);
+}
+.podcast-overlay { position: relative; z-index: 2; max-width: 40em; margin: 0 auto; padding-inline: 24px; }
+.podcast-overlay .head-sub { margin: 16px auto 0; }
+.podcast-cta { margin-top: 28px; }
+@media (max-width: 860px) {
+  .podcast { min-height: 420px; }
+  .podcast-guests { gap: 12px; }
+  .podcast-row { gap: 12px; }
+  .podcast-guest { width: clamp(60px, 18vw, 96px); }
+}
 .section-head h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 800; letter-spacing: -.02em; }
 .section-head { margin-bottom: 40px; }
 
@@ -263,7 +294,7 @@ ul { list-style: none; }
 .hero-grid > div:first-child > *:nth-child(3) { animation-delay: .26s; }
 .hero-photo { animation-delay: .55s; }   /* image comes in after the left-side text */
 /* The hero "Get in touch" button slides in from the left instead of up */
-.hero-grid > div:first-child > .btn-hero { animation-name: hero-cta-left; }
+.hero-grid > div:first-child > .hero-actions { animation-name: hero-cta-left; }
 @keyframes hero-cta-left {
   from { opacity: 0; transform: translateX(-32px); }
   to   { opacity: 1; transform: none; }
@@ -1063,15 +1094,17 @@ body.cs-lock { overflow: hidden; }
 .globe-wrap canvas { display: block; }
 
 /* City labels on the globe (HTML elements) — IBM Plex Mono, shown only while zoomed in */
+.globe-label-anchor { position: relative; pointer-events: none; }
 .globe-label {
-  font-family: 'IBM Plex Mono', var(--mono);
-  font-size: 12px; font-weight: 500; letter-spacing: .06em;
-  color: var(--primary); white-space: nowrap;
+  position: absolute; bottom: 10px; right: 10px;   /* sits above-left of the city dot, clear of the flight line */
+  font-family: 'GT America', var(--font);
+  font-size: 24px; font-weight: 700; letter-spacing: .01em;
+  color: #fff; white-space: nowrap;
   text-shadow: 0 1px 8px rgba(0, 0, 0, .95);
   pointer-events: none; user-select: none;
   opacity: 0; transition: opacity .4s ease;
 }
-.globe-wrap.labels-on .globe-label { opacity: 1; }
+.globe-label-anchor.show .globe-label { opacity: 1; }
 
 /* Intro / 2025 header — pinned at the top of the stage, above the globe */
 .globe-intro { position: relative; z-index: 3; max-width: 40em; padding: 11vh 24px 0; }
@@ -1116,6 +1149,14 @@ body.cs-lock { overflow: hidden; }
   width: 100%; max-width: 680px; height: 520px; margin: 28px auto 0;
 }
 .globe-scrolly.is-static .globe-place { display: none; }
+/* In static mode there's no scroll journey: drop the blackout + scroll cue, and
+   let the "Let's work together" CTA sit in normal flow (it's otherwise translated
+   off-screen by --cta-up, which only the scroll journey animates). */
+.globe-scrolly.is-static .globe-blackout { display: none; }
+.globe-scrolly.is-static .globe-scrollcue { display: none; }
+.globe-scrolly.is-static .globe-cta {
+  position: static; transform: none; padding: 32px 24px 8px;
+}
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 860px) {

@@ -10,6 +10,14 @@
   var reduceMotion = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Small / touch screens: the pinned (position:sticky) scroll-driven WebGL globe
+  // stalls rAF during momentum scroll on mobile (iOS especially), so the globe
+  // appears to freeze. On these devices we skip the scroll journey and show the
+  // lightweight auto-rotating globe in normal page flow instead.
+  var isMobile = !!(window.matchMedia &&
+    (window.matchMedia('(max-width: 860px)').matches ||
+     window.matchMedia('(hover: none) and (pointer: coarse)').matches));
+
   /* ── 1. Fade in / fade out on scroll ─────────────────────────── */
   (function () {
     var els = document.querySelectorAll('[data-reveal]');
@@ -126,18 +134,27 @@
     { city: 'Kyoto',           country: 'Japan',       lat:  35.0116, lng: 135.7681 },
     { city: 'Busan',           country: 'South Korea', lat:  35.1796, lng: 129.0756 },
     { city: 'Seoul',           country: 'South Korea', lat:  37.5665, lng: 126.9780 },
+    { city: 'Jeju',            country: 'South Korea', lat:  33.4996, lng: 126.5312 },
     { city: 'Shanghai',        country: 'China',       lat:  31.2304, lng: 121.4737 },
     { city: 'Chengdu',         country: 'China',       lat:  30.5728, lng: 104.0668 },
     { city: 'Chongqing',       country: 'China',       lat:  29.4316, lng: 106.9123 },
     { city: 'Hong Kong',       country: 'China',       lat:  22.3193, lng: 114.1694 },
     { city: 'Taipei',          country: 'Taiwan',      lat:  25.0330, lng: 121.5654 },
+    { city: 'Kaohsiung',       country: 'Taiwan',      lat:  22.6273, lng: 120.3014 },
     { city: 'Hanoi',           country: 'Vietnam',     lat:  21.0278, lng: 105.8342 },
+    { city: 'Da Nang',         country: 'Vietnam',     lat:  16.0544, lng: 108.2022 },
     { city: 'Bangkok',         country: 'Thailand',    lat:  13.7563, lng: 100.5018 },
     { city: 'Ho Chi Minh City',country: 'Vietnam',     lat:  10.8231, lng: 106.6297 },
     { city: 'Singapore',       country: 'Singapore',   lat:   1.3521, lng: 103.8198 },
     { city: 'Bali',            country: 'Indonesia',   lat:  -8.4095, lng: 115.1889 },
     { city: 'Sydney',          country: 'Australia',   lat: -33.8688, lng: 151.2093 }
   ];
+
+  // Home base — the trip starts here. Shown on the globe as its own marker/label,
+  // but kept out of PLACES so it isn't treated as a journey stop.
+  var HOME = { city: 'San Francisco', country: 'United States', lat: 37.7749, lng: -122.4194 };
+  // Everything that gets a dot + label on the globe: home base, then every stop.
+  var MARKERS = [HOME].concat(PLACES);
 
   var wrap = document.getElementById('globe-wrap');
   var mount = document.getElementById('globe');
@@ -180,8 +197,8 @@
         .globeImageUrl('assets/textures/earth-night-3600.jpg')   // 3600×1800 NASA Black Marble (vs the 2K example texture)
         .atmosphereColor(ACCENT)
         .atmosphereAltitude(0.18)
-        // Glowing points at each city
-        .pointsData(PLACES)
+        // Glowing points at each city (incl. San Francisco home base)
+        .pointsData(MARKERS)
         .pointLat('lat').pointLng('lng')
         .pointColor(function () { return ACCENT; })
         .pointAltitude(0.035)
@@ -189,13 +206,17 @@
         .pointsMerge(false)
         .pointsTransitionDuration(700)     // markers fade/shrink when cleared at the end
         // City labels as HTML elements so we can use the IBM Plex Mono web font
-        .htmlElementsData(PLACES)
+        .htmlElementsData(MARKERS)
         .htmlLat('lat').htmlLng('lng')
         .htmlElement(function (d) {
+          var anchor = document.createElement('div');
+          anchor.className = 'globe-label-anchor';
+          anchor.dataset.idx = MARKERS.indexOf(d) - 1;   // which leg must finish before this label shows (home base = -1, shows from the start)
           var el = document.createElement('div');
           el.className = 'globe-label';
           el.textContent = d.city;
-          return el;
+          anchor.appendChild(el);
+          return anchor;
         })
         // Flight-path arcs between visited cities (revealed as the journey traces)
         .arcStartLat(function (d) { return d.startLat; })
@@ -238,11 +259,14 @@
     var FAR  = 5.0;   // zoomed-out altitude — small whole globe that fits below the header
     var NEAR = 0.62;  // zoomed-in altitude — half / region, spans the width (the journey)
 
-    // Static fallback: reduced motion, or the scrolly section is missing.
-    if (reduceMotion || !section) {
+    // Static fallback: reduced motion, mobile/touch, or the scrolly section is missing.
+    if (reduceMotion || isMobile || !section) {
       if (section) section.classList.add('is-static');
-      world.pointOfView({ lat: 18, lng: 110, altitude: FAR }, 0);
+      world.pointOfView({ lat: 18, lng: 110, altitude: isMobile ? 2.4 : FAR }, 0);
       if (!reduceMotion) { controls.autoRotate = true; controls.autoRotateSpeed = 0.5; }
+      // On mobile, don't let the globe capture touch — taps/drags should scroll the
+      // page. autoRotate still runs via the render loop even with controls disabled.
+      if (isMobile) controls.enabled = false;
       document.addEventListener('visibilitychange', function () {
         if (!reduceMotion) controls.autoRotate = !document.hidden;
       });
@@ -253,7 +277,7 @@
     controls.autoRotate = false;
     controls.enabled = false;              // scroll fully drives the camera
 
-    var SF = { lat: 37.7749, lng: -122.4194 };   // home base — globe starts here
+    var SF = HOME;   // home base — globe starts here (also a marker via MARKERS)
     world.pointOfView({ lat: SF.lat, lng: SF.lng, altitude: FAR }, 0);
 
     function lerp(a, b, t) { return a + (b - a) * t; }
@@ -318,6 +342,17 @@
       world.arcsData(arcs);
     }
 
+    // Show each city's label once its flight line is ≥80% of the way there.
+    // Re-query every frame: globe.gl adds/removes label nodes as cities rotate
+    // into view, so a cached list would miss most of them.
+    function updateLabels(rp, active) {
+      var els = mount.querySelectorAll('.globe-label-anchor');
+      for (var i = 0; i < els.length; i++) {
+        var idx = parseInt(els[i].dataset.idx, 10) || 0;
+        els[i].classList.toggle('show', active && rp >= idx + 0.8);
+      }
+    }
+
     // Free mode (at the footer): fade out markers + lines, slow auto-spin, draggable.
     var freeMode = false, freeLat = 0, freeLng = 0, dragging = false, lastX = 0, lastY = 0;
     var FREE_SPIN = 5;                       // free-mode auto-rotation (deg/sec)
@@ -334,7 +369,7 @@
       // Glide the camera from the free spin back to the docked orientation instead of snapping it.
       world.pointOfView({ lat: toLat, lng: toLng, altitude: toAlt }, EXIT_MS);
       exitT = EXIT_MS;
-      world.pointsData(PLACES);             // markers return
+      world.pointsData(MARKERS);            // markers return (incl. home base)
       arcFading = true; arcDir = 1; arcFadeMs = EXIT_MS;        // flight lines fade back in
       arcFadeT = arcAlpha * EXIT_MS;        // continue from the current (faded) alpha
       world.arcsData(fullRouteArcs());
@@ -396,7 +431,11 @@
       } else {                              // journey → glide continuously along the path
         dark = 1; introOp = 0; alt = NEAR; shift = 0; showPlace = true;
         var jp = (p - ZIN) / (ZOUT - ZIN);
-        var seg = jp * (PLACES.length - 1);
+        // Reach the final city by HOLD of the journey, then dwell on it so the
+        // last stop (e.g. Sydney) gets real screen time instead of flashing at the boundary.
+        var HOLD = 0.92;
+        var sp = jp < HOLD ? (jp / HOLD) : 1;
+        var seg = sp * (PLACES.length - 1);
         var k = Math.floor(seg), f = seg - k;   // linear f — flows without pausing at each city
         lat = spline(k, 'lat', f);
         lng = spline(k, 'lng', f);
@@ -414,7 +453,9 @@
         }
       }
       wrap.style.setProperty('--globe-shift', Math.round(shift) + 'px');
-      wrap.classList.toggle('labels-on', showPlace);   // labels only during the journey
+      // A city label fades in once its flight line is ≥80% of the way there.
+      // PLACES[i] is the end of route leg i, so the line reaches it at rp = i + 1.
+      updateLabels(rp, p < ZOUT);
       if (ctaEl) ctaEl.style.setProperty('--cta-up', clamp01(ctaUp).toFixed(3));
       if (blackout) blackout.style.opacity = dark.toFixed(3);
       if (intro) {
