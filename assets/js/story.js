@@ -261,8 +261,10 @@
     var FAR  = 5.0;   // zoomed-out altitude — small whole globe that fits below the header
     var NEAR = 0.62;  // zoomed-in altitude — half / region, spans the width (the journey)
 
-    // Static fallback: reduced motion, mobile/touch, or the scrolly section is missing.
-    if (reduceMotion || isMobile || !section) {
+    // Static fallback: reduced motion or the scrolly section is missing.
+    // (Mobile runs the scroll-driven journey too — the canvas is pointer-events:none
+    // on mobile so touches scroll the page, which drives the camera.)
+    if (reduceMotion || !section) {
       if (section) section.classList.add('is-static');
       // is-static resizes the wrap (e.g. 380px tall on mobile); the canvas was
       // sized to the pre-static layout, so re-fit it to the new layout. Reading
