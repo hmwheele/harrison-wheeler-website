@@ -97,44 +97,28 @@ ul { list-style: none; }
 }
 
 /* ── Buttons ────────────────────────────────────────────────────── */
+/* One size + shape for every text button; only the fill/ghost colors differ. */
 .btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   font-family: var(--font);
-  font-size: .9rem;
-  font-weight: 600;
-  padding: 11px 22px;
+  font-size: 1.05rem;
+  font-weight: 500;
+  padding: 14px 28px;
   border-radius: 100px;
-  border: 1px solid transparent;
+  border: 0.5px solid transparent;
   cursor: pointer;
   transition: background .2s, color .2s, border-color .2s, transform .15s;
   white-space: nowrap;
 }
-.btn-primary { background: var(--primary); color: var(--on-primary); }
-.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
-.btn-ghost { background: transparent; color: var(--text); border-color: #fff; }
-.btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
-/* Hero CTA — largest button on the page */
-.btn-hero {
-  border-style: none;
-  background-color: var(--primary);       /* lighter purple */
-  color: var(--on-primary);               /* even darker purple */
-  border-radius: 48px;
-  padding: 1rem 2rem;
-  font-family: var(--font);
-  font-size: 1.25rem;
-  font-weight: 500;
-}
-.btn-hero:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
-/* Secondary hero CTA — same size as .btn-hero, ghost styling */
+/* Filled (primary) variant */
+.btn-primary, .btn-hero { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+.btn-primary:hover, .btn-hero:hover { background: var(--primary-hover); transform: translateY(-1px); }
+/* Ghost (secondary) variant */
+.btn-ghost, .btn-hero-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+.btn-ghost:hover, .btn-hero-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
-.btn-hero-ghost {
-  background: transparent; color: var(--text);
-  border: 1px solid var(--border); border-radius: 48px;
-  padding: 1rem 2rem; font-family: var(--font); font-size: 1.25rem; font-weight: 500;
-}
-.btn-hero-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
 
 /* ── Nav ────────────────────────────────────────────────────────── */
 .nav {
@@ -487,8 +471,6 @@ main > .phead-wrap { padding-top: var(--gap); }
 
 /* ── CTA band ───────────────────────────────────────────────────── */
 .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 30px; }
-/* Larger buttons under "Let's work together" */
-.cta-actions .btn { font-size: 1.05rem; padding: 15px 32px; }
 .cta-section { padding-bottom: clamp(120px, 18vh, 200px); }
 
 /* ── Footer ─────────────────────────────────────────────────────── */
@@ -977,6 +959,7 @@ body.cs-lock { overflow: hidden; }
   border: 1px solid var(--border);
   background: linear-gradient(135deg, #2a2833, #3a3747);
   position: relative;
+  width: 90%; justify-self: center;   /* trim the photo width by 10% */
 }
 .tl-media img, .tl-media iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
 /* Once a real photo loads, the well conforms to the image's own dimensions

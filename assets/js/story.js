@@ -194,7 +194,9 @@
         .width(mount.clientWidth)
         .height(mount.clientHeight)
         .backgroundColor('rgba(0,0,0,0)')
-        .globeImageUrl('assets/textures/earth-night-3600.jpg')   // 3600×1800 NASA Black Marble (vs the 2K example texture)
+        // Desktop gets the hi-res 3600×1800 map; mobile gets a 2048×1024 power-of-two
+        // texture — large/NPOT textures fail to decode on many mobile GPUs (black globe).
+        .globeImageUrl(isMobile ? 'assets/textures/earth-night-2048.jpg' : 'assets/textures/earth-night-3600.jpg')
         .atmosphereColor(ACCENT)
         .atmosphereAltitude(0.18)
         // Glowing points at each city (incl. San Francisco home base)
