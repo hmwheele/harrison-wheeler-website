@@ -1145,6 +1145,9 @@ body.cs-lock { overflow: hidden; }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 860px) {
+  /* Full-width, stacked buttons on mobile */
+  .hero-actions, .cta-actions { flex-direction: column; align-items: stretch; }
+  .btn { width: 100%; justify-content: center; }
   .timeline-rail { padding: 48px 20px 56px; }
   .timeline-rail::before { display: none; }   /* drop the detached/floating spine on mobile */
   .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 14px; padding-left: 0; margin-bottom: 104px; }
