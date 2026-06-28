@@ -71,7 +71,7 @@
     }
     path.setAttribute('d', d);
 
-    var phrase = 'The experiences a team delivers reflect the culture you build.  ';
+    var phrase = 'Design leader. Creator. Builder. Community maker. ';
     tp.textContent = phrase.repeat(14);
 
     // The path is static; we move the text ALONG it by shifting startOffset,
@@ -293,6 +293,25 @@
     }, { passive: true });
     window.addEventListener('resize', update, { passive: true });
     update();
+  })();
+
+  /* ── Home: reveal the nav brand only after scrolling past the hero ── */
+  (function () {
+    if (!document.body.classList.contains('home')) return;
+    var hero = document.querySelector('.hero');
+    var nav = document.querySelector('.nav');
+    if (!hero) return;
+    var ticking = false;
+    function check() {
+      var navH = nav ? nav.offsetHeight : 64;
+      document.body.classList.toggle('show-brand', hero.getBoundingClientRect().bottom <= navH);
+      ticking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { requestAnimationFrame(check); ticking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', check, { passive: true });
+    check();
   })();
 
   /* ── Current year in footer ─────────────────────────────────── */

@@ -137,6 +137,7 @@ ul { list-style: none; }
 /* Fade the backdrop in once the user scrolls past the viewport (toggled in main.js) */
 .nav.scrolled::before { opacity: 1; }
 .nav-inner {
+  position: relative;
   max-width: var(--max); margin: 0 auto; padding: 16px 32px;
   display: flex; align-items: center; justify-content: space-between;
 }
@@ -144,7 +145,15 @@ ul { list-style: none; }
   display: inline-flex; align-items: center; gap: 10px;
   font-weight: 700; letter-spacing: -.01em; font-size: .98rem; color: var(--text);
 }
-.nav-logo-img { width: 24px; height: auto; display: block; }
+.nav-logo-img { width: 24px; height: auto; display: block; transform-origin: left top; transition: transform .3s ease; }
+.nav-logo-name { transition: opacity .25s ease, visibility .25s ease; }
+/* Home: the hero already shows the name large. At the top, keep just the mark and
+   hide the name; once scrolled past the hero, shrink the mark and reveal the name.
+   The mark is enlarged with a transform (no layout reflow) so the nav links never
+   move and the position never snaps — scale 1.75 ≈ 42px, dropped 8px to sit 24px
+   from the top. */
+body.home:not(.show-brand) .nav-logo-img { transform: translateY(8px) scale(1.75); }
+body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .nav-links { display: flex; gap: 30px; align-items: center; }
 .nav-links a { font-family: var(--mono); font-size: .95rem; font-weight: 400; letter-spacing: .02em; color: #fff; transition: color .2s; }
 .nav-links a:hover { color: var(--primary); }
@@ -219,11 +228,12 @@ ul { list-style: none; }
 .hero-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 48px; align-items: center; }
 .hero h1 {
   text-align: left;
-  font-size: clamp(3rem, 7.5vw, 5.25rem);
+  font-size: clamp(3.75rem, 9.5vw, 7rem);
   font-weight: 800;
-  line-height: 1.05;
+  line-height: 1.02;
   letter-spacing: -.03em;
   margin-bottom: 24px;
+  max-width: 8ch;   /* forces "Harrison Wheeler" onto two lines */
 }
 .hero p.lede { font-family: 'Merriweather', serif; font-size: 1.25rem; font-weight: 300; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; }
 .hero-photo { position: relative; }
