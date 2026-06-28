@@ -197,8 +197,7 @@
         // Desktop gets the hi-res 3600×1800 map; mobile gets a 2048×1024 power-of-two
         // texture — large/NPOT textures fail to decode on many mobile GPUs (black globe).
         .globeImageUrl(isMobile ? 'assets/textures/earth-night-2048.jpg' : 'assets/textures/earth-night-3600.jpg')
-        .atmosphereColor(ACCENT)
-        .atmosphereAltitude(0.18)
+        .showAtmosphere(false)   // no glow — it was getting clipped at the edges of the stage
         // Glowing points at each city (incl. San Francisco home base)
         .pointsData(MARKERS)
         .pointLat('lat').pointLng('lng')
@@ -259,9 +258,7 @@
     var ctaEl    = document.querySelector('[data-globe-cta]');
 
     var FAR  = 5.0;   // zoomed-out altitude — small whole globe that fits below the header
-    // zoomed-in altitude. On mobile, pull back a bit so the globe (and its atmosphere
-    // glow) isn't clipped at the top/bottom of the narrow, full-height stage.
-    var NEAR = isMobile ? 0.95 : 0.62;
+    var NEAR = 0.62;  // zoomed-in altitude — half / region, spans the width (the journey)
 
     // Static fallback: reduced motion or the scrolly section is missing.
     // (Mobile runs the scroll-driven journey too — the canvas is pointer-events:none
