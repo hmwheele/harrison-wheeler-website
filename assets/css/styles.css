@@ -819,7 +819,7 @@ body.cs-lock { overflow: hidden; }
   .story-head {
     min-height: 92vh;
     display: flex; flex-direction: column; justify-content: flex-end;
-    padding-top: 200px; padding-bottom: 72px;
+    padding-top: 200px; padding-bottom: 64px;
   }
 }
 /* The hero heading is the .story-tagline <h1>; its size is set below. */
@@ -860,7 +860,7 @@ body.cs-lock { overflow: hidden; }
 .story-head-media { animation: story-hero-right .8s cubic-bezier(.22, 1, .36, 1) .17s both; }
 
 /* About highlights — three bordered cards under the hero */
-.story-about-band { padding-block: 56px 8px; }   /* keep .container's horizontal padding intact */
+.story-about-band { padding-block: 64px; }   /* keep .container's horizontal padding intact */
 .about-cards {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
   max-width: var(--max); margin: 0 auto;
@@ -877,8 +877,8 @@ body.cs-lock { overflow: hidden; }
 }
 .about-card p {
   margin: 0;
-  font-family: var(--font); font-weight: 400;
-  font-size: 1.15rem; line-height: 1.55; color: var(--text);
+  font-family: 'Merriweather', Georgia, serif; font-weight: 400;
+  font-size: 1.05rem; line-height: 1.65; color: var(--text);
 }
 /* Company logo lockup — small 1:1 squares, 2px rounded */
 .logo-lockup { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
@@ -890,9 +890,9 @@ body.cs-lock { overflow: hidden; }
 .logo-chip img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* Centered "My story" band that opens the timeline */
-.story-band { text-align: center; padding-block: 90px 10px; }
+.story-band { text-align: center; padding-block: 64px 24px; }
 .story-band h2 {
-  font-size: clamp(3rem, 7.5vw, 5.25rem); font-weight: 700; line-height: 1; letter-spacing: -.02em;
+  font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.05; letter-spacing: -.02em;
 }
 .story-lead {
   max-width: 40em; margin: 28px auto 0; text-align: center;
@@ -901,7 +901,7 @@ body.cs-lock { overflow: hidden; }
 }
 
 /* ── The rail ───────────────────────────────────────────────────── */
-.timeline-rail { position: relative; max-width: var(--max); margin: 0 auto; padding: 60px 32px 60px; }
+.timeline-rail { position: relative; max-width: var(--max); margin: 0 auto; padding: 24px 32px 80px; }
 /* Continuous central spine */
 .timeline-rail::before {
   content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
@@ -1119,7 +1119,7 @@ body.cs-lock { overflow: hidden; }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 860px) {
-  .timeline-rail { padding: 40px 20px; }
+  .timeline-rail { padding: 16px 20px 56px; }
   .timeline-rail::before { display: none; }   /* drop the detached/floating spine on mobile */
   .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 14px; padding-left: 0; margin-bottom: 104px; }
   .tl-hold { height: 170vh; }
@@ -1134,10 +1134,13 @@ body.cs-lock { overflow: hidden; }
   .story-head {
     min-height: 88vh;
     display: flex; flex-direction: column; justify-content: flex-end;
-    padding-top: 96px; padding-bottom: 48px;
+    padding-top: 96px; padding-bottom: 40px;
   }
   .story-head-grid { grid-template-columns: 1fr; gap: 32px; padding-inline: 20px; }
   .about-cards { grid-template-columns: 1fr; gap: 16px; }
+  /* Consistent vertical rhythm on mobile: equal section gaps, tighter myStory→timeline */
+  .story-about-band { padding-block: 40px; }
+  .story-band { padding-block: 40px 16px; }
   .footer-inner { justify-content: center; text-align: center; }
   .footer-nav { justify-content: center; width: 100%; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }
