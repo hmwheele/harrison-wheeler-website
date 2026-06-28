@@ -533,13 +533,14 @@ main > .phead-wrap { padding-top: var(--gap); }
 }
 .cs-topbar.visible { transform: translateY(0); }
 .cs-back {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: #f1f0f3; border: 1px solid #e7e5ea; border-radius: 100px;
-  padding: 8px 16px; font-size: .85rem; font-weight: 600; color: #17151b;
-  font-family: inherit; cursor: pointer; white-space: nowrap;
-  transition: background .2s;
+  width: 38px; height: 38px; border-radius: 100px;
+  background: #f1f0f3; border: 1px solid #e7e5ea;
+  display: grid; place-items: center; flex: 0 0 auto;
+  font-size: 1rem; color: #17151b;
+  font-family: inherit; cursor: pointer;
+  transition: background .2s, transform .2s;
 }
-.cs-back:hover { background: #e4e2e8; }
+.cs-back:hover { background: #e4e2e8; transform: scale(1.05); }
 .cs-topbar-title {
   font-size: .9rem; font-weight: 600; color: #17151b;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -653,10 +654,12 @@ main > .phead-wrap { padding-top: var(--gap); }
 .cs-main p { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.75; color: #36333c; margin-bottom: 16px; max-width: 42em; }
 .cs-main ul.bullets { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.7; list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
 .cs-main ul.bullets li { margin-bottom: 6px; }
-.cs-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 8px 0 24px; }
+/* Stat cells share 1px internal grid lines (the gap reveals the container bg);
+   the outer perimeter has no stroke. */
+.cs-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; margin: 8px 0 24px; background: var(--cs-border); border-radius: 12px; overflow: hidden; }
 /* blocks of exactly 4 stat cards stack 2×2 instead of a cramped single row */
 .cs-metrics:has(.cs-metric:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
-.cs-metric { background: #f6f5f8; border: 1px solid var(--cs-border); border-radius: 12px; padding: 20px; }
+.cs-metric { background: #f6f5f8; padding: 20px; }
 .cs-metric .num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; color: var(--cs-accent); }
 .cs-metric .lbl { font-size: .85rem; color: var(--cs-muted); margin-top: 4px; }
 .cs-note { color: #9b97a3; font-size: .85rem; margin-top: 36px; }
@@ -789,20 +792,41 @@ body.cs-lock { overflow: hidden; }
           mask-image: linear-gradient(#000 60%, transparent 100%);
   opacity: .5; pointer-events: none;
 }
-.story-head-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: start; max-width: var(--max); margin: 0 auto; padding-inline: 32px; position: relative; z-index: 1; }
-/* Radial halftone tucked behind the photo, lower-right of the hero header */
-.hero-halftone {
-  position: absolute; z-index: -1;
-  right: clamp(-300px, -13vw, -120px); top: 40vh;   /* bleeds past the right edge so it peeks out around the photo */
-  width: clamp(440px, 58vw, 820px); height: auto;
-  opacity: .55; pointer-events: none;
+.story-head-grid { display: grid; grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 40px; max-width: var(--max); margin: 0 auto; padding-inline: 32px; position: relative; z-index: 1; }
+.story-head-text { max-width: 72em; margin: 0 auto; }
+/* Background hero video filling the section. */
+.story-head-video {
+  position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0f0e13;
+  --hero-dot: #0d0c11;   /* dots match the page background */
 }
-@media (max-width: 860px) { .hero-halftone { display: none; } }
+/* Seamless dot field (16px lattice) masked into a gradient: nothing in the top third,
+   fading in below and solid at the bottom — reads as a dotted gradient. */
+.story-head-video::before {
+  content: ""; position: absolute; inset: 0; z-index: 3; pointer-events: none;
+  background-image: radial-gradient(var(--hero-dot) 1px, transparent 1.6px);
+  background-size: 16px 16px; background-position: 0 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 33%, #000 100%);
+          mask-image: linear-gradient(to bottom, transparent 33%, #000 100%);
+}
+.story-head-video video { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Scrim only: keeps the white hero text legible and fades into the page bg at the bottom. */
+.story-head-video::after {
+  content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, rgba(19, 18, 23, .55) 0%, rgba(19, 18, 23, .35) 45%, var(--bg) 100%);
+}
+/* Desktop: taller hero with the text nested toward the bottom, more breathing room up top. */
+@media (min-width: 861px) {
+  .story-head {
+    min-height: 92vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding-top: 200px; padding-bottom: 72px;
+  }
+}
 /* The hero heading is the .story-tagline <h1>; its size is set below. */
 .story-tagline {
   font-family: var(--font); font-weight: 700;
   font-size: clamp(2.2rem, 5.5vw, 3.8rem); line-height: 1.1; letter-spacing: -.03em;
-  color: var(--text); max-width: 15em; margin: 0 0 26px;
+  color: var(--text); max-width: 20em; margin: 0 auto 26px;
 }
 .story-intro {
   max-width: 42em; margin: 0;
@@ -825,7 +849,7 @@ body.cs-lock { overflow: hidden; }
 .story-head-text > *, .story-head-media {
   animation: story-hero-up .75s cubic-bezier(.22, 1, .36, 1) both;
 }
-.story-head-text > *:nth-child(1) { animation-delay: .05s; }
+.story-head-text > *:nth-child(1) { animation-delay: .7s; }
 .story-head-text > *:nth-child(2) { animation-delay: .13s; }
 .story-head-text > *:nth-child(3) { animation-delay: .21s; }
 .story-head-text > *:nth-child(4) { animation-delay: .27s; }
@@ -835,20 +859,27 @@ body.cs-lock { overflow: hidden; }
 }
 .story-head-media { animation: story-hero-right .8s cubic-bezier(.22, 1, .36, 1) .17s both; }
 
-/* About / "what I've built" prose block under the intro */
-.story-about { padding-top: 82px; }   /* match the story-head → story-about gap to the story-about → story-band gap (≈90px) */
-.story-about h2:first-child { margin-top: 0; }
-.story-about p { font-family: 'Merriweather', Georgia, serif; font-weight: 300; }
-/* Condensed facts list with bold accent leads + dividers */
-.about-list { margin-top: 8px; }
-.story-about .about-item {
-  margin: 0; max-width: none;
-  padding: 22px 0; border-top: 1px solid var(--border-soft);
-  font-family: var(--font); font-weight: 400; color: var(--text);
-  font-size: clamp(1.05rem, 1.5vw, 1.22rem); line-height: 1.5;
+/* About highlights — three bordered cards under the hero */
+.story-about-band { padding-block: 56px 8px; }   /* keep .container's horizontal padding intact */
+.about-cards {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+  max-width: var(--max); margin: 0 auto;
 }
-.story-about .about-item:first-child { border-top: 0; padding-top: 0; }
-.about-item strong { color: var(--primary); font-weight: 700; }
+.about-card {
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 16px; padding: 36px 32px;
+}
+.about-card h3 {
+  margin: 0 0 16px;
+  font-family: var(--font); font-weight: 700;
+  font-size: 1.5rem; line-height: 1.25; letter-spacing: -.01em;
+  color: var(--primary);
+}
+.about-card p {
+  margin: 0;
+  font-family: var(--font); font-weight: 400;
+  font-size: 1.15rem; line-height: 1.55; color: var(--text);
+}
 /* Company logo lockup — small 1:1 squares, 2px rounded */
 .logo-lockup { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 .logo-chip {
@@ -1099,8 +1130,14 @@ body.cs-lock { overflow: hidden; }
   .tl-card  { padding-top: 0; order: 2; }
   .tl-card::before { display: none; }   /* drop the blurred parallax backdrop on mobile (it overflowed the card) */
   .tl-year { padding: 2px 0; background: none; }
+  /* Nest the tagline toward the bottom so the video shows above it on mobile too. */
+  .story-head {
+    min-height: 88vh;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding-top: 96px; padding-bottom: 48px;
+  }
   .story-head-grid { grid-template-columns: 1fr; gap: 32px; padding-inline: 20px; }
-  .story-head-media { aspect-ratio: 4 / 5; height: auto; max-width: 320px; align-self: auto; justify-self: center; order: -1; position: static; }
+  .about-cards { grid-template-columns: 1fr; gap: 16px; }
   .footer-inner { justify-content: center; text-align: center; }
   .footer-nav { justify-content: center; width: 100%; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }

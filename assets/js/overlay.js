@@ -31,7 +31,7 @@
     topbar = document.createElement('div');
     topbar.className = 'cs-topbar';
     topbar.innerHTML =
-      '<button class="cs-back" aria-label="Back">← Back</button>' +
+      '<button class="cs-back" aria-label="Close case study">✕</button>' +
       '<span class="cs-topbar-title"></span>' +
       '<div class="cs-progress" aria-hidden="true"><span></span></div>';
     overlay.appendChild(topbar);
@@ -137,6 +137,12 @@
       var prev = car.querySelector('.cs-car-btn.prev');
       var next = car.querySelector('.cs-car-btn.next');
       if (!track || !slides.length) return;
+      // A single slide has nothing to page through — hide the arrows.
+      if (slides.length < 2) {
+        if (prev) prev.style.display = 'none';
+        if (next) next.style.display = 'none';
+        return;
+      }
       var i = 0;
 
       function maxScroll() { return Math.max(0, track.scrollWidth - viewport.clientWidth); }

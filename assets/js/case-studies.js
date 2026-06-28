@@ -339,14 +339,7 @@ window.CASE_STUDIES = {
     body: [
       '<h1>Dual Creator Cam</h1>',
       '<p class="cs-deck">A 0→1 iOS app that turns one tap into two finished videos — a vertical file for Reels and TikTok, a horizontal file for YouTube — auto-saved to Photos, no reshoot, no cropping in post. Designed and built solo with Claude Code, Xcode, and Figma over a year of travel.</p>',
-      '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
-  '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
-  '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
-    '<div class="cs-slide"><img src="assets/case_studies/dualcreatorcam/dualhero.webp" alt="Dual Creator Cam — one tap, two finished videos" loading="lazy"></div>' +
-    '<div class="cs-slide"><video autoplay loop muted playsinline aria-label="Rotating the phone and customizing the record button finish"><source src="assets/case_studies/dualcreatorcam/rotatingcustomization.webm" type="video/webm"></video></div>' +
-  '</div></div>' +
-  '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
-'</div>',
+      '<div class="cs-figure"><img src="assets/case_studies/dualcreatorcam/dualhero.webp" alt="Dual Creator Cam — one tap, two finished videos" loading="lazy"></div>',
 
       '<h2 id="overview">Overview</h2>',
       '<p>The best camera is the one already in your pocket — the opportunity was making it do more. Dual Creator Cam captures one high-resolution source and writes two files in parallel, so a creator walks away from a single take with both the vertical and horizontal cut their platforms need. I owned the whole thing: product definition, the Figma spec, the agent-led Swift build, and QA.</p>',
@@ -405,7 +398,7 @@ window.CASE_STUDIES = {
 '</div>',
       '<h3>Personalization (the 2.0 centerpiece)</h3>',
       '<p>Traveling through Asia, I saw how big personalization is in creator culture — custom cases, themed accessories, character straps. Given how many apps look alike, and that women make up slightly over half of all creators (up to 76% on TikTok and 79% on Instagram), I made the one control you stare at the whole shoot yours: four record-button finishes — Chrome, Matte, a faceted gem (with its own Metal shader), and a soccer ball — plus color themes. 2.0 also added the ability to start a Dual or Single recording straight from the <strong>Lock Screen and Control Center</strong> without opening the app, and a redesigned capture HUD with a live timer and an at-a-glance format readout.</p>',
-      '<div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/dualcreatorcam/personalization.png" alt="A customized faceted-gem record button while recording fireworks" style="height:auto;object-fit:contain" loading="lazy"></div>',
+      '<div class="cs-figure" style="aspect-ratio:auto;background:transparent;border:0;max-width:400px;margin:8px auto 24px;padding:0"><video autoplay loop muted playsinline aria-label="Rotating the phone and customizing the record button finish" style="height:auto;width:100%;display:block"><source src="assets/case_studies/dualcreatorcam/rotatingcustomization.webm" type="video/webm"></video></div>',
       '<h3>The hard problems</h3>',
       '<ul class="bullets">',
       '<li><strong>Cropping.</strong> The product hinges on cropping one source frame into two correct aspect ratios, every frame, in real time. I pulled that geometry into a single pure function (aspect-fill: given a source extent and a target size, return the scale and crop rect) so it could be unit-tested in isolation instead of debugged live through the camera pipeline.</li>',
