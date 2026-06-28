@@ -171,10 +171,13 @@ ul { list-style: none; }
 .podcast-guests {
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   display: flex; flex-direction: column; justify-content: center; gap: 16px;
-  will-change: transform;
+  will-change: transform, opacity;
+  opacity: 0; transition: opacity .9s ease;
 }
+.podcast-guests.is-in { opacity: 1; }
 .podcast-row { display: flex; gap: 16px; justify-content: center; flex-wrap: nowrap; will-change: transform; }
-.podcast-guest { flex: 0 0 auto; width: clamp(84px, 9vw, 118px); aspect-ratio: 1 / 1; border-radius: 6px; background: var(--surface-2); }
+.podcast-guest { flex: 0 0 auto; width: clamp(84px, 9vw, 118px); aspect-ratio: 1 / 1; border-radius: 6px; background: var(--surface-2); overflow: hidden; }
+.podcast-guest img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* Scrim so the centered copy stays readable over the tiles. */
 .podcast::before {
   content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;

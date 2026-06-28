@@ -250,14 +250,27 @@
     update();
   })();
 
-  /* ── Podcast: rows drift horizontally + tile field rises on scroll ─ */
+  /* ── Podcast: fade the grid in, then rows drift horizontally on scroll ─ */
   (function () {
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var section = document.querySelector('.podcast');
     if (!section) return;
     var guests = section.querySelector('[data-podcast-guests]');
+    if (!guests) return;
+    // Fade the tile grid in when the section scrolls into view (runs for everyone).
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { guests.classList.add('is-in'); io.disconnect(); }
+        });
+      }, { threshold: 0.15 });
+      io.observe(section);
+    } else {
+      guests.classList.add('is-in');
+    }
+    // Parallax drift is motion — skip it (but keep the fade) under reduced motion.
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var rows = section.querySelectorAll('.podcast-row');
-    if (!guests || !rows.length) return;
+    if (!rows.length) return;
     var ticking = false;
     function update() {
       var rect = section.getBoundingClientRect();

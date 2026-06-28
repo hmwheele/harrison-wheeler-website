@@ -259,7 +259,9 @@
     var ctaEl    = document.querySelector('[data-globe-cta]');
 
     var FAR  = 5.0;   // zoomed-out altitude — small whole globe that fits below the header
-    var NEAR = 0.62;  // zoomed-in altitude — half / region, spans the width (the journey)
+    // zoomed-in altitude. On mobile, pull back a bit so the globe (and its atmosphere
+    // glow) isn't clipped at the top/bottom of the narrow, full-height stage.
+    var NEAR = isMobile ? 0.95 : 0.62;
 
     // Static fallback: reduced motion or the scrolly section is missing.
     // (Mobile runs the scroll-driven journey too — the canvas is pointer-events:none
