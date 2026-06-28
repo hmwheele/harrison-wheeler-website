@@ -1134,6 +1134,8 @@ body.cs-lock { overflow: hidden; }
   width: 100%; max-width: 680px; height: 520px; margin: 28px auto 0;
 }
 .globe-scrolly.is-static .globe-place { display: none; }
+/* Static (mobile) globe auto-rotates on its own — let touches scroll the page. */
+.globe-scrolly.is-static .globe-wrap canvas { pointer-events: none; }
 /* In static mode there's no scroll journey: drop the blackout + scroll cue, and
    let the "Let's work together" CTA sit in normal flow (it's otherwise translated
    off-screen by --cta-up, which only the scroll journey animates). */

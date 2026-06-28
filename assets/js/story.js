@@ -270,10 +270,11 @@
       resize();
       requestAnimationFrame(resize);
       world.pointOfView({ lat: 18, lng: 110, altitude: isMobile ? 2.4 : FAR }, 0);
-      if (!reduceMotion) { controls.autoRotate = true; controls.autoRotateSpeed = 0.5; }
-      // On mobile, don't let the globe capture touch — taps/drags should scroll the
-      // page. autoRotate still runs via the render loop even with controls disabled.
-      if (isMobile) controls.enabled = false;
+      // Keep auto-rotation on — its continuous render loop is what keeps iOS Safari
+      // from blanking the (offscreen-then-onscreen) WebGL buffer. The canvas is made
+      // pointer-events:none in CSS so touches scroll the page instead of rotating.
+      controls.autoRotate = !reduceMotion;
+      controls.autoRotateSpeed = 0.5;
       document.addEventListener('visibilitychange', function () {
         if (!reduceMotion) controls.autoRotate = !document.hidden;
       });
