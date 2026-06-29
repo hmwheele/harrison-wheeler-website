@@ -314,6 +314,35 @@
     check();
   })();
 
+  /* ── Home hero: photo parallax — drifts up slightly faster than scroll ── */
+  // As the page scrolls down, lift the whole hero photo (frame + image +
+  // decorations) by an extra fraction of scrollY so it rides up a touch faster
+  // than the rest of the hero (effective speed 1x + SPEED).
+  (function () {
+    var photo = document.querySelector('.hero .hero-photo');
+    if (!photo) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var SPEED = 0.18; // extra upward speed on top of the normal 1x scroll
+    photo.style.willChange = 'transform';
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var y = window.scrollY || window.pageYOffset || 0;
+      if (y > 0) {
+        // !important so the parallax overrides the photo's CSS entrance animation,
+        // which keeps a transform via animation-fill-mode: both.
+        photo.style.setProperty('transform', 'translate3d(0,' + (-y * SPEED).toFixed(1) + 'px,0)', 'important');
+      } else {
+        // At the very top, drop the override so the entrance animation can play.
+        photo.style.removeProperty('transform');
+      }
+    }
+    window.addEventListener('scroll', function () {
+      if (!ticking) { requestAnimationFrame(update); ticking = true; }
+    }, { passive: true });
+    update();
+  })();
+
   /* ── Current year in footer ─────────────────────────────────── */
   document.querySelectorAll('[data-year]').forEach(function (el) {
     el.textContent = new Date().getFullYear();
