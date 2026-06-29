@@ -228,14 +228,14 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .hero-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 48px; align-items: center; }
 .hero h1 {
   text-align: left;
-  font-size: clamp(3.75rem, 9.5vw, 7rem);
+  font-size: clamp(3.5rem, calc(12vw - 16px), 8rem);
   font-weight: 800;
   line-height: 1.02;
   letter-spacing: -.03em;
   margin-bottom: 24px;
   max-width: 8ch;   /* forces "Harrison Wheeler" onto two lines */
 }
-.hero p.lede { font-family: 'Merriweather', serif; font-size: 1.25rem; font-weight: 300; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; }
+.hero p.lede { font-family: 'GT America', system-ui, sans-serif; font-size: 30px; font-weight: 700; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; }
 .hero-photo { position: relative; }
 .hero-photo img {
   width: 100%; height: auto; display: block;
