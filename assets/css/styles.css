@@ -102,7 +102,7 @@ ul { list-style: none; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: var(--font);
+  font-family: 'IBM Plex Mono', var(--mono);
   font-size: 1.05rem;
   font-weight: 500;
   padding: 14px 28px;
