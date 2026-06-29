@@ -364,7 +364,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .card-body { padding: 16px 0 8px; text-align: left; }
 .card .eyebrow { display: none; }
 .card h3 { font-size: 24px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; margin-bottom: 10px; transition: color .2s; }
-.card .meta { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 16px; color: var(--text-muted); }
+.card .meta { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 16px; color: #fff; }
 .news-all { color: var(--primary); font-weight: 600; text-decoration: none; }
 .news-all:hover { text-decoration: underline; }
 
