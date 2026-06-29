@@ -118,6 +118,9 @@ ul { list-style: none; }
 /* Ghost (secondary) variant */
 .btn-ghost, .btn-hero-ghost { background: transparent; color: var(--text); border-color: var(--border); }
 .btn-ghost:hover, .btn-hero-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+/* Disabled / "coming soon" CTA — unclickable, visually muted */
+.btn:disabled, .btn[disabled] { opacity: .5; cursor: not-allowed; }
+.btn:disabled:hover, .btn[disabled]:hover { background: var(--primary); transform: none; }
 .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
 
 /* ── Nav ────────────────────────────────────────────────────────── */
