@@ -802,7 +802,7 @@ body.cs-lock { overflow: hidden; }
 
 /* =====================================================================
    MY STORY  — scroll-driven vertical timeline + Asia globe
-   (story.html). Reuses the dark theme tokens above.
+   (about.html). Reuses the dark theme tokens above.
    ===================================================================== */
 
 /* ── Page intro ─────────────────────────────────────────────────── */
@@ -902,7 +902,7 @@ body.cs-lock { overflow: hidden; }
 }
 .about-card h3 {
   margin: 0 0 16px;
-  font-family: var(--font); font-weight: 700;
+  font-family: var(--font); font-weight: 200;
   font-size: 1.5rem; line-height: 1.25; letter-spacing: -.01em;
   color: var(--primary);
 }

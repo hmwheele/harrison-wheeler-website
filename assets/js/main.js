@@ -20,10 +20,15 @@
   }
 
   /* ── Highlight current page in nav ──────────────────────────── */
-  var here = location.pathname.split('/').pop() || 'index.html';
+  // Normalize a path/href to a canonical key so clean URLs ("/", "/about")
+  // and legacy ones ("index.html", "about.html") both resolve the same.
+  function pageKey(p) {
+    p = (p || '').replace(/^\/+/, '').replace(/\.html$/, '').replace(/\/$/, '');
+    return (p === '' || p === 'index') ? 'home' : p;
+  }
+  var here = pageKey(location.pathname);
   document.querySelectorAll('.nav-links a').forEach(function (a) {
-    var target = a.getAttribute('href');
-    if (target === here || (here === 'index.html' && target === 'index.html')) {
+    if (pageKey(a.getAttribute('href')) === here) {
       a.classList.add('active');
     }
   });
