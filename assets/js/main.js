@@ -358,6 +358,8 @@
     var input  = form && form.querySelector('input[type="email"]');
     var submit = form && form.querySelector('.subpop-submit');
     var msg    = root.querySelector('[data-subpop-msg]');
+    var title  = root.querySelector('.subpop-title');
+    var copy   = root.querySelector('.subpop-copy');
     if (!panel || !form || !input) return;
 
     // Signups POST to the beehiiv-subscribe Cloudflare Worker (free; the site
@@ -409,8 +411,16 @@
       }).then(function (res) {
         if (res.ok) {
           if (window.track) window.track('newsletter_signup', { method: 'beehiiv' });
-          form.hidden = true;
-          setMsg('Thanks! Check your inbox to confirm your subscription.', 'ok');
+          // Swap the card into a confirmation: success text replaces the title/copy,
+          // the email field goes away, and Subscribe becomes a Close button.
+          if (title) title.textContent = 'Thanks for subscribing!';
+          if (copy) copy.textContent = 'Check your inbox to confirm your subscription.';
+          input.hidden = true; input.removeAttribute('required');
+          setMsg('', '');
+          submit.type = 'button';
+          submit.disabled = false;
+          submit.textContent = 'Close';
+          submit.addEventListener('click', close);
           remember();   // don't pop up again once they've signed up
         } else {
           if (submit) submit.disabled = false;
