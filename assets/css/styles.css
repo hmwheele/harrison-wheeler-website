@@ -244,7 +244,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   margin-bottom: 24px;
   max-width: 8ch;   /* forces "Harrison Wheeler" onto two lines */
 }
-.hero p.lede { font-family: 'GT America', system-ui, sans-serif; font-size: 30px; font-weight: 700; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; }
+.hero p.lede { font-family: 'GT America', system-ui, sans-serif; font-size: 30px; font-weight: 700; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; margin-left: 48px; }
 .hero-photo { position: relative; }
 .hero-photo img {
   width: 100%; height: auto; display: block;
@@ -631,7 +631,9 @@ main > .phead-wrap { padding-top: var(--gap); }
   padding: 8px 48px 110px;
 }
 /* Sticky table of contents */
-.cs-toc { position: sticky; top: 84px; align-self: start; height: max-content; }
+/* Pull left so its edge lines up with the close (✕) button: the .cs-layout
+   has 48px of left padding, the .cs-close sits at left:28px → shift -20px. */
+.cs-toc { position: sticky; top: 84px; align-self: start; height: max-content; margin-left: calc(28px - 48px); }
 .cs-toc ul { display: flex; flex-direction: column; gap: 4px; }
 .cs-toc a {
   display: block; padding: 6px 0; font-size: 1rem; color: var(--cs-muted);
@@ -708,15 +710,19 @@ main > .phead-wrap { padding-top: var(--gap); }
 .cs-main h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin: 52px 0 18px; scroll-margin-top: 80px; }
 .cs-main h3 { font-size: 1.05rem; font-weight: 700; margin: 28px 0 8px; }
 .cs-main p { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.75; color: #36333c; margin-bottom: 16px; max-width: 42em; }
+/* Inline bold inside body paragraphs reads as plain text (titles are headings, not <strong>) */
+.cs-main p strong, .cs-main p b { font-weight: 400; }
 .cs-main ul.bullets { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.7; list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
 .cs-main ul.bullets li { margin-bottom: 6px; }
 /* Stat cells share 1px internal grid lines (the gap reveals the container bg);
    the outer perimeter has no stroke. */
-.cs-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; margin: 8px 0 24px; background: var(--cs-border); border-radius: 12px; overflow: hidden; }
+/* Divider lines via 1px gaps over the border colour; cells are filled with the
+   page bg so only the lines show (no grey card). */
+.cs-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; margin: 8px 0 24px; background: var(--cs-border); }
 /* blocks of exactly 4 stat cards stack 2×2 instead of a cramped single row */
 .cs-metrics:has(.cs-metric:nth-child(4):last-child) { grid-template-columns: repeat(2, 1fr); }
-.cs-metric { background: #f6f5f8; padding: 20px; }
-.cs-metric .num { font-size: 1.9rem; font-weight: 800; letter-spacing: -.02em; color: var(--cs-accent); }
+.cs-metric { background: var(--cs-bg); padding: 20px; }
+.cs-metric .num { font-family: 'Merriweather', Georgia, serif; font-size: 1.9rem; font-weight: 700; letter-spacing: -.02em; color: #000; }
 .cs-metric .lbl { font-size: .85rem; color: var(--cs-muted); margin-top: 4px; }
 .cs-note { color: #9b97a3; font-size: .85rem; margin-top: 36px; }
 .cs-diagram { margin: 30px 0 8px; }
@@ -1222,4 +1228,50 @@ body.cs-lock { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal] { opacity: 1 !important; transform: none !important; }
+}
+
+/* ── Newsletter popover (bottom-right, home) ─────────────────────── */
+.subpop { position: fixed; right: 24px; bottom: 24px; z-index: 60; }
+.subpop-panel {
+  position: relative;
+  width: 320px; max-width: calc(100vw - 48px);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 22px 22px 20px; box-shadow: 0 24px 60px rgba(0,0,0,.55);
+  transform-origin: bottom right; transform: translateY(12px) scale(.96); opacity: 0;
+  visibility: hidden; pointer-events: none;
+  transition: transform .26s cubic-bezier(.22,1,.36,1), opacity .2s, visibility .26s;
+}
+.subpop.is-open .subpop-panel { transform: translateY(0) scale(1); opacity: 1; visibility: visible; pointer-events: auto; }
+.subpop-close {
+  position: absolute; top: 12px; right: 12px; width: 28px; height: 28px;
+  display: grid; place-items: center; border-radius: 100px; cursor: pointer;
+  background: transparent; border: 0; color: var(--text-muted); transition: color .2s, background .2s;
+}
+.subpop-close:hover { color: var(--text); background: var(--surface-2); }
+.subpop-eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+.subpop-title { font-family: 'GT America', system-ui, sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; color: var(--text); }
+.subpop-copy { font-size: .92rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 16px; max-width: 30ch; }
+.subpop-form { display: flex; flex-direction: column; gap: 10px; }
+.subpop-input {
+  width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font); font-size: .95rem; transition: border-color .2s;
+}
+.subpop-input::placeholder { color: var(--text-muted); }
+.subpop-input:focus { outline: none; border-color: var(--primary); }
+.subpop-input.invalid { border-color: #ff6b8a; }
+.subpop-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 12px 16px; border-radius: 100px; cursor: pointer; border: 0;
+  background: var(--primary); color: var(--on-primary);
+  font-family: 'IBM Plex Mono', var(--mono); font-size: .92rem; font-weight: 500;
+  transition: background .2s, transform .15s;
+}
+.subpop-submit:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.subpop-submit:disabled { opacity: .6; cursor: default; transform: none; }
+.subpop-msg { font-size: .9rem; line-height: 1.45; margin-top: 12px; color: var(--text-muted); }
+.subpop-msg.ok { color: #7ee0a8; }
+.subpop-msg.err { color: #ff9bb0; }
+@media (max-width: 560px) {
+  .subpop { right: 16px; bottom: 16px; }
 }

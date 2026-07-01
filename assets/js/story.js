@@ -292,6 +292,10 @@
     function lerp(a, b, t) { return a + (b - a) * t; }
     function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
     function smooth(t) { return t * t * (3 - 2 * t); }
+    // Smootherstep (Perlin): eases in AND out with zero velocity at both ends, so
+    // the camera glides between cities (as before) but gently slows to a rest on
+    // each one before moving on — no hard snap/jolt.
+    function restEase(f) { return f * f * f * (f * (f * 6 - 15) + 10); }
     function at(i) { return PLACES[Math.max(0, Math.min(PLACES.length - 1, i))]; }
     // Interpolate longitude along the shortest way around the globe.
     function lerpLng(a, b, t) { return a + (((b - a + 540) % 360) - 180) * t; }
@@ -445,11 +449,12 @@
         var HOLD = 0.92;
         var sp = jp < HOLD ? (jp / HOLD) : 1;
         var seg = sp * (PLACES.length - 1);
-        var k = Math.floor(seg), f = seg - k;   // linear f — flows without pausing at each city
+        var k = Math.floor(seg), f = restEase(seg - k);   // glide, easing to a rest on each city
+        var segEased = k + f;
         lat = spline(k, 'lat', f);
         lng = spline(k, 'lng', f);
-        cityIdx = Math.round(seg);
-        rp = 1 + seg;                      // SF leg done; draw each city leg as it's flown
+        cityIdx = Math.round(segEased);
+        rp = 1 + segEased;                 // SF leg done; the line dwells with the camera, then extends
       }
 
       if (freeWanted) {                  // footer: let the controls (auto-rotate + drag) drive

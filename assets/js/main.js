@@ -348,6 +348,81 @@
     update();
   })();
 
+  /* ── Newsletter popover (home) ──────────────────────────────── */
+  (function () {
+    var root = document.querySelector('[data-subpop]');
+    if (!root) return;
+    var panel  = root.querySelector('.subpop-panel');
+    var closeB = root.querySelector('[data-subpop-close]');
+    var form   = root.querySelector('[data-subpop-form]');
+    var input  = form && form.querySelector('input[type="email"]');
+    var submit = form && form.querySelector('.subpop-submit');
+    var msg    = root.querySelector('[data-subpop-msg]');
+    if (!panel || !form || !input) return;
+
+    // Signups POST to the beehiiv-subscribe Cloudflare Worker (free; the site
+    // stays on GitHub Pages), which forwards to beehiiv with the secret API key.
+    // See /beehiiv-worker. Set this to the Worker URL from `wrangler deploy`:
+    //   https://beehiiv-subscribe.<your-subdomain>.workers.dev
+    var SUBSCRIBE_ENDPOINT = 'https://beehiiv-subscribe.harrisonwheeler.workers.dev';
+    var DISMISS_KEY = 'subpop-dismissed';
+
+    function dismissed() { try { return localStorage.getItem(DISMISS_KEY) === '1'; } catch (e) { return false; } }
+    function remember() { try { localStorage.setItem(DISMISS_KEY, '1'); } catch (e) {} }
+    function isOpen() { return root.classList.contains('is-open'); }
+    function open() { root.classList.add('is-open'); }
+    function close() { root.classList.remove('is-open'); remember(); }
+
+    // Pop up by default a moment after load, unless already dismissed/subscribed.
+    if (!dismissed()) { setTimeout(open, 900); }
+
+    if (closeB) closeB.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) close(); });
+
+    function setMsg(text, kind) {
+      if (!msg) return;
+      msg.textContent = text || '';
+      msg.className = 'subpop-msg' + (kind ? ' ' + kind : '');
+      msg.hidden = !text;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = (input.value || '').trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        input.classList.add('invalid'); input.focus();
+        setMsg('Please enter a valid email address.', 'err');
+        return;
+      }
+      input.classList.remove('invalid');
+      if (submit) submit.disabled = true;
+      setMsg('Subscribing…', '');
+      // Real CORS request — the Worker returns JSON, so success/failure is exact.
+      fetch(SUBSCRIBE_ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (data) {
+          return { ok: r.ok && data.ok !== false, data: data };
+        });
+      }).then(function (res) {
+        if (res.ok) {
+          if (window.track) window.track('newsletter_signup', { method: 'beehiiv' });
+          form.hidden = true;
+          setMsg('Thanks! Check your inbox to confirm your subscription.', 'ok');
+          remember();   // don't pop up again once they've signed up
+        } else {
+          if (submit) submit.disabled = false;
+          setMsg('Something went wrong. Please try again.', 'err');
+        }
+      }).catch(function () {
+        if (submit) submit.disabled = false;
+        setMsg('Something went wrong. Please try again.', 'err');
+      });
+    });
+  })();
+
   /* ── Current year in footer ─────────────────────────────────── */
   document.querySelectorAll('[data-year]').forEach(function (el) {
     el.textContent = new Date().getFullYear();

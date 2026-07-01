@@ -404,6 +404,23 @@
     </div>
   </footer>
 
+  <!-- ── Newsletter popover (home only) ── -->
+  <div class="subpop" data-subpop>
+    <div class="subpop-panel" id="subpop-panel" role="dialog" aria-label="Subscribe to email updates" aria-modal="false">
+      <button class="subpop-close" type="button" aria-label="Close" data-subpop-close>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+      <p class="subpop-eyebrow">Newsletter</p>
+      <h3 class="subpop-title">Hear from me</h3>
+      <p class="subpop-copy">Occasional notes on design, leadership, and building, straight to your inbox. No spam.</p>
+      <form class="subpop-form" data-subpop-form novalidate>
+        <input class="subpop-input" type="email" name="email" required placeholder="you@email.com" autocomplete="email" aria-label="Email address" />
+        <button class="subpop-submit" type="submit">Subscribe<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      </form>
+      <p class="subpop-msg" data-subpop-msg hidden></p>
+    </div>
+  </div>
+
   <script src="assets/js/main.js"></script>
   <script src="assets/js/case-studies.js"></script>
   <script src="assets/js/overlay.js"></script>
