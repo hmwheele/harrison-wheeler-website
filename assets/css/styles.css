@@ -234,6 +234,52 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   to   { background-position: -64px 0; }
 }
 .hero > .container { position: relative; z-index: 2; }
+
+/* ── Hero variant: full-height portrait with page-centered content in front ── */
+.hero--stage {
+  position: relative; min-height: 100vh; padding: 0; overflow: hidden;
+  display: flex; align-items: flex-end; text-align: center;
+}
+/* Portrait fills the hero height, centered, running to the bottom (below the buttons) */
+.hero--stage .hero-bigimg {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  height: 100%; width: auto; max-width: none; z-index: 1;
+  object-fit: contain; object-position: bottom center;
+  filter: drop-shadow(0 20px 60px rgba(0, 0, 0, .45));
+}
+/* Content layered in front, centered to the page */
+.hero--stage { justify-content: center; }
+.hero-stage-content { position: relative; z-index: 3; width: 100%; text-align: center; padding-bottom: 7vh; }
+/* higher specificity so it beats the two-column .hero h1 / .hero p.lede rules */
+.hero--stage .hero-bigname {
+  margin: 0 0 22px; max-width: none; text-align: center;
+  font-size: clamp(3rem, 11vw, 8.5rem); font-weight: 800;
+  line-height: .92; letter-spacing: -.03em; color: #fff;
+  text-shadow: 0 6px 44px rgba(0, 0, 0, .6);
+}
+.hero--stage .hero-stage-content .lede { margin: 0 auto 28px; margin-left: auto; text-align: center; font-size: 48px; line-height: 1.25; font-weight: 200; }
+.hero--stage .hero-actions { justify-content: center; }
+/* On phones the portrait is zoomed, so drop the content lower to clear the face */
+@media (max-width: 560px) {
+  /* Fill the hero to the *visible* viewport (dvh accounts for the mobile
+     browser toolbar) so the content box's bottom == the real bottom. */
+  .hero.hero--stage { align-items: stretch; padding-top: 0; min-height: 100vh; min-height: 100dvh; }
+  .hero-stage-content {
+    min-height: 100vh; min-height: 100dvh; box-sizing: border-box;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding-bottom: 172px;   /* reserve room for the pinned buttons */
+  }
+  .hero--stage .hero-bigname { font-size: clamp(2.4rem, 13vw, 4rem); }
+  .hero--stage .hero-stage-content .lede { font-size: 24px; margin-bottom: 20px; }
+  /* Slightly smaller, vertically centered portrait on phones */
+  .hero--stage .hero-bigimg { height: 88%; bottom: 6%; }
+  /* Dock the action buttons to the bottom of the visible viewport, with side padding */
+  .hero--stage .hero-actions {
+    position: absolute; left: 20px; right: 20px; margin: 0;
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
 .hero-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 48px; align-items: center; }
 .hero h1 {
   text-align: left;

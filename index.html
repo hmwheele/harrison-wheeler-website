@@ -111,28 +111,18 @@
   </header>
 
   <main>
-    <!-- ── Hero ── -->
-    <section class="hero">
-      <div class="container">
-        <div class="hero-grid">
-          <div>
-            <h1>Harrison Wheeler</h1>
-            <p class="lede">Product design leader defining experiences and the teams behind them.</p>
-            <div class="hero-actions">
-              <a class="btn btn-hero" href="mailto:hello@harrisonwheeler.com">Get in touch →</a>
-              <a class="btn btn-hero-ghost" href="https://www.linkedin.com/in/hmwheeler" target="_blank" rel="noopener">Connect on LinkedIn<svg class="btn-ext-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
-            </div>
-          </div>
-          <div class="hero-photo">
-            <span class="hello-pill" data-hello>Hello from San Francisco 🇺🇸</span>
-            <img src="assets/profile-image.jpg" alt="Portrait of Harrison Wheeler" onerror="this.style.display='none'" />
-            <span class="badge-circle" aria-label="Amplitude Product 50 — Best Product">
-              <svg viewBox="0 0 160 160">
-                <defs><path id="badgeCircle" d="M80,80 m-46,0 a46,46 0 1,1 92,0 a46,46 0 1,1 -92,0" fill="none" /></defs>
-                <text><textPath href="#badgeCircle">Amplitude Product 50 · Best Product ·&#160;</textPath></text>
-              </svg>
-            </span>
-          </div>
+    <!-- ── Hero (full-height portrait, page-centered content in front) ── -->
+    <section class="hero hero--stage">
+      <picture>
+        <source srcset="assets/hero_big_transparent.webp" type="image/webp" />
+        <img class="hero-bigimg" src="assets/hero_big_transparent.png" alt="Portrait of Harrison Wheeler" />
+      </picture>
+      <div class="container hero-stage-content">
+        <h1 class="hero-bigname">Harrison Wheeler</h1>
+        <p class="lede">Product design leader defining experiences and the teams behind them.</p>
+        <div class="hero-actions">
+          <a class="btn btn-hero" href="mailto:hello@harrisonwheeler.com">Get in touch →</a>
+          <a class="btn btn-hero-ghost" href="https://www.linkedin.com/in/hmwheeler" target="_blank" rel="noopener">Connect on LinkedIn<svg class="btn-ext-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h10v10"/><path d="M7 17 17 7"/></svg></a>
         </div>
       </div>
     </section>
