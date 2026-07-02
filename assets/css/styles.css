@@ -270,7 +270,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
     padding-bottom: 172px;   /* reserve room for the pinned buttons */
   }
   .hero--stage .hero-bigname { font-size: clamp(2.4rem, 13vw, 4rem); }
-  .hero--stage .hero-stage-content .lede { font-size: 24px; margin-bottom: 20px; }
+  .hero--stage .hero-stage-content .lede { font-size: 18px; margin-bottom: 20px; }
   /* Slightly smaller, vertically centered portrait on phones */
   .hero--stage .hero-bigimg { height: 88%; bottom: 6%; }
   /* Dock the action buttons to the bottom of the visible viewport, with side padding */
