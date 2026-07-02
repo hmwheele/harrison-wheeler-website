@@ -257,7 +257,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   line-height: .92; letter-spacing: -.03em; color: #fff;
   text-shadow: 0 6px 44px rgba(0, 0, 0, .6);
 }
-.hero--stage .hero-stage-content .lede { margin: 0 auto 28px; margin-left: auto; text-align: center; font-size: 48px; line-height: 1.25; font-weight: 200; }
+.hero--stage .hero-stage-content .lede { margin: 0 auto 28px; margin-left: auto; text-align: center; font-size: 32px; line-height: 1.25; font-weight: 200; }
 .hero--stage .hero-actions { justify-content: center; }
 /* On phones the portrait is zoomed, so drop the content lower to clear the face */
 @media (max-width: 560px) {
