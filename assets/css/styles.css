@@ -247,6 +247,50 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   object-fit: contain; object-position: bottom center;
   filter: drop-shadow(0 20px 60px rgba(0, 0, 0, .45));
 }
+/* Marching-ants outline tracing the silhouette — positioned exactly over the portrait */
+.hero-contour {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  height: 100%; width: auto; z-index: 2; pointer-events: none;
+  /* fade the outline out at the bottom so the image's straight crop edge doesn't show as a box */
+  -webkit-mask-image: linear-gradient(to bottom, #000 64%, transparent 84%);
+          mask-image: linear-gradient(to bottom, #000 64%, transparent 84%);
+}
+.hero-contour path {
+  fill: none; stroke: #fff; stroke-width: 1.6;
+  stroke-dasharray: 9 7; vector-effect: non-scaling-stroke;
+  animation: contour-march 0.7s linear infinite;
+}
+@keyframes contour-march { to { stroke-dashoffset: -16; } }
+@media (prefers-reduced-motion: reduce) { .hero-contour path { animation: none; } }
+
+/* On-load: portrait + contour drag in from the left to centre, a cursor "grabs" it */
+@keyframes hero-drag-in {
+  from { transform: translateX(calc(-50% - 46vw)); }
+  to   { transform: translateX(-50%); }
+}
+.hero--stage .hero-bigimg { animation: hero-drag-in 1.4s cubic-bezier(.22, 1, .36, 1) both; }
+/* contour drags in with the portrait, then fades out 1s after it settles */
+.hero-contour { animation: hero-drag-in 1.4s cubic-bezier(.22, 1, .36, 1) both, hero-contour-fade .6s ease 2.4s forwards; }
+@keyframes hero-contour-fade { to { opacity: 0; } }
+.hero-drag-cursor {
+  position: absolute; z-index: 5; left: 50%; top: 46%; pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .5));
+  animation: hero-cursor-in 1.4s cubic-bezier(.22, 1, .36, 1) both,
+             hero-cursor-out .4s ease 1.25s both;
+}
+@keyframes hero-cursor-in {
+  from { transform: translate(calc(-50% - 46vw), -50%); }
+  to   { transform: translate(-50%, -50%); }
+}
+@keyframes hero-cursor-out { to { opacity: 0; } }
+/* Name, tagline + buttons stay hidden through the drag, then fade in once it settles */
+.hero-stage-content { animation: hero-content-fade .5s ease 1.4s both; }
+@keyframes hero-content-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .hero--stage .hero-bigimg, .hero-contour { animation: none; }
+  .hero-drag-cursor { display: none; }
+  .hero-stage-content { animation: none; }
+}
 /* Content layered in front, centered to the page */
 .hero--stage { justify-content: center; }
 .hero-stage-content { position: relative; z-index: 3; width: 100%; text-align: center; padding-bottom: 7vh; }
@@ -273,6 +317,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   .hero--stage .hero-stage-content .lede { font-size: 18px; margin-bottom: 20px; }
   /* Slightly smaller, vertically centered portrait on phones */
   .hero--stage .hero-bigimg { height: 88%; bottom: 6%; }
+  .hero-contour { height: 88%; bottom: 6%; }
   /* Dock the action buttons to the bottom of the visible viewport, with side padding */
   .hero--stage .hero-actions {
     position: absolute; left: 20px; right: 20px; margin: 0;
