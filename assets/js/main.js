@@ -152,12 +152,11 @@
   (function () {
     var cards = document.querySelectorAll('.card-grid .card');
     if (!cards.length) return;
-    var PEEK = 10;
+    var PEEK = 8;   // each folder pins 8px lower so the previous tops peek out
     function setTops() {
       var vh = window.innerHeight || document.documentElement.clientHeight;
       cards.forEach(function (c, i) {
-        var base = Math.min(96, vh - c.offsetHeight - 16);
-        c.style.setProperty('--stick-top', (base + i * PEEK) + 'px');
+        c.style.setProperty('--stick-top', (Math.min(96, vh - c.offsetHeight - 16) + i * PEEK) + 'px');
       });
     }
     window.addEventListener('resize', setTops, { passive: true });
