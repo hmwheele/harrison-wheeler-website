@@ -413,10 +413,11 @@
     var placeEl  = document.querySelector('[data-globe-place]');
     var ctaEl    = document.querySelector('[data-globe-cta]');
 
-    // ── Static fallback: reduced motion, mobile, or no scrolly section ──
-    // (Mobile runs the auto-rotating globe in normal flow — the pinned scroll
-    // journey stalls during iOS momentum scroll.)
-    if (reduceMotion || !section || isMobile) {
+    // ── Static fallback: reduced motion or no scrolly section ──
+    // (Mobile gets the full scroll journey too — modern iOS Safari keeps
+    // dispatching scroll events through momentum scrolling, so the old
+    // "rAF stalls on mobile" concern no longer applies.)
+    if (reduceMotion || !section) {
       if (section) section.classList.add('is-static');
       resize();
       requestAnimationFrame(resize);

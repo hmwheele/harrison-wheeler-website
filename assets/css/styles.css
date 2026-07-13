@@ -1018,6 +1018,8 @@ body.cs-lock::before { opacity: 1; }
   .card .card-media, .card:nth-child(odd) .card-media { order: -1; }
   .card .card-body, .card:nth-child(odd) .card-body { order: 0; }
   .belief-grid { grid-template-columns: 1fr; gap: 48px; }
+  /* Profile photo: ~half the viewport wide, centered */
+  .timeline-photo { width: 50vw; margin-inline: auto; }
   .belief-text { position: static; }
   .timeline { gap: 44px; }
   .timeline-group { text-align: left; }
