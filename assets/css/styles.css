@@ -1033,7 +1033,8 @@ body.cs-lock::before { opacity: 1; }
   :root { --gap: 80px; }
   .container { padding-inline: 20px; }
 
-  .cs-sheet { margin-top: 24px; border-radius: 18px 18px 0 0; padding-top: 20px; }
+  /* Float the sheet off the bottom edge (a bottom margin) with all corners rounded */
+  .cs-sheet { margin-top: 24px; margin-bottom: 16px; border-radius: 18px; padding-top: 20px; }
   .cs-layout { grid-template-columns: 1fr; gap: 24px; padding: 8px 22px 72px; }
   .cs-toc { display: none; }
   .cs-carousel { margin-right: 0; }
