@@ -134,16 +134,8 @@ ul { list-style: none; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   background: transparent;
 }
-/* Mobile: blurred full-width backdrop behind logo + hamburger */
-@media (max-width: 860px) {
-  .nav::before {
-    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background: rgba(13, 12, 17, .35);
-    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
-    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
-            mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
-  }
-}
+/* (Removed the full-width blurred header backdrop — the floating nav pill
+   is the only chrome at the top now.) */
 .nav-inner {
   position: relative;
   max-width: var(--max); margin: 0 auto; padding: 24px 32px;
@@ -1178,7 +1170,7 @@ body.cs-lock::before { opacity: 1; }
 .story-band { text-align: center; padding-block: 64px 24px; }
 .story-band h2 {
   font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
-  font-size: clamp(40px, 6.5vw, 88px); font-weight: 700; line-height: 1; letter-spacing: -.02em;
+  font-size: clamp(46px, 7.2vw, 100px); font-weight: 700; line-height: 1; letter-spacing: -.02em;
   text-transform: uppercase;
   /* light-pink linear gradient, fading up */
   color: #ffd8e4;   /* fallback for no background-clip: text */
@@ -1446,16 +1438,19 @@ body.cs-lock::before { opacity: 1; }
   /* Let touches scroll the page (which drives the globe journey) instead of grabbing the globe. */
   .globe-wrap canvas { pointer-events: none; }
   .timeline-rail { padding: 48px 20px 56px; }
-  .timeline-rail::before { display: none; }   /* drop the detached/floating spine on mobile */
   .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 14px; padding-left: 0; margin-bottom: 104px; }
   .tl-hold { height: 170vh; }
-  /* stack as: year → photo → text (no spine to attach to) */
+  /* stack as: year → photo → text, all centred on the spine */
   .tl-media, .tl-card, .tl-node { grid-column: 1 !important; grid-row: auto !important; }
-  .tl-node  { position: static; left: auto; top: auto; transform: none; justify-self: start; align-items: flex-start; order: 0; }
+  .tl-node  { position: static; left: auto; top: auto; transform: none; justify-self: center; align-items: center; order: 0; }
   .tl-media { order: 1; }
-  .tl-card  { padding-top: 0; order: 2; }
+  /* solid bg on the media + text so they mask the central spine — the line
+     shows only in the gaps between elements, connecting the years. */
+  .tl-media { background: var(--bg); }
+  .tl-card  { padding: 0 8px; order: 2; text-align: center; background: var(--bg); }
   .tl-card::before { display: none; }   /* drop the blurred parallax backdrop on mobile (it overflowed the card) */
-  .tl-year { padding: 2px 0; background: none; }
+  /* keep the year's solid bg so it masks the spine, and centre it */
+  .tl-year { padding: 6px 14px; }
   /* Nest the tagline toward the bottom so the video shows above it on mobile too. */
   .story-head {
     min-height: 88vh;
