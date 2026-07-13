@@ -1,7 +1,7 @@
 /* =====================================================================
    story.js — "My story" timeline page
    1) Reveal elements (fade IN on enter, fade OUT on leave) on scroll
-   2) Auto-rotating night-earth globe lighting up places visited in Asia
+   2) Scroll-driven Mapbox globe lighting up places visited in Asia
    Loaded after main.js (which handles nav, mobile menu, footer year).
    ===================================================================== */
 (function () {
@@ -176,79 +176,219 @@
     }
   } catch (e) { showFallback(); return; }
 
-  // Load globe.gl (standalone build bundles three.js) from CDN, then init.
+  /* ── Config ─────────────────────────────────────────────────────
+     Mapbox public access token (starts with "pk."). Get one from
+     https://account.mapbox.com/access-tokens/ and restrict it to your
+     site's domain(s) in the Mapbox dashboard before shipping. Until a
+     real token is wired in, the globe degrades to the text city list. */
+  var MAPBOX_TOKEN = 'pk.eyJ1IjoiaG13aGVlbGUiLCJhIjoiY21yZXpzMzk3MHQ4NDJ3b282YmQzZzFoYyJ9.eMJQn_b6U2Fl3uD4IOEJnw';
+  var MAP_STYLE    = 'mapbox://styles/mapbox/dark-v11';
+  var ACCENT       = '#d0bcff';
+  var GL_VER       = 'v3.9.3';
+
+  // Load Mapbox GL JS (+ its CSS) from CDN, then init.
+  var link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = 'https://api.mapbox.com/mapbox-gl-js/' + GL_VER + '/mapbox-gl.css';
+  document.head.appendChild(link);
+
   var s = document.createElement('script');
-  s.src = 'https://unpkg.com/globe.gl';
+  s.src = 'https://api.mapbox.com/mapbox-gl-js/' + GL_VER + '/mapbox-gl.js';
   s.async = true;
   s.onerror = showFallback;
   s.onload = initGlobe;
   document.head.appendChild(s);
 
   function initGlobe() {
-    if (typeof window.Globe !== 'function') { showFallback(); return; }
+    var mapboxgl = window.mapboxgl;
+    if (!mapboxgl || (mapboxgl.supported && !mapboxgl.supported())) { showFallback(); return; }
+    // No real token yet → show the text fallback rather than a blank/erroring map.
+    if (!MAPBOX_TOKEN || MAPBOX_TOKEN.indexOf('pk.') !== 0) { showFallback(); return; }
+    mapboxgl.accessToken = MAPBOX_TOKEN;
 
-    var ACCENT = '#d0bcff';
-    var world;
+    var SF = HOME;                          // home base — globe starts here (also a marker)
+    var ASIA = { lat: 18, lng: 110 };
+
+    // Camera as Mapbox zoom levels (center + zoom, not orbit altitude).
+    // Higher = closer. Tuned so the whole globe fits below the header (FAR),
+    // the Asia region spans the width during the journey (NEAR), and the
+    // docked dome sits comfortably at the bottom (DOCK_ALT).
+    var FAR      = 1.35;   // zoomed-out whole globe
+    var NEAR     = 3.30;   // zoomed-in region (the journey)
+    var DOCK_ALT = 2.15;   // docked half-globe at the bottom
+
+    var map;
     try {
-      world = window.Globe()(mount)
-        .width(mount.clientWidth)
-        .height(mount.clientHeight)
-        .backgroundColor('rgba(0,0,0,0)')
-        // Desktop gets the hi-res 3600×1800 map; mobile gets a 2048×1024 power-of-two
-        // texture — large/NPOT textures fail to decode on many mobile GPUs (black globe).
-        .globeImageUrl(isMobile ? 'assets/textures/earth-night-2048.jpg' : 'assets/textures/earth-night-3600.jpg')
-        .showAtmosphere(false)   // no glow — it was getting clipped at the edges of the stage
-        // Glowing points at each city (incl. San Francisco home base)
-        .pointsData(MARKERS)
-        .pointLat('lat').pointLng('lng')
-        .pointColor(function () { return ACCENT; })
-        .pointAltitude(0.035)
-        .pointRadius(0.32)
-        .pointsMerge(false)
-        .pointsTransitionDuration(700)     // markers fade/shrink when cleared at the end
-        // City labels as HTML elements so we can use the IBM Plex Mono web font
-        .htmlElementsData(MARKERS)
-        .htmlLat('lat').htmlLng('lng')
-        .htmlElement(function (d) {
-          var anchor = document.createElement('div');
-          anchor.className = 'globe-label-anchor';
-          anchor.dataset.idx = MARKERS.indexOf(d) - 1;   // which leg must finish before this label shows (home base = -1, shows from the start)
-          var el = document.createElement('div');
-          el.className = 'globe-label';
-          el.textContent = d.city;
-          anchor.appendChild(el);
-          return anchor;
-        })
-        // Flight-path arcs between visited cities (revealed as the journey traces)
-        .arcStartLat(function (d) { return d.startLat; })
-        .arcStartLng(function (d) { return d.startLng; })
-        .arcEndLat(function (d) { return d.endLat; })
-        .arcEndLng(function (d) { return d.endLng; })
-        .arcColor(function () { return ['rgba(255,255,255,' + (0.25 * arcAlpha).toFixed(3) + ')', 'rgba(255,255,255,' + (0.95 * arcAlpha).toFixed(3) + ')']; })
-        .arcAltitudeAutoScale(0.4)
-        .arcStroke(0.55)
-        .arcDashLength(1)
-        .arcDashGap(0)
-        .arcDashAnimateTime(0)
-        .arcsTransitionDuration(0)         // no enter-animation → no flicker when the leg grows
-        .arcsData([]);
-    } catch (err) {
-      showFallback();
-      return;
+      map = new mapboxgl.Map({
+        container: mount,
+        style: MAP_STYLE,
+        projection: 'globe',
+        center: [SF.lng, SF.lat],
+        zoom: FAR,
+        bearing: 0,
+        pitch: 0,
+        interactive: false,                // scroll fully drives the camera
+        antialias: true,
+        fadeDuration: 0,                   // no cross-fade flicker as tiles swap
+        renderWorldCopies: false,
+        dragRotate: false
+      });
+    } catch (err) { showFallback(); return; }
+
+    map.on('error', function () {});       // swallow transient tile/style hiccups
+
+    map.on('load', function () {
+      try { onReady(mapboxgl, map, SF, ASIA, FAR, NEAR, DOCK_ALT); }
+      catch (err) { showFallback(); }
+    });
+  }
+
+  function onReady(mapboxgl, map, SF, ASIA, FAR, NEAR, DOCK_ALT) {
+    // Transparent space + dark low fog so the globe floats over the page (the
+    // blackout/finale background) instead of sitting on a filled rectangle.
+    try {
+      map.setFog({
+        color: 'rgba(12,14,22,0.9)',
+        'high-color': 'rgba(32,36,60,0.5)',
+        'horizon-blend': 0.02,
+        'space-color': 'rgba(0,0,0,0)',        // transparent → the earth floats over the page
+        'star-intensity': 0
+      });
+    } catch (e) {}
+    try { map.setPaintProperty('background', 'background-color', 'rgba(0,0,0,0)'); } catch (e) {}
+
+    // Hide only the base style's own place labels (country / city / water names)
+    // — the country / state border lines stay on to give geographic context.
+    // The only labels on the globe should be our custom stop markers.
+    try {
+      map.getStyle().layers.forEach(function (l) {
+        if (l.type === 'symbol') { try { map.setLayoutProperty(l.id, 'visibility', 'none'); } catch (e) {} }
+      });
+    } catch (e) {}
+
+    // 3D topography: displace the globe surface from a terrain DEM and shade it,
+    // so mountain ranges read as real relief on the grayscale globe (the camera
+    // also pitches during the journey — see apply() — so the 3D is visible).
+    try {
+      if (!map.getSource('mapbox-dem')) {
+        map.addSource('mapbox-dem', {
+          type: 'raster-dem',
+          url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+          tileSize: 512, maxzoom: 14
+        });
+      }
+      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.25 });
+      map.addLayer({
+        id: 'hillshade', type: 'hillshade', source: 'mapbox-dem',
+        paint: {
+          'hillshade-exaggeration': 0.6,
+          'hillshade-shadow-color': '#000000',
+          'hillshade-highlight-color': '#464b57',
+          'hillshade-accent-color': '#0a0b10'
+        }
+      });
+    } catch (e) {}
+
+    // ── Flight-path arcs: a curved line source drawn leg-by-leg ──
+    function emptyFC() { return { type: 'FeatureCollection', features: [] }; }
+    function lineFeat(coords) { return { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } }; }
+    var GC_STEPS = 48;
+    var ARC_BASE_OPACITY = 0.85;
+    // Curved flight-hop arc between two points. A quadratic bezier whose control
+    // point bows perpendicular to the leg, so lines lift off like flight-map
+    // routes instead of hugging the surface. Longitudes are unwrapped to the
+    // shortest way round, so e.g. Tokyo → San Francisco hops across the Pacific
+    // rather than sweeping over the pole. Bow scales with leg length (subtle for
+    // short hops, more pronounced for long hauls), capped so it stays elegant.
+    function flightArc(a, b, n) {
+      var lng0 = a[0], lat0 = a[1];
+      var dLng = ((b[0] - lng0 + 540) % 360) - 180;   // shortest way (handles antimeridian)
+      var lng1 = lng0 + dLng, lat1 = b[1];
+      var dx = lng1 - lng0, dy = lat1 - lat0;
+      var chord = Math.sqrt(dx * dx + dy * dy);
+      if (chord < 1e-6) return [[lng0, lat0], [lng1, lat1]];
+      var nx = -dy / chord, ny = dx / chord;          // perpendicular unit vector…
+      if (ny < 0) { nx = -nx; ny = -ny; }             // …flipped so the arc bows "up" on the map
+      var bow = chord * Math.min(0.22, 0.10 + chord * 0.004);
+      var cx = (lng0 + lng1) / 2 + nx * bow;          // bezier control point
+      var cy = (lat0 + lat1) / 2 + ny * bow;
+      var pts = [];
+      for (var i = 0; i <= n; i++) {
+        var t = i / n, u = 1 - t;
+        pts.push([u * u * lng0 + 2 * u * t * cx + t * t * lng1,
+                  u * u * lat0 + 2 * u * t * cy + t * t * lat1]);
+      }
+      return pts;
     }
 
-    var controls = world.controls();
-    controls.enableZoom = false;
-    // Render at 1x so the HTML label layer aligns with the WebGL points (the
-    // html layer projects in CSS px; a >1 devicePixelRatio offsets the labels).
-    try { world.renderer().setPixelRatio(1); } catch (e) {}
+    map.addSource('route', { type: 'geojson', data: emptyFC() });
+    // Dark casing under the white line so it stays legible over bright satellite
+    // terrain (deserts, snow) as well as dark ocean.
+    map.addLayer({
+      id: 'route-casing', type: 'line', source: 'route',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': 'rgba(0,0,0,0.55)', 'line-width': 3.6, 'line-blur': 0.8, 'line-opacity': ARC_BASE_OPACITY }
+    });
+    map.addLayer({
+      id: 'route-line', type: 'line', source: 'route',
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#ffffff', 'line-width': 1.6, 'line-opacity': ARC_BASE_OPACITY, 'line-blur': 0.2 }
+    });
+    var routeSrc = map.getSource('route');
 
-    // Keep the (large) canvas sized to its container (re-pin pixelRatio: globe.gl
-    // resets it to devicePixelRatio on resize, which would offset the HTML labels).
-    function resize() {
-      world.width(mount.clientWidth).height(mount.clientHeight);
-      try { world.renderer().setPixelRatio(1); } catch (e) {}
+    // ── City points: soft accent glow + a bright core ──
+    map.addSource('markers', {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: MARKERS.map(function (d) {
+        return { type: 'Feature', geometry: { type: 'Point', coordinates: [d.lng, d.lat] }, properties: {} };
+      }) }
+    });
+    map.addLayer({
+      id: 'marker-glow', type: 'circle', source: 'markers',
+      paint: { 'circle-radius': 11, 'circle-color': ACCENT, 'circle-blur': 1, 'circle-opacity': 0.5 }
+    });
+    map.addLayer({
+      id: 'marker-core', type: 'circle', source: 'markers',
+      paint: {
+        'circle-radius': 3.4, 'circle-color': ACCENT, 'circle-opacity': 1,
+        'circle-stroke-width': 1.2, 'circle-stroke-color': 'rgba(255,255,255,0.9)'
+      }
+    });
+
+    // ── City labels: HTML markers so we keep the site font (GT America) ──
+    // Reuse the same .globe-label markup the CSS already styles. Mapbox fades
+    // markers on the far side of the globe out (opacityWhenCovered).
+    var labelEls = [];
+    MARKERS.forEach(function (d, i) {
+      var anchor = document.createElement('div');
+      anchor.className = 'globe-label-anchor';
+      anchor.dataset.idx = i - 1;             // which leg must finish first (home base = -1)
+      var el = document.createElement('div');
+      el.className = 'globe-label';
+      el.textContent = d.city;
+      anchor.appendChild(el);
+      new mapboxgl.Marker({ element: anchor, anchor: 'center', opacityWhenCovered: '0' })
+        .setLngLat([d.lng, d.lat]).addTo(map);
+      labelEls.push(anchor);
+    });
+
+    function setMarkersVisible(v) {
+      var vis = v ? 'visible' : 'none';
+      try {
+        map.setLayoutProperty('marker-glow', 'visibility', vis);
+        map.setLayoutProperty('marker-core', 'visibility', vis);
+      } catch (e) {}
+      for (var i = 0; i < labelEls.length; i++) labelEls[i].style.display = v ? '' : 'none';
     }
+    function setArcOpacity(a) {
+      var o = +(ARC_BASE_OPACITY * a).toFixed(3);
+      try { map.setPaintProperty('route-line', 'line-opacity', o); } catch (e) {}
+      try { map.setPaintProperty('route-casing', 'line-opacity', o); } catch (e) {}
+    }
+
+    // Camera: Mapbox is center+zoom(+pitch), so lat/lng/zoom/pitch drives it directly.
+    function setCam(lat, lng, zoom, pitch) { map.jumpTo({ center: [lng, lat], zoom: zoom, pitch: pitch || 0 }); }
+    function resize() { try { map.resize(); } catch (e) {} }
     window.addEventListener('resize', resize, { passive: true });
 
     var section  = document.getElementById('globe-scrolly');
@@ -257,44 +397,47 @@
     var placeEl  = document.querySelector('[data-globe-place]');
     var ctaEl    = document.querySelector('[data-globe-cta]');
 
-    var FAR  = 5.0;   // zoomed-out altitude — small whole globe that fits below the header
-    var NEAR = 0.62;  // zoomed-in altitude — half / region, spans the width (the journey)
-
-    // Static fallback: reduced motion or the scrolly section is missing.
-    // (Mobile runs the scroll-driven journey too — the canvas is pointer-events:none
-    // on mobile so touches scroll the page, which drives the camera.)
-    if (reduceMotion || !section) {
+    // ── Static fallback: reduced motion, mobile, or no scrolly section ──
+    // (Mobile runs the auto-rotating globe in normal flow — the pinned scroll
+    // journey stalls during iOS momentum scroll.)
+    if (reduceMotion || !section || isMobile) {
       if (section) section.classList.add('is-static');
-      // is-static resizes the wrap (e.g. 380px tall on mobile); the canvas was
-      // sized to the pre-static layout, so re-fit it to the new layout. Reading
-      // clientWidth in resize() forces the reflow, so do it now + on the next frame.
       resize();
       requestAnimationFrame(resize);
-      world.pointOfView({ lat: 18, lng: 110, altitude: isMobile ? 2.4 : FAR }, 0);
-      // Keep auto-rotation on — its continuous render loop is what keeps iOS Safari
-      // from blanking the (offscreen-then-onscreen) WebGL buffer. The canvas is made
-      // pointer-events:none in CSS so touches scroll the page instead of rotating.
-      controls.autoRotate = !reduceMotion;
-      controls.autoRotateSpeed = 0.5;
-      document.addEventListener('visibilitychange', function () {
-        if (!reduceMotion) controls.autoRotate = !document.hidden;
-      });
+      routeSrc.setData({ type: 'FeatureCollection', features: (function () {
+        var f = [];
+        for (var i = 0; i < PLACES.length; i++) {
+          var a = i === 0 ? SF : PLACES[i - 1];
+          f.push(lineFeat(flightArc([a.lng, a.lat], [PLACES[i].lng, PLACES[i].lat], GC_STEPS)));
+        }
+        return f;
+      })() });
+      map.jumpTo({ center: [ASIA.lng, ASIA.lat], zoom: isMobile ? 1.7 : FAR });
+      if (!reduceMotion) {
+        var lastT = null, spinRAF;
+        (function spin(ts) {
+          if (!document.hidden) {
+            if (lastT === null) lastT = ts;
+            var dt = Math.min(80, ts - lastT); lastT = ts;
+            var c = map.getCenter();
+            map.jumpTo({ center: [c.lng - (isMobile ? 4 : 6) * dt / 1000, c.lat], zoom: map.getZoom() });
+          } else { lastT = null; }
+          spinRAF = requestAnimationFrame(spin);
+        })();
+        void spinRAF;
+      }
       return;
     }
 
     // ── Scroll-driven journey (damped easing + smooth spline path) ───
-    controls.autoRotate = false;
-    controls.enabled = false;              // scroll fully drives the camera
-
-    var SF = HOME;   // home base — globe starts here (also a marker via MARKERS)
-    world.pointOfView({ lat: SF.lat, lng: SF.lng, altitude: FAR }, 0);
+    setCam(SF.lat, SF.lng, FAR);
 
     function lerp(a, b, t) { return a + (b - a) * t; }
     function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
     function smooth(t) { return t * t * (3 - 2 * t); }
     // Smootherstep (Perlin): eases in AND out with zero velocity at both ends, so
-    // the camera glides between cities (as before) but gently slows to a rest on
-    // each one before moving on — no hard snap/jolt.
+    // the camera glides between cities but gently slows to a rest on each one
+    // before moving on — no hard snap/jolt.
     function restEase(f) { return f * f * f * (f * (f * 6 - 15) + 10); }
     function at(i) { return PLACES[Math.max(0, Math.min(PLACES.length - 1, i))]; }
     // Interpolate longitude along the shortest way around the globe.
@@ -308,33 +451,36 @@
         (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
     }
 
-    var ASIA = { lat: 18, lng: 110 };
     var ZIN = 0.12, ZOUT = 0.72;           // zoom-in ends / journey ends (then dock + CTA)
     var DOCK_END = 0.84;                    // globe finishes docking to the bottom by here
     var FREE_START = 0.93;                  // past here (→ footer) the earth spins freely + draggable
-    var DOCK_ALT = 1.5;                     // altitude of the docked half-globe
     var DOCK_SHIFT = 0.5;                   // drop the docked globe so its centre is at the bottom edge
     var SHIFT_VH = 0.18;                    // drop the zoomed-out globe below the header
     var DAMP = 0.08;                        // camera easing — lower = smoother / heavier
     var SPIN_DPS = 6;                       // intro idle rotation speed (deg/sec)
+    var PITCH_MAX = 32;                     // camera tilt during the journey so 3D terrain reads (deg)
     var spin = 0, lastCity = -1;
 
     // Flight-path route: starts in San Francisco, then through every city.
     var ROUTE = [SF].concat(PLACES);
     var LEGS = ROUTE.length - 1;
+    // Draw every leg, including leg 0 (San Francisco → first city). The flight
+    // arc bows it across the Pacific like a real flight hop rather than sweeping
+    // a flat line over the pole, so it reads as intentional.
+    var DRAW_FROM = 0;
     var lastArcKey = '';
     var arcAlpha = 1, arcFading = false, arcFadeT = 0, ARC_FADE_MS = 700;
     var arcDir = -1, arcFadeMs = ARC_FADE_MS;   // fade direction (-1 out / +1 in) and duration
-    function fullRouteArcs() {
-      var arcs = [];
-      for (var i = 0; i < LEGS; i++) {
-        arcs.push({ startLat: ROUTE[i].lat, startLng: ROUTE[i].lng,
-                    endLat: ROUTE[i + 1].lat, endLng: ROUTE[i + 1].lng });
+
+    function fullRouteFC() {
+      var f = [];
+      for (var i = DRAW_FROM; i < LEGS; i++) {
+        f.push(lineFeat(flightArc([ROUTE[i].lng, ROUTE[i].lat], [ROUTE[i + 1].lng, ROUTE[i + 1].lat], GC_STEPS)));
       }
-      return arcs;
+      return { type: 'FeatureCollection', features: f };
     }
-    // Draw the route up to `rp` legs — the current (fractional) leg is drawn partway,
-    // so the line extends as the user scrolls instead of snapping in complete.
+    // Draw the route up to `rp` legs — the current (fractional) leg is drawn
+    // partway, so the line extends as the user scrolls instead of snapping in.
     function setRouteArcs(rp) {
       rp = Math.max(0, Math.min(LEGS, rp));
       var full = Math.floor(rp);
@@ -342,27 +488,23 @@
       var key = full + ':' + frac;
       if (key === lastArcKey) return;
       lastArcKey = key;
-      var arcs = [], i;
-      for (i = 0; i < full; i++) {                     // completed legs (full arcs)
-        arcs.push({ startLat: ROUTE[i].lat, startLng: ROUTE[i].lng,
-                    endLat: ROUTE[i + 1].lat, endLng: ROUTE[i + 1].lng });
+      var feats = [], i;
+      for (i = DRAW_FROM; i < full; i++) {             // completed legs (full arcs); leg 0 (SF→) skipped
+        feats.push(lineFeat(flightArc([ROUTE[i].lng, ROUTE[i].lat], [ROUTE[i + 1].lng, ROUTE[i + 1].lat], GC_STEPS)));
       }
-      if (full < LEGS && frac > 0.001) {               // current leg, drawn partway
-        var a = ROUTE[full], b = ROUTE[full + 1];
-        arcs.push({ startLat: a.lat, startLng: a.lng,
-                    endLat: lerp(a.lat, b.lat, frac), endLng: lerpLng(a.lng, b.lng, frac) });
+      if (full >= DRAW_FROM && full < LEGS && frac > 0.001) {   // current leg, drawn partway (not the SF leg)
+        var gc = flightArc([ROUTE[full].lng, ROUTE[full].lat], [ROUTE[full + 1].lng, ROUTE[full + 1].lat], GC_STEPS);
+        var take = Math.max(2, Math.round((gc.length - 1) * frac) + 1);
+        feats.push(lineFeat(gc.slice(0, take)));
       }
-      world.arcsData(arcs);
+      routeSrc.setData({ type: 'FeatureCollection', features: feats });
     }
 
     // Show each city's label once its flight line is ≥80% of the way there.
-    // Re-query every frame: globe.gl adds/removes label nodes as cities rotate
-    // into view, so a cached list would miss most of them.
     function updateLabels(rp, active) {
-      var els = mount.querySelectorAll('.globe-label-anchor');
-      for (var i = 0; i < els.length; i++) {
-        var idx = parseInt(els[i].dataset.idx, 10) || 0;
-        els[i].classList.toggle('show', active && rp >= idx + 0.8);
+      for (var i = 0; i < labelEls.length; i++) {
+        var idx = parseInt(labelEls[i].dataset.idx, 10) || 0;
+        labelEls[i].classList.toggle('show', active && rp >= idx + 0.8);
       }
     }
 
@@ -371,21 +513,22 @@
     var FREE_SPIN = 5;                       // free-mode auto-rotation (deg/sec)
     var exitT = 0, EXIT_MS = 450;            // smooth glide-back when scrolling out of free mode
     function enterFree() {
-      var pov = world.pointOfView();
-      freeLat = pov.lat; freeLng = pov.lng;
-      world.pointsData([]);                 // markers fade out
+      var c = map.getCenter();
+      freeLat = c.lat; freeLng = c.lng;
+      setMarkersVisible(false);              // markers fade out
+      routeSrc.setData(fullRouteFC());
       arcFading = true; arcDir = -1; arcFadeMs = ARC_FADE_MS;   // flight lines fade out (not abrupt)
       arcFadeT = (1 - arcAlpha) * ARC_FADE_MS;
       lastArcKey = '__free__';
     }
-    function exitFree(toLat, toLng, toAlt) {
-      // Glide the camera from the free spin back to the docked orientation instead of snapping it.
-      world.pointOfView({ lat: toLat, lng: toLng, altitude: toAlt }, EXIT_MS);
+    function exitFree(toLat, toLng, toZoom) {
+      // Glide the camera from the free spin back to the docked orientation.
+      map.easeTo({ center: [toLng, toLat], zoom: toZoom, pitch: 0, duration: EXIT_MS });
       exitT = EXIT_MS;
-      world.pointsData(MARKERS);            // markers return (incl. home base)
+      setMarkersVisible(true);               // markers return (incl. home base)
+      routeSrc.setData(fullRouteFC());
       arcFading = true; arcDir = 1; arcFadeMs = EXIT_MS;        // flight lines fade back in
-      arcFadeT = arcAlpha * EXIT_MS;        // continue from the current (faded) alpha
-      world.arcsData(fullRouteArcs());
+      arcFadeT = arcAlpha * EXIT_MS;         // continue from the current (faded) alpha
       lastArcKey = '__exit__';
     }
     // Drag to rotate (only while the earth is free at the footer).
@@ -411,7 +554,7 @@
 
     function apply(p) {
       var vh = window.innerHeight || document.documentElement.clientHeight;
-      var lat, lng, alt, dark, introOp, shift, showPlace = false, cityIdx = 0, rp = 0, ctaUp = 1, freeWanted = false;
+      var lat, lng, zoom, pitch = 0, dark, introOp, shift, showPlace = false, cityIdx = 0, rp = 0, ctaUp = 1, freeWanted = false;
       var down = vh * SHIFT_VH + 128;   // extra 128px of breathing room above the globe
 
       if (p < ZIN) {                        // arrive → slow spin over SF, then sweep into the first city
@@ -419,7 +562,8 @@
         dark = t; introOp = 1 - (p / ZIN);
         lat = lerp(SF.lat, PLACES[0].lat, t);
         lng = lerpLng(SF.lng + spin, PLACES[0].lng, t);
-        alt = lerp(FAR, NEAR, t); shift = lerp(down, 0, t);
+        zoom = lerp(FAR, NEAR, t); shift = lerp(down, 0, t);
+        pitch = PITCH_MAX * t;             // tilt in as we zoom toward the first city
         rp = t;                            // draw the SF → first-city leg as we zoom in
       } else if (p > ZOUT) {                // journey done → dock half-globe to the bottom, raise CTA
         introOp = 0; rp = LEGS;            // full route stays drawn
@@ -429,23 +573,24 @@
           dark = 1 - u;
           lat = lerp(last.lat, ASIA.lat, u);
           lng = lerp(last.lng, ASIA.lng, u);
-          alt = lerp(NEAR, DOCK_ALT, u);
+          zoom = lerp(NEAR, DOCK_ALT, u);
+          pitch = PITCH_MAX * (1 - u);      // tilt back to flat as the globe docks
           shift = u * vh * DOCK_SHIFT;
         } else if (p < FREE_START) {       // hold the dome at the bottom, pull the CTA up over it
           var w = smooth((p - DOCK_END) / (FREE_START - DOCK_END));
           dark = 0;
           lat = ASIA.lat; lng = ASIA.lng;
-          alt = DOCK_ALT; shift = vh * DOCK_SHIFT;
+          zoom = DOCK_ALT; shift = vh * DOCK_SHIFT;
           ctaUp = 1 - w;
         } else {                           // → footer: clean earth, spinning + draggable
-          dark = 0; alt = DOCK_ALT; shift = vh * DOCK_SHIFT; ctaUp = 0;
+          dark = 0; zoom = DOCK_ALT; shift = vh * DOCK_SHIFT; ctaUp = 0;
           freeWanted = true;
         }
       } else {                              // journey → glide continuously along the path
-        dark = 1; introOp = 0; alt = NEAR; shift = 0; showPlace = true;
+        dark = 1; introOp = 0; zoom = NEAR; shift = 0; pitch = PITCH_MAX; showPlace = true;
         var jp = (p - ZIN) / (ZOUT - ZIN);
         // Reach the final city by HOLD of the journey, then dwell on it so the
-        // last stop (e.g. Sydney) gets real screen time instead of flashing at the boundary.
+        // last stop gets real screen time instead of flashing at the boundary.
         var HOLD = 0.92;
         var sp = jp < HOLD ? (jp / HOLD) : 1;
         var seg = sp * (PLACES.length - 1);
@@ -457,18 +602,17 @@
         rp = 1 + segEased;                 // SF leg done; the line dwells with the camera, then extends
       }
 
-      if (freeWanted) {                  // footer: let the controls (auto-rotate + drag) drive
+      if (freeWanted) {                  // footer: let the auto-spin + drag drive
         if (!freeMode) { enterFree(); freeMode = true; }
       } else {
-        if (freeMode) { exitFree(lat, lng, alt); freeMode = false; }
+        if (freeMode) { exitFree(lat, lng, zoom); freeMode = false; }
         if (exitT <= 0) {                // not mid glide-back → drive the camera directly
-          world.pointOfView({ lat: lat, lng: lng, altitude: alt }, 0);
+          setCam(lat, lng, zoom, pitch);
           if (!arcFading) setRouteArcs(rp);
         }
       }
       wrap.style.setProperty('--globe-shift', Math.round(shift) + 'px');
       // A city label fades in once its flight line is ≥80% of the way there.
-      // PLACES[i] is the end of route leg i, so the line reaches it at rp = i + 1.
       updateLabels(rp, p < ZOUT);
       if (ctaEl) ctaEl.style.setProperty('--cta-up', clamp01(ctaUp).toFixed(3));
       if (blackout) blackout.style.opacity = dark.toFixed(3);
@@ -506,18 +650,17 @@
         arcFadeT += dt;
         var fk = Math.min(1, arcFadeT / arcFadeMs);
         arcAlpha = arcDir < 0 ? (1 - fk) : fk;
+        setArcOpacity(arcAlpha);
         if (fk >= 1) {
           arcFading = false;
-          if (arcDir < 0) { arcAlpha = 0; world.arcsData([]); }
-          else { arcAlpha = 1; lastArcKey = ''; }   // hand the route back to setRouteArcs
-        } else {
-          world.arcsData(fullRouteArcs());
+          if (arcDir < 0) { arcAlpha = 0; setArcOpacity(0); routeSrc.setData(emptyFC()); }
+          else { arcAlpha = 1; setArcOpacity(1); lastArcKey = ''; }   // hand the route back to setRouteArcs
         }
       }
       if (exitT > 0) exitT -= dt;          // let the glide-back tween finish
       if (freeMode) {                      // footer: slow auto-spin unless the user is dragging
         if (!dragging) freeLng -= FREE_SPIN * dt / 1000;
-        world.pointOfView({ lat: freeLat, lng: freeLng, altitude: DOCK_ALT }, 0);
+        setCam(freeLat, freeLng, DOCK_ALT);
       }
       requestAnimationFrame(tick);
     }

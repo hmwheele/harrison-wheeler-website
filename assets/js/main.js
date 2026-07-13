@@ -137,46 +137,32 @@
     }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        if (en.isIntersecting) {
-          en.target.classList.add('visible');
-          io.unobserve(en.target);
-        }
+        en.target.classList.toggle('visible', en.isIntersecting);
       });
     }, { rootMargin: '0px 0px -12% 0px', threshold: 0.2 });
     groups.forEach(function (g) { io.observe(g); });
   })();
 
-  /* ── Card grids: staggered parallax on scroll ───────────────── */
-  // Every second card in a grid rides at an offset, drifting upward
-  // relative to its neighbor as the grid moves through the viewport.
+  /* ── Folder deck: per-card sticky offset ─────────────────────── */
+  // Cards pin at 96px below the top — unless a card is taller than the
+  // viewport (mobile), in which case it pins once its BOTTOM is 16px above
+  // the viewport edge, so all of its content scrolls into view first.
   (function () {
-    var grids = document.querySelectorAll('.card-grid');
-    if (!grids.length) return;
-    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
-    var RANGE_LEFT = 20;  // left column: slow drift
-    var RANGE_RIGHT = 56; // right column: faster, offset drift
-
-    var cardTicking = false;
-    function updateCards() {
+    var cards = document.querySelectorAll('.card-grid .card');
+    if (!cards.length) return;
+    function setTops() {
       var vh = window.innerHeight || document.documentElement.clientHeight;
-      var twoCol = window.innerWidth > 860 && !reduce.matches;
-      grids.forEach(function (grid) {
-        var cards = grid.children;
-        var r = grid.getBoundingClientRect();
-        var p = Math.max(0, Math.min(1, (vh - r.top) / (vh + r.height)));
-        for (var i = 0; i < cards.length; i++) {
-          if (!twoCol) { cards[i].style.removeProperty('--py'); continue; }
-          var range = (i % 2 === 0) ? RANGE_LEFT : RANGE_RIGHT;
-          cards[i].style.setProperty('--py', (range - p * range * 2).toFixed(1) + 'px');
-        }
+      cards.forEach(function (c) {
+        c.style.setProperty('--stick-top', Math.min(96, vh - c.offsetHeight - 16) + 'px');
       });
-      cardTicking = false;
     }
-    window.addEventListener('scroll', function () {
-      if (!cardTicking) { requestAnimationFrame(updateCards); cardTicking = true; }
-    }, { passive: true });
-    window.addEventListener('resize', updateCards, { passive: true });
-    updateCards();
+    window.addEventListener('resize', setTops, { passive: true });
+    window.addEventListener('load', setTops);   // re-measure once images land
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(setTops);
+      cards.forEach(function (c) { ro.observe(c); });
+    }
+    setTops();
   })();
 
   /* ── Fade in + up on scroll into view ───────────────────────── */
@@ -189,7 +175,7 @@
     }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+        en.target.classList.toggle('in', en.isIntersecting);
       });
     }, { threshold: 0.2, rootMargin: '0px 0px -10% 0px' });
     els.forEach(function (e) { io.observe(e); });
@@ -438,3 +424,29 @@
     el.textContent = new Date().getFullYear();
   });
 })();
+
+
+/* ── Hero parallax: logo backdrop lags behind the name/copy on scroll ── */
+(function () {
+  var hero = document.querySelector('.hero--stage');
+  var logo = document.querySelector('.hero-logo-bg');
+  if (!hero || !logo) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  var ticking = false;
+  function update() {
+    ticking = false;
+    var y = window.scrollY || window.pageYOffset;
+    if (y > hero.offsetHeight) return;   // hero scrolled past — nothing to do
+    /* logo (background layer) lags the most; copy lags a little */
+    hero.style.setProperty('--plx-logo', (y * 0.45).toFixed(1) + 'px');
+    hero.style.setProperty('--plx-name', (y * -0.35).toFixed(1) + 'px');
+    /* dissolve the logo before its parallax drift reaches the next section */
+    var fade = Math.max(0, 1 - y / (window.innerHeight * 0.5));
+    hero.style.setProperty('--plx-fade', fade.toFixed(3));
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+})();
+

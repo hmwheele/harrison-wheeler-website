@@ -25,6 +25,12 @@
   src: url('../fonts/GT-America-Standard-Bold.otf') format('opentype');
   font-weight: 700; font-style: normal; font-display: swap;
 }
+/* ── Neudron (display — hero name) ── */
+@font-face {
+  font-family: 'Neudron';
+  src: url('../fonts/403-neudron-regular.woff2') format('woff2');
+  font-weight: 100 900; font-style: normal; font-display: swap;
+}
 /* ── Reckless (variable, serif display) — wavy marquee headline ── */
 @font-face {
   font-family: 'Reckless';
@@ -128,36 +134,45 @@ ul { list-style: none; }
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   background: transparent;
 }
-/* Blurred backdrop lives on a pseudo so it can fade to 0 at the bottom (no hard line). */
-.nav::before {
-  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: rgba(13, 12, 17, .82);
-  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-          mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-  opacity: 0; transition: opacity .3s ease;
+/* Mobile: blurred full-width backdrop behind logo + hamburger */
+@media (max-width: 860px) {
+  .nav::before {
+    content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: rgba(13, 12, 17, .35);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+  }
 }
-/* Fade the backdrop in once the user scrolls past the viewport (toggled in main.js) */
-.nav.scrolled::before { opacity: 1; }
 .nav-inner {
   position: relative;
-  max-width: var(--max); margin: 0 auto; padding: 16px 32px;
+  max-width: var(--max); margin: 0 auto; padding: 24px 32px;
   display: flex; align-items: center; justify-content: space-between;
 }
 .nav-logo {
   display: inline-flex; align-items: center; gap: 10px;
   font-weight: 700; letter-spacing: -.01em; font-size: .98rem; color: var(--text);
 }
-.nav-logo-img { width: 24px; height: auto; display: block; transform-origin: left top; transition: transform .3s ease; }
+.nav-logo-img { width: 24px; height: auto; display: block; transform-origin: left top; transition: transform .3s ease, opacity .25s ease, visibility .25s ease; }
 .nav-logo-name { transition: opacity .25s ease, visibility .25s ease; }
 /* Home: the hero already shows the name large. At the top, keep just the mark and
    hide the name; once scrolled past the hero, shrink the mark and reveal the name.
    The mark is enlarged with a transform (no layout reflow) so the nav links never
    move and the position never snaps — scale 1.75 ≈ 42px, dropped 8px to sit 24px
    from the top. */
-body.home:not(.show-brand) .nav-logo-img { transform: translateY(8px) scale(1.75); }
+body.home:not(.show-brand) .nav-logo-img { opacity: 0; visibility: hidden; }
 body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .nav-links { display: flex; gap: 30px; align-items: center; }
+/* desktop: links centered to the page (mobile overlay overrides this) */
+@media (min-width: 861px) {
+  .nav-links {
+    position: absolute; left: 50%; top: 16px; transform: translateX(-50%);
+    background: rgba(13, 12, 17, .6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 999px; padding: 14px 32px;
+  }
+}
 .nav-links a { font-family: var(--mono); font-size: .95rem; font-weight: 400; letter-spacing: .02em; color: #fff; transition: color .2s; }
 .nav-links a:hover { color: var(--primary); }
 .nav-links a.active { color: var(--primary); }
@@ -221,17 +236,17 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   background-image:
     linear-gradient(var(--border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
-  background-size: 64px 64px;
+  background-size: 40px 40px;
   -webkit-mask-image: linear-gradient(#000 60%, transparent 100%);
           mask-image: linear-gradient(#000 60%, transparent 100%);
   opacity: .5;
   pointer-events: none;
   /* slow, seamless leftward drift (one 64px tile per cycle) */
-  animation: hero-grid-pan 16s linear infinite;
+  animation: hero-grid-pan 10s linear infinite;
 }
 @keyframes hero-grid-pan {
   from { background-position: 0 0; }
-  to   { background-position: -64px 0; }
+  to   { background-position: -40px 0; }
 }
 .hero > .container { position: relative; z-index: 2; }
 
@@ -244,7 +259,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .hero--stage .hero-bigimg {
   position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
   height: 100%; width: auto; max-width: none; z-index: 1;
-  aspect-ratio: 2679 / 2000;   /* reserve size before the webp loads (prevents a mobile reflow jump) */
+  aspect-ratio: 1200 / 675;   /* reserve size before the webp loads (prevents a mobile reflow jump) */
   object-fit: contain; object-position: bottom center;
   filter: drop-shadow(0 20px 60px rgba(0, 0, 0, .45));
 }
@@ -285,7 +300,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 }
 @keyframes hero-cursor-out { to { opacity: 0; } }
 /* Name, tagline + buttons stay hidden through the drag, then fade in once it settles */
-.hero-stage-content { animation: hero-content-fade .5s ease 1.4s both; }
+.hero-stage-content { animation: hero-content-fade .5s ease .1s both; }
 @keyframes hero-content-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .hero--stage .hero-bigimg, .hero-contour { animation: none; }
@@ -294,27 +309,55 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 }
 /* Content layered in front, centered to the page */
 .hero--stage { justify-content: center; }
-.hero-stage-content { position: relative; z-index: 3; width: 100%; text-align: center; padding-bottom: 7vh; }
+.hero-stage-content { position: relative; z-index: 3; width: 100%; text-align: center; padding-bottom: 7vh; container-type: inline-size; }
+/* the whole copy block (name, subtext, buttons) rises faster than the page on scroll */
+.hero--stage .hero-stage-content { transform: translateY(var(--plx-name, 0px)); will-change: transform; }
+
+.bigname-br { display: none; }
+
+/* HW logo — centered backdrop behind the hero copy (above the grid, below the text) */
+.hero--stage .hero-logo-bg {
+  position: absolute; left: 50%; top: 58%;
+  transform: translate(-50%, -50%) translateY(var(--plx-logo, 0px));
+  width: min(440px, 82vw); height: auto; z-index: 2; pointer-events: none;
+  filter: brightness(0);
+  /* base .85, fades out on scroll before it can collide with the next section's bg */
+  opacity: calc(.85 * var(--plx-fade, 1));
+  will-change: transform;
+}
+
+
 /* higher specificity so it beats the two-column .hero h1 / .hero p.lede rules */
 .hero--stage .hero-bigname {
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif;
+  text-transform: uppercase; font-synthesis: none;
   margin: 0 0 22px; max-width: none; text-align: center;
-  font-size: clamp(3rem, 11vw, 8.5rem); font-weight: 800;
-  line-height: .92; letter-spacing: -.03em; color: #fff;
-  text-shadow: 0 6px 44px rgba(0, 0, 0, .6);
+  font-size: clamp(3.6rem, 14.5vw, 11rem); /* fallback */
+  font-size: 19cqw; font-weight: 800;
+  line-height: .92; letter-spacing: -.01em;
+  /* stretch the glyphs taller without widening them */
+  transform: scaleY(1.5); transform-origin: bottom center;
+  /* white at the baseline fading up into the mint green */
+  color: #b9f2c8;   /* fallback for browsers without background-clip: text */
+  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-.hero--stage .hero-stage-content .lede { margin: 0 auto 28px; margin-left: auto; text-align: center; font-size: 32px; line-height: 1.25; font-weight: 200; }
+.hero--stage .hero-stage-content .lede { margin: 0 auto 28px; margin-left: auto; text-align: center; font-family: 'Merriweather', Georgia, serif; font-size: 32px; line-height: 1.25; font-weight: 300; }
 .hero--stage .hero-actions { justify-content: center; }
 /* On phones the portrait is zoomed, so drop the content lower to clear the face */
 @media (max-width: 560px) {
   /* Fill the hero to the *visible* viewport (dvh accounts for the mobile
      browser toolbar) so the content box's bottom == the real bottom. */
-  .hero.hero--stage { align-items: stretch; padding-top: 0; min-height: 100vh; min-height: 100dvh; }
+  .hero.hero--stage { align-items: stretch; padding-top: 0; min-height: 100vh; min-height: 100svh; }
   .hero-stage-content {
-    min-height: 100vh; min-height: 100dvh; box-sizing: border-box;
+    min-height: 100vh; min-height: 100svh; box-sizing: border-box;
     display: flex; flex-direction: column; justify-content: flex-end;
     padding-bottom: 172px;   /* reserve room for the pinned buttons */
   }
-  .hero--stage .hero-bigname { font-size: clamp(2.4rem, 13vw, 4rem); }
+  .bigname-br { display: inline; }
+  /* two stacked lines on phones — pull them closer together */
+  .hero--stage .hero-bigname { font-size: 38cqw; line-height: .82; }
   .hero--stage .hero-stage-content .lede { font-size: 18px; margin-bottom: 20px; }
   /* Slightly smaller, vertically centered portrait on phones */
   .hero--stage .hero-bigimg { height: 88%; bottom: 6%; }
@@ -405,8 +448,9 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 
 /* ── Belief statement ───────────────────────────────────────────── */
 .belief p.big {
-  font-size: clamp(1.5rem, 3.2vw, 2.4rem); font-weight: 200; letter-spacing: -.02em;
-  line-height: 1.3; max-width: 22em; margin-bottom: 28px;
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: clamp(1.5rem, 3.2vw, 2.4rem); font-weight: 300; letter-spacing: -.02em;
+  line-height: 1.4; max-width: 22em; margin-bottom: 28px;
 }
 .belief p.body { font-family: 'Merriweather', Georgia, serif; font-weight: 300; line-height: 1.6; color: var(--text-muted); max-width: 40em; margin-bottom: 16px; }
 .belief-more { margin-top: 14px; }
@@ -414,13 +458,26 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 /* Career timeline beside the belief statement.
    Left column pins while the timeline scrolls past it. */
 .belief-grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 80px; align-items: start; }
-.belief-text { position: sticky; top: 120px; }
+.belief-text { position: sticky; top: 120px; text-align: left; }
+/* Image placeholder above the timeline (right column) */
+.timeline-photo {
+  position: relative;   /* anchors the rotating badge at its corner */
+  width: 100%; aspect-ratio: 4 / 5; border-radius: 8px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, #2a2833, #1f1d26);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); font-family: var(--mono); font-size: .8rem;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+/* Profile photo fills the box (clipped to the rounded corners) while the
+   overhanging badge stays a sibling so it isn't clipped. */
+.timeline-photo-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
 .timeline { display: flex; flex-direction: column; gap: 96px; padding-block: 24px; }
 .timeline-group {
   text-align: center;
   opacity: 0;
-  transform: translateY(28px);
-  transition: opacity .6s ease, transform .6s ease;
+  transform: translateY(48px);
+  transition: opacity .45s cubic-bezier(.22, 1, .36, 1), transform .45s cubic-bezier(.22, 1, .36, 1);
 }
 .timeline-group.visible { opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce) {
@@ -443,29 +500,66 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .timeline-item em { display: block; font-style: normal; font-size: .9rem; color: var(--text-muted); }
 
 /* ── Card grids ─────────────────────────────────────────────────── */
-.card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.card-grid { display: flex; flex-direction: column; gap: 0; }
 /* Leadership + Projects are two groups under one "Select work" header — keep them tight */
-#leadership { padding-bottom: 56px; }
-#projects { padding-top: 0; }
+#leadership { padding-bottom: 0; }
 .card {
-  position: relative; display: flex; flex-direction: column;
-  border-radius: 0; overflow: visible;
-  background: transparent; border: none;
-  transition: transform .2s;
+  position: relative; display: grid;
+  grid-template-columns: 1fr 1fr; align-items: center; gap: clamp(32px, 5vw, 72px);
+  margin: 0;   /* flush top-to-bottom, full container width */
+  /* Folder-organizer outline framing each case study — drawn on a masked
+     ::before so every folder's lines fade to transparency toward the bottom. */
+  padding: clamp(28px, 3.5vw, 52px);
+  border: none;
+  border-radius: 24px 24px 0 0;
+  background: var(--bg); overflow: visible;   /* opaque — cards cover the pinned header text */
+  transition: transform .2s, border-color .2s;
   cursor: pointer;
   will-change: transform;
 }
-.card { transform: translateY(var(--py, 0px)); }
-.card:hover { transform: translateY(calc(var(--py, 0px) - 3px)); }
-.card:hover h3 { color: #ffd8e4; }
-.card-media { aspect-ratio: 16/10; background: linear-gradient(135deg, #2a2833, #3a3747); position: relative; border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+/* Every folder's outline fades to transparency toward the bottom. Drawn on a
+   masked pseudo-element (border-image can't round corners). */
+.card::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, .16); border-bottom: none;
+  border-radius: 24px 24px 0 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 35%, transparent 95%);
+          mask-image: linear-gradient(to bottom, #000 35%, transparent 95%);
+  transition: border-color .2s;
+}
+.card:hover::before { border-color: rgba(255, 255, 255, .28); }
+/* Alternating editorial layout: odd rows put the title on the left + image on
+   the right; even rows flip to image-left, title-right. */
+.card:nth-child(odd) .card-media { order: 2; }
+.card:nth-child(odd) .card-body  { order: 1; }
+.card:hover { transform: translateY(-3px); }
+.card:hover h3 { background-position: 0% 0%; }   /* fill the near-white with light pink */
+/* Sticky deck (all sizes): each folder pins and the next one scrolls up over
+   it. --stick-top is set per card in main.js so folders taller than the
+   viewport (mobile) scroll fully into view before pinning. */
+.card { position: sticky; top: var(--stick-top, 96px); }
+.card-media { aspect-ratio: 16/10; background: linear-gradient(135deg, #2a2833, #3a3747); position: relative; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 .card-media img { width: 100%; height: 100%; object-fit: cover; }
 .card-media--placeholder { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3a2a3f, #2a3347 55%, #1f2a3a); }
 .card-media-tag { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: #ffd8e4; border: 1px solid rgba(255,216,228,.35); border-radius: 999px; padding: 7px 16px; }
 .card-body { padding: 16px 0 8px; text-align: left; }
 .card .eyebrow { display: none; }
-.card h3 { font-size: 24px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; margin-bottom: 10px; transition: color .2s; }
-.card .meta { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 16px; color: #fff; }
+.card h3 {
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  text-transform: uppercase; font-size: clamp(40px, 6.5vw, 88px); font-weight: 700;
+  letter-spacing: -.01em; line-height: .92; margin-bottom: 12px;
+  /* light-pink gradient; on hover the near-white body fills in with pink.
+     Gradients can't be transitioned directly, so we use a double-height
+     gradient (pink up top, near-white below) and slide it via
+     background-position — which IS animatable. */
+  color: var(--light-pink);   /* fallback for no background-clip: text */
+  background: linear-gradient(to bottom, #ffd8e4 0%, #ffd8e4 50%, #ffeef4 60%, #ffeef4 100%);
+  background-size: 100% 200%; background-position: 0% 100%;   /* default: near-white body, pink top */
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: background-position .6s ease;
+}
+.card .meta { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 20px; line-height: 1.5; color: #fff; }
 .news-all { color: var(--primary); font-weight: 600; text-decoration: none; }
 .news-all:hover { text-decoration: underline; }
 
@@ -492,7 +586,22 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   letter-spacing: -.01em; color: var(--text); margin: 0;
 }
 .section-head.head-display.head-gt h2 {
-  font-family: 'GT America', system-ui, sans-serif; font-weight: 700; letter-spacing: -.02em;
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif;
+  font-weight: 400; font-synthesis: none; letter-spacing: -.01em;
+  text-transform: capitalize;
+  font-size: clamp(3.3rem, 8.25vw, 5.8rem);
+}
+/* "Let's work together" CTA — match the hero bigname treatment
+   (uppercase, heavy weight, mint gradient, vertical stretch) but
+   keep the CTA heading's own font size from the rule above. */
+.cta-section .section-head.head-display.head-gt h2,
+.globe-cta .section-head.head-display.head-gt h2 {
+  text-transform: uppercase; font-weight: 800; line-height: .92;
+  transform: scaleY(1.5); transform-origin: bottom center;
+  color: #b9f2c8;
+  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 /* Merriweather subtext that sits under a section header */
 .head-sub {
@@ -514,6 +623,9 @@ main > .phead-wrap { padding-top: var(--gap); }
 .phead { position: sticky; top: 96px; z-index: 1; padding-bottom: clamp(80px, 12vh, 150px); }
 .phead [data-phead] { will-change: opacity, transform; }
 .phead-body { position: relative; z-index: 2; background: var(--bg); }
+/* Select Work: no opaque block — the folder cards themselves scroll over the
+   pinned header text (cards carry their own opaque bg). */
+main > .phead-wrap > .phead-body { background: transparent; }
 /* Grid pattern behind the case-study cards — over the solid bg, behind the cards.
    Opacity driven by main.js: fades in as the section enters, out as it leaves. */
 .cs-grid {
@@ -522,7 +634,8 @@ main > .phead-wrap { padding-top: var(--gap); }
   background-image:
     linear-gradient(var(--border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
-  background-size: 64px 64px;
+  background-size: 40px 40px;
+  background-position: 20px 0, 20px 0;   /* nudge the grid to the right */
   -webkit-mask-image: linear-gradient(transparent 0, #000 7%, #000 90%, transparent 100%);
           mask-image: linear-gradient(transparent 0, #000 7%, #000 90%, transparent 100%);
 }
@@ -537,26 +650,11 @@ main > .phead-wrap { padding-top: var(--gap); }
   transition: opacity .75s cubic-bezier(.22, 1, .36, 1), transform .75s cubic-bezier(.22, 1, .36, 1);
 }
 [data-reveal-up].in { opacity: 1; transform: none; }
+/* Profile photo rests at a slight tilt (overrides the reveal-up end state) */
+.timeline-photo.in { transform: rotate(-3.5deg); }
 @media (prefers-reduced-motion: reduce) { [data-reveal-up] { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .timeline-photo { transform: rotate(-3.5deg); } }
 
-/* Highlighter marker that sweeps in left→right when the line reveals */
-.hl {
-  background-image: linear-gradient(rgba(208, 188, 255, .28), rgba(208, 188, 255, .28));
-  background-repeat: no-repeat;
-  background-position: left bottom;
-  background-size: 0% 40%;
-  border-radius: 2px;
-  padding: 0 .08em;
-  transition: background-size .7s cubic-bezier(.22, 1, .36, 1);
-  -webkit-box-decoration-break: clone;
-          box-decoration-break: clone;
-}
-[data-reveal-up].in .hl { background-size: 100% 40%; }
-/* delay the start, then stagger the three phrases in one after another */
-[data-reveal-up].in .hl:nth-of-type(1) { transition-delay: .6s; }
-[data-reveal-up].in .hl:nth-of-type(2) { transition-delay: 1s; }
-[data-reveal-up].in .hl:nth-of-type(3) { transition-delay: 1.4s; }
-@media (prefers-reduced-motion: reduce) { .hl { transition: none; background-size: 100% 40%; } }
 .community-track { display: flex; flex: 0 0 auto; align-items: flex-start; gap: 24px; width: max-content; padding-right: 24px; padding-block: 48px 12px; }
 .community-photo { margin: 0; flex: 0 0 auto; }
 /* Alternate heights + vertical offsets so the strip isn't a straight line */
@@ -584,7 +682,7 @@ main > .phead-wrap { padding-top: var(--gap); }
 }
 .cg-group:last-child { border-bottom: 1px solid var(--border); }
 .cg-label {
-  font-family: 'Merriweather', Georgia, serif; font-size: 1.5rem; font-weight: 400;
+  font-family: 'Merriweather', Georgia, serif; font-size: 1.5rem; font-weight: 300;
   letter-spacing: 0; color: var(--light-pink); padding-top: 0;
 }
 .cg-list { display: flex; flex-direction: column; }
@@ -632,14 +730,14 @@ main > .phead-wrap { padding-top: var(--gap); }
    ===================================================================== */
 .cs-overlay {
   position: fixed; inset: 0; z-index: 500;
-  /* Light scrim so the dark grid page genuinely PEEKS through at the top */
-  background: rgba(8, 7, 11, .35);
-  opacity: 0; visibility: hidden;
-  transition: opacity .4s ease, visibility .4s ease;
+  /* Tint now lives on body::before so it can fade independently; panel is solid */
+  background: transparent;
+  visibility: hidden;   /* no opacity fade — the panel stays solid; it slides in */
+  transition: visibility .5s ease;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
-.cs-overlay.open { opacity: 1; visibility: visible; }
+.cs-overlay.open { visibility: visible; }
 
 .cs-sheet {
   --cs-bg: #ffffff;
@@ -657,7 +755,7 @@ main > .phead-wrap { padding-top: var(--gap); }
   background: var(--cs-bg);    /* plain white — no grid */
   color: var(--cs-text);
   border-radius: 22px 22px 0 0;
-  box-shadow: 0 -18px 70px rgba(0,0,0,.55);
+  box-shadow: 0 0 60px rgba(0,0,0,.4);
   font-family: var(--font);
 
   /* Slide UP from the bottom of the viewport */
@@ -666,6 +764,17 @@ main > .phead-wrap { padding-top: var(--gap); }
   will-change: transform;
 }
 .cs-overlay.open .cs-sheet { transform: translateY(0); }
+/* Desktop: float the overlay card with an even 16px gap on all sides;
+   all corners rounded. */
+@media (min-width: 861px) {
+  /* Clip everything to the floating card's bounds so scrolling content can't
+     spill into the 16px border (i.e. no strip peeking above the topbar). */
+  .cs-overlay { clip-path: inset(16px round 22px); }
+  .cs-sheet {
+    width: auto; margin: 16px;
+    min-height: calc(100vh - 32px); border-radius: 22px;
+  }
+}
 
 /* ── Fixed mini-header inside the case-study overlay ────────────── */
 .cs-topbar {
@@ -680,6 +789,10 @@ main > .phead-wrap { padding-top: var(--gap); }
   transition: transform .3s ease;
 }
 .cs-topbar.visible { transform: translateY(0); }
+/* Desktop: keep the mini-header within the floating card's 16px bounds + rounded top */
+@media (min-width: 861px) {
+  .cs-topbar { top: 16px; left: 16px; right: 16px; border-radius: 22px 22px 0 0; }
+}
 .cs-back {
   width: 38px; height: 38px; border-radius: 100px;
   background: #f1f0f3; border: 1px solid #e7e5ea;
@@ -801,10 +914,10 @@ main > .phead-wrap { padding-top: var(--gap); }
 
 .cs-main h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin: 52px 0 18px; scroll-margin-top: 80px; }
 .cs-main h3 { font-size: 1.05rem; font-weight: 700; margin: 28px 0 8px; }
-.cs-main p { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.75; color: #36333c; margin-bottom: 16px; max-width: 42em; }
+.cs-main p { font-family: 'Merriweather', Georgia, serif; font-weight: 300; line-height: 1.75; color: #36333c; margin-bottom: 16px; max-width: 42em; }
 /* Inline bold inside body paragraphs reads as plain text (titles are headings, not <strong>) */
 .cs-main p strong, .cs-main p b { font-weight: 400; }
-.cs-main ul.bullets { font-family: 'Merriweather', Georgia, serif; font-weight: 400; line-height: 1.7; list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
+.cs-main ul.bullets { font-family: 'Merriweather', Georgia, serif; font-weight: 300; line-height: 1.7; list-style: disc; padding-left: 22px; margin-bottom: 16px; color: #36333c; max-width: 42em; }
 .cs-main ul.bullets li { margin-bottom: 6px; }
 /* Stat cells share 1px internal grid lines (the gap reveals the container bg);
    the outer perimeter has no stroke. */
@@ -861,25 +974,32 @@ main > .phead-wrap { padding-top: var(--gap); }
 .cs-table td:first-child { font-weight: 600; }
 
 body.cs-lock { overflow: hidden; }
+/* Full-viewport backdrop tint behind the case-study panel. Lives on a persistent
+   body::before (not the clipped overlay) so it fades IN on open and OUT on close
+   as the panel slides up/down, while the panel itself stays solid. */
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 499;
+  background: rgba(8, 7, 11, .45);
+  opacity: 0; pointer-events: none;
+  transition: opacity .5s ease;
+}
+body.cs-lock::before { opacity: 1; }
 
 /* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 860px) {
-  /* Full-screen menu; options pinned to the bottom of the viewport */
-  .nav.open { -webkit-backdrop-filter: none; backdrop-filter: none; }  /* don't trap the fixed overlay */
+  /* Desktop-style header on mobile: the centered pill of links — no wordmark,
+     no hamburger, no full-screen menu. */
+  .nav-toggle { display: none; }
+  .nav-logo { display: none; }
   .nav-links {
-    position: fixed; inset: 0; z-index: 1;
-    flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 2px;
-    background: var(--bg);
-    padding: 88px 24px max(44px, 8vh);
-    transform: translateX(-100%); transition: transform .34s cubic-bezier(.22, 1, .36, 1);
-    will-change: transform; backface-visibility: hidden;
+    position: absolute; left: 50%; top: 16px; transform: translateX(-50%);
+    background: rgba(13, 12, 17, .6);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 999px; padding: 12px 20px; gap: 18px;
   }
-  .nav.open .nav-links { transform: translateX(0); }
-  .nav-links a { padding: 14px 8px; font-size: 1.5rem; }
-  .nav-logo, .nav-toggle { position: relative; z-index: 2; }   /* stay above the overlay */
-  .nav-toggle { display: block; }
-  .nav-inner { padding-inline: 20px; }   /* align logo + menu icon to the page gutters */
-  html:has(.nav.open) { overflow: hidden; }   /* lock page scroll while menu is open */
+  .nav-links a { font-size: .9rem; }
+  .nav-inner { padding-inline: 20px; }
 
   /* Scale the wavy "on a path" arc text 2x on mobile (section clips the overflow) */
   .arc svg { width: 200%; margin-left: -50%; }
@@ -890,7 +1010,13 @@ body.cs-lock { overflow: hidden; }
   .hello-pill { top: -14px; right: -8px; font-size: .85rem; padding: 12px 18px; }
   .badge-circle { width: 120px; height: 120px; left: -28px; bottom: -28px; }
 
-  .card-grid { grid-template-columns: 1fr; }
+  /* Stack image over text on mobile; drop the alternating side-by-side layout.
+     Full-bleed: the folder borders run the full width of the viewport.
+     (Selectors repeat :nth-child(odd) to outrank the desktop alternating rule
+     so EVERY card shows image first, then title.) */
+  .card { grid-template-columns: 1fr; gap: 16px; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); }
+  .card .card-media, .card:nth-child(odd) .card-media { order: -1; }
+  .card .card-body, .card:nth-child(odd) .card-body { order: 0; }
   .belief-grid { grid-template-columns: 1fr; gap: 48px; }
   .belief-text { position: static; }
   .timeline { gap: 44px; }
@@ -941,7 +1067,7 @@ body.cs-lock { overflow: hidden; }
   background-image:
     linear-gradient(var(--border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
-  background-size: 64px 64px;
+  background-size: 40px 40px;
   -webkit-mask-image: linear-gradient(#000 60%, transparent 100%);
           mask-image: linear-gradient(#000 60%, transparent 100%);
   opacity: .5; pointer-events: none;
@@ -978,9 +1104,11 @@ body.cs-lock { overflow: hidden; }
 }
 /* The hero heading is the .story-tagline <h1>; its size is set below. */
 .story-tagline {
-  font-family: var(--font); font-weight: 200;
-  font-size: clamp(2.2rem, 5.5vw, 3.8rem); line-height: 1.1; letter-spacing: -.03em;
-  color: var(--text); max-width: 20em; margin: 0 auto 26px;
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif;
+  font-weight: 400; font-synthesis: none;
+  font-size: clamp(2.4rem, calc(9vw - 16px), 5.5rem); line-height: 1.05; letter-spacing: -.01rem;
+  color: var(--text); max-width: 30em; margin: 0 auto 26px;
+  text-shadow: 0 3px 16px rgba(0, 0, 0, .3);
 }
 .story-intro {
   max-width: 42em; margin: 0;
@@ -1031,7 +1159,7 @@ body.cs-lock { overflow: hidden; }
 }
 .about-card p {
   margin: 0;
-  font-family: 'Merriweather', Georgia, serif; font-weight: 400;
+  font-family: 'Merriweather', Georgia, serif; font-weight: 300;
   font-size: 1.05rem; line-height: 1.65; color: var(--text);
 }
 /* Company logo lockup — small 1:1 squares, 2px rounded */
@@ -1046,12 +1174,19 @@ body.cs-lock { overflow: hidden; }
 /* Centered "My story" band that opens the timeline */
 .story-band { text-align: center; padding-block: 64px 24px; }
 .story-band h2 {
-  font-size: clamp(2rem, 4.5vw, 3rem); font-weight: 700; line-height: 1.05; letter-spacing: -.02em;
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-size: clamp(40px, 6.5vw, 88px); font-weight: 700; line-height: 1; letter-spacing: -.02em;
+  text-transform: uppercase;
+  /* light-pink linear gradient, fading up */
+  color: #ffd8e4;   /* fallback for no background-clip: text */
+  background: linear-gradient(to top, #ffeef4 0%, #ffe1eb 20%, #ffd8e4 48%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 .story-lead {
   max-width: 40em; margin: 28px auto 0; text-align: center;
   font-family: 'Merriweather', Georgia, serif;
-  font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 400; line-height: 1.5;
+  font-size: clamp(1.15rem, 2.2vw, 1.45rem); font-weight: 300; line-height: 1.5;
 }
 
 /* ── The rail ───────────────────────────────────────────────────── */
@@ -1088,8 +1223,9 @@ body.cs-lock { overflow: hidden; }
 .tl-node { grid-column: 2; grid-row: 1; align-self: center; justify-self: center; display: flex; flex-direction: column; align-items: center; }
 .tl-year {
   position: relative;
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
-  color: var(--primary); background: var(--bg); padding: 8px 16px;
+  color: #b9f2c8; background: var(--bg); padding: 8px 16px;
 }
 
 /* Media well (image, or the Street View iframe on the first block) */
@@ -1211,7 +1347,7 @@ body.cs-lock { overflow: hidden; }
 .globe-wrap {
   position: absolute; left: 50%; top: 50%;
   width: max(100vw, 100vh); height: max(100vw, 100vh);
-  max-width: none;
+  max-width: none; z-index: 2;   /* sits above the CTA title so it emerges from behind */
   transform: translate(-50%, calc(-50% + var(--globe-shift, 0px)));
 }
 #globe { width: 100%; height: 100%; }
@@ -1233,8 +1369,9 @@ body.cs-lock { overflow: hidden; }
 /* Intro / 2025 header — pinned at the top of the stage, above the globe */
 .globe-intro { position: relative; z-index: 3; max-width: 40em; padding: 11vh 24px 0; }
 .globe-intro .story-finale-year {
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
-  color: var(--primary); margin-bottom: 16px;
+  color: #b9f2c8; margin-bottom: 16px;
 }
 .globe-intro h2 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
 .globe-intro .globe-sub { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; line-height: 1.8; color: #fff; max-width: 34em; margin: 0 auto 18px; }
@@ -1253,13 +1390,27 @@ body.cs-lock { overflow: hidden; }
 /* "Let's work together" — pulls up from the bottom of the stage over the docked
    half-globe (translate driven by --cta-up in story.js; 1 = hidden below, 0 = up). */
 .globe-cta {
-  position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+  position: absolute; left: 0; right: 0;
   padding: 0 24px max(14vh, 96px);
-  transform: translateY(calc(var(--cta-up, 1) * 115%));
-  will-change: transform;
+  /* Rise up from below the stage by animating `bottom` (driven by --cta-up in
+     story.js; 1 = hidden below, 0 = docked). We deliberately avoid `transform`
+     here so .globe-cta does NOT form its own stacking context — that lets the
+     title sit BEHIND the globe while the actions stay in FRONT of it. */
+  bottom: calc(var(--cta-up, 1) * -72vh);
   /* no background box — keep legible over the globe with a soft shadow */
   text-shadow: 0 2px 24px rgba(0, 0, 0, .7);
 }
+/* The title crests up from BEHIND the docked globe (z-index 1 < globe's 2),
+   while the supporting text + buttons stay in FRONT (z-index 3) and clickable. */
+.globe-cta .section-head { position: relative; z-index: 1; text-shadow: none; }
+.globe-cta .head-sub,
+.globe-cta .cta-actions { position: relative; z-index: 3; }
+/* Lift the title up out of the docked dome so only its bottom edge tucks
+   behind the globe (interactive journey only — the static fallback has no dome). */
+.globe-scrolly:not(.is-static) .globe-cta .section-head { transform: translateY(-14vh); }
+/* Pull the supporting text + buttons up so they sit close under the lifted title. */
+.globe-scrolly:not(.is-static) .globe-cta .head-sub,
+.globe-scrolly:not(.is-static) .globe-cta .cta-actions { transform: translateY(calc(-11vh - 16px)); }
 
 .globe-fallback { display: none; padding: 40px 24px; }
 .globe-wrap.no-webgl #globe { display: none; }
