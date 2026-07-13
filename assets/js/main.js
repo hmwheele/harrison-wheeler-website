@@ -147,13 +147,17 @@
   // Cards pin at 96px below the top — unless a card is taller than the
   // viewport (mobile), in which case it pins once its BOTTOM is 16px above
   // the viewport edge, so all of its content scrolls into view first.
+  // Each folder pins PEEK px lower than the previous, so as the deck stacks
+  // the earlier folders' rounded tops peek out above the current one.
   (function () {
     var cards = document.querySelectorAll('.card-grid .card');
     if (!cards.length) return;
+    var PEEK = 10;
     function setTops() {
       var vh = window.innerHeight || document.documentElement.clientHeight;
-      cards.forEach(function (c) {
-        c.style.setProperty('--stick-top', Math.min(96, vh - c.offsetHeight - 16) + 'px');
+      cards.forEach(function (c, i) {
+        var base = Math.min(96, vh - c.offsetHeight - 16);
+        c.style.setProperty('--stick-top', (base + i * PEEK) + 'px');
       });
     }
     window.addEventListener('resize', setTops, { passive: true });
