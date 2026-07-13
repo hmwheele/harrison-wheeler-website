@@ -60,8 +60,9 @@
   --on-primary:    #381e72;
   --light-pink:    #ffd8e4;
 
-  /* Type */
-  --font:  'GT America', 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  /* Type — sitewide fallback rule: sans-serif stacks fall back to Helvetica,
+     serif stacks fall back to Georgia (never to another webfont). */
+  --font:  'GT America', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --mono:  'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Layout */
@@ -321,7 +322,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 
 /* higher specificity so it beats the two-column .hero h1 / .hero p.lede rules */
 .hero--stage .hero-bigname {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   text-transform: uppercase; font-synthesis: none;
   margin: 0 0 22px; max-width: none; text-align: center;
   font-size: clamp(3.6rem, 14.5vw, 11rem); /* fallback */
@@ -371,7 +372,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   margin-bottom: 24px;
   max-width: 8ch;   /* forces "Harrison Wheeler" onto two lines */
 }
-.hero p.lede { font-family: 'GT America', system-ui, sans-serif; font-size: 30px; font-weight: 700; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; margin-left: 48px; }
+.hero p.lede { font-family: 'GT America', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 30px; font-weight: 700; line-height: 1.5; color: var(--light-pink); max-width: 26em; margin-bottom: 30px; margin-left: 48px; }
 .hero-photo { position: relative; }
 .hero-photo img {
   width: 100%; height: auto; display: block;
@@ -389,7 +390,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   background: #fff;
   color: #141218;
   border-radius: 100px;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 0.9375rem;
   font-weight: 600;
   white-space: nowrap;
@@ -411,7 +412,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   font-weight: 600;
   letter-spacing: 2px;
   text-transform: uppercase;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-style: normal;
 }
 @keyframes badge-spin { to { transform: rotate(360deg); } }
@@ -476,7 +477,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   .timeline-group { opacity: 1; transform: none; transition: none; }
 }
 .timeline-year {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: 1.8rem; font-weight: 800; letter-spacing: -.01em;
   color: var(--primary); margin-bottom: 20px;
 }
@@ -538,7 +539,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .card-body { padding: 16px 0 8px; text-align: left; }
 .card .eyebrow { display: none; }
 .card h3 {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   text-transform: uppercase; font-size: clamp(40px, 6.5vw, 88px); font-weight: 700;
   letter-spacing: -.01em; line-height: .92; margin-bottom: 12px;
   /* light-pink gradient; on hover the near-white body fills in with pink.
@@ -579,7 +580,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   letter-spacing: -.01em; color: var(--text); margin: 0;
 }
 .section-head.head-display.head-gt h2 {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400; font-synthesis: none; letter-spacing: -.01em;
   text-transform: capitalize;
   font-size: clamp(3.3rem, 8.25vw, 5.8rem);
@@ -757,6 +758,31 @@ main > .phead-wrap > .phead-body { background: transparent; }
   will-change: transform;
 }
 .cs-overlay.open .cs-sheet { transform: translateY(0); }
+
+/* ── Desktop card-to-modal morph (overlay.js adds .cs-morph / .cs-revealed) ──
+   The ghost is the rectangle that grows from the clicked card into the
+   sheet's frame, crossfading dark → white. While it flies, the real sheet
+   is already in place but invisible; .cs-revealed swaps it in and fades
+   the content up. */
+.cs-morph-ghost {
+  position: fixed; z-index: 560; pointer-events: none;
+  background: var(--bg);
+  box-shadow: 0 0 60px rgba(0, 0, 0, .4);
+}
+.cs-overlay.cs-morph .cs-sheet {
+  transition: none; transform: none;   /* skip the slide-up; the ghost is the animation */
+  opacity: 0;
+}
+.cs-overlay.cs-morph.cs-revealed .cs-sheet { opacity: 1; }
+.cs-overlay.cs-morph .cs-sheet .cs-close,
+.cs-overlay.cs-morph .cs-sheet .cs-layout {
+  opacity: 0; transform: translateY(14px);
+}
+.cs-overlay.cs-morph.cs-revealed .cs-sheet .cs-close,
+.cs-overlay.cs-morph.cs-revealed .cs-sheet .cs-layout {
+  opacity: 1; transform: none;
+  transition: opacity .45s ease .06s, transform .45s cubic-bezier(.22, 1, .36, 1) .06s;
+}
 /* Desktop: float the overlay card with an even 16px gap on all sides;
    all corners rounded. */
 @media (min-width: 861px) {
@@ -796,7 +822,13 @@ main > .phead-wrap > .phead-body { background: transparent; }
 }
 .cs-back:hover { background: #e4e2e8; transform: scale(1.05); }
 .cs-topbar-title {
-  font-size: .9rem; font-weight: 600; color: #17151b;
+  /* Absolute-centered in the bar so the left-aligned back button doesn't
+     shift the title off true center. */
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  max-width: 66%; text-align: center;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
+  text-transform: uppercase; letter-spacing: -.01em;
+  font-size: 1.5rem; font-weight: 600; color: #17151b;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 /* Reading progress along the topbar's bottom edge */
@@ -841,7 +873,7 @@ main > .phead-wrap > .phead-body { background: transparent; }
 .cs-toc a.active { color: var(--cs-text); border-color: transparent; font-weight: 600; }
 
 .cs-main { min-width: 0; }
-.cs-main h1 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.05; margin-bottom: 18px; }
+.cs-main h1 { font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none; font-size: 5rem; text-transform: uppercase; font-weight: 800; letter-spacing: -.01em; line-height: 1.05; margin-bottom: 18px; }
 .cs-deck { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.15rem; line-height: 1.6; color: var(--cs-muted); max-width: 36em; margin-bottom: 36px; }
 /* ── Hero carousel ──────────────────────────────────────────────── */
 .cs-carousel { position: relative; margin: 0 0 56px; outline: none; }
@@ -905,7 +937,7 @@ main > .phead-wrap > .phead-body { background: transparent; }
 .cs-car-btn.next { right: 16px; }
 .cs-car-btn:disabled { opacity: .3; cursor: default; }
 
-.cs-main h2 { font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; margin: 52px 0 18px; scroll-margin-top: 80px; }
+.cs-main h2 { font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none; font-size: 3rem; text-transform: capitalize; font-weight: 800; letter-spacing: -.01em; margin: 52px 0 18px; scroll-margin-top: 80px; }
 .cs-main h3 { font-size: 1.05rem; font-weight: 700; margin: 28px 0 8px; }
 .cs-main p { font-family: 'Merriweather', Georgia, serif; font-weight: 300; line-height: 1.75; color: #36333c; margin-bottom: 16px; max-width: 42em; }
 /* Inline bold inside body paragraphs reads as plain text (titles are headings, not <strong>) */
@@ -1100,7 +1132,7 @@ body.cs-lock::before { opacity: 1; }
 }
 /* The hero heading is the .story-tagline <h1>; its size is set below. */
 .story-tagline {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 400; font-synthesis: none;
   font-size: clamp(2.4rem, calc(9vw - 16px), 5.5rem); line-height: 1.05; letter-spacing: -.01rem;
   color: var(--text); max-width: 30em; margin: 0 auto 26px;
@@ -1147,6 +1179,14 @@ body.cs-lock::before { opacity: 1; }
   background: transparent; border: 1px solid var(--border);
   border-radius: 16px; padding: 36px 32px;
 }
+.about-card-illo {
+  display: block; width: 64px; height: 64px; margin: 0 0 28px;
+}
+.about-card-illo rect, .about-card-illo line,
+.about-card-illo circle, .about-card-illo ellipse, .about-card-illo path {
+  stroke-width: 1.25; fill: none;
+  vector-effect: non-scaling-stroke;
+}
 .about-card h3 {
   margin: 0 0 16px;
   font-family: var(--font); font-weight: 200;
@@ -1170,7 +1210,7 @@ body.cs-lock::before { opacity: 1; }
 /* Centered "My story" band that opens the timeline */
 .story-band { text-align: center; padding-block: 64px 24px; }
 .story-band h2 {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: clamp(46px, 7.2vw, 100px); font-weight: 700; line-height: 1; letter-spacing: -.02em;
   text-transform: uppercase;
   /* light-pink linear gradient, fading up */
@@ -1220,7 +1260,7 @@ body.cs-lock::before { opacity: 1; }
 .tl-node { grid-column: 2; grid-row: 1; align-self: center; justify-self: center; display: flex; flex-direction: column; align-items: center; }
 .tl-year {
   position: relative;
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
   color: #b9f2c8; background: var(--bg); padding: 8px 16px;
 }
@@ -1366,7 +1406,7 @@ body.cs-lock::before { opacity: 1; }
 /* Intro / 2025 header — pinned at the top of the stage, above the globe */
 .globe-intro { position: relative; z-index: 3; max-width: 40em; padding: 11vh 24px 0; }
 .globe-intro .story-finale-year {
-  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
   color: #b9f2c8; margin-bottom: 16px;
 }
@@ -1502,7 +1542,7 @@ body.cs-lock::before { opacity: 1; }
 }
 .subpop-close:hover { color: var(--text); background: var(--surface-2); }
 .subpop-eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
-.subpop-title { font-family: 'GT America', system-ui, sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; color: var(--text); }
+.subpop-title { font-family: 'GT America', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; color: var(--text); }
 .subpop-copy { font-size: .92rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 16px; max-width: 30ch; }
 .subpop-form { display: flex; flex-direction: column; gap: 10px; }
 .subpop-input {

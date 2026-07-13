@@ -178,16 +178,75 @@
     });
   }
 
-  function open(key, push) {
+  // Desktop morph: the clicked card appears to grow into the modal.
+  // A fixed-position "ghost" rectangle animates from the card's rect to the
+  // sheet's final frame while crossfading dark → white; the real sheet stays
+  // hidden underneath and the content fades in once the ghost lands.
+  var morphGhost = null;
+
+  function canMorph(originEl) {
+    return !!(originEl && originEl.getBoundingClientRect &&
+      Element.prototype.animate &&
+      window.matchMedia('(min-width: 861px)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  function morphOpen(originEl) {
+    var from = originEl.getBoundingClientRect();
+    overlay.classList.remove('cs-revealed');
+    overlay.classList.add('cs-morph');
+    overlay.classList.add('open');
+
+    if (morphGhost) morphGhost.remove();
+    morphGhost = document.createElement('div');
+    morphGhost.className = 'cs-morph-ghost';
+    document.body.appendChild(morphGhost);
+
+    // Final frame matches the desktop floating sheet: 16px gap on all sides.
+    var anim = morphGhost.animate([
+      {
+        top: from.top + 'px', left: from.left + 'px',
+        width: from.width + 'px', height: from.height + 'px',
+        backgroundColor: '#0d0c11', borderRadius: '24px 24px 0 0'
+      },
+      {
+        top: '16px', left: '16px',
+        width: (window.innerWidth - 32) + 'px',
+        height: (window.innerHeight - 32) + 'px',
+        backgroundColor: '#ffffff', borderRadius: '22px'
+      }
+    ], { duration: 520, easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'forwards' });
+
+    // Reveal = swap the real sheet in + fade the text up. Normally driven by
+    // onfinish; the timer is a fallback because animation events only fire on
+    // rendering frames (a backgrounded tab would otherwise never reveal).
+    var revealed = false;
+    function settle() {
+      // no-op if already revealed or the overlay was closed mid-morph
+      if (revealed || !overlay.classList.contains('cs-morph')) return;
+      revealed = true;
+      overlay.classList.add('cs-revealed');
+      if (morphGhost) { morphGhost.remove(); morphGhost = null; }
+    }
+    anim.onfinish = settle;
+    setTimeout(settle, 620);
+  }
+
+  function open(key, push, originEl) {
     if (!overlay) build();
     if (!render(key)) return;
 
     lastFocus = document.activeElement;
     document.body.classList.add('cs-lock');
     overlay.scrollTop = 0;
-    // force reflow so the slide-up transition always plays
-    void sheet.offsetHeight;
-    overlay.classList.add('open');
+    if (canMorph(originEl)) {
+      morphOpen(originEl);
+    } else {
+      overlay.classList.remove('cs-morph', 'cs-revealed');
+      // force reflow so the slide-up transition always plays
+      void sheet.offsetHeight;
+      overlay.classList.add('open');
+    }
 
     var title = window.CASE_STUDIES[key].title + ' — Harrison Wheeler';
     if (push) history.pushState({ cs: key }, title, '#cs=' + key);
@@ -206,6 +265,9 @@
 
   function close(skipHistory) {
     if (!overlay) return;
+    if (morphGhost) { morphGhost.remove(); morphGhost = null; }
+    // drop morph state so the sheet's slide-down transition applies again
+    overlay.classList.remove('cs-morph', 'cs-revealed');
     overlay.classList.remove('open');
     document.body.classList.remove('cs-lock');
     if (!skipHistory && history.state && history.state.cs) history.back();
@@ -217,7 +279,7 @@
     el.addEventListener('click', function (e) {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
       e.preventDefault();
-      open(el.getAttribute('data-cs'), true);
+      open(el.getAttribute('data-cs'), true, el);
     });
   });
 
