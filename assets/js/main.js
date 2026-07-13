@@ -143,6 +143,37 @@
     groups.forEach(function (g) { io.observe(g); });
   })();
 
+  /* ── Timeline spine: draw the line as you scroll down ───────── */
+  // The central spine (and the 2025 connector) fill from the top down,
+  // tracking a reference line near the lower part of the viewport, so the
+  // line appears to "draw" itself as the reader scrolls through the timeline.
+  (function () {
+    var rail = document.querySelector('.timeline-rail');
+    if (!rail) return;
+    var finale = document.querySelector('.story-finale-year');
+    var FINALE_LINE = 56;   // px height of the 2025 connector (see CSS)
+    var drawTicking = false;
+    function drawUpdate() {
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      var ref = vh * 0.82;                         // the line draws down to here
+      var r = rail.getBoundingClientRect();
+      var d = (ref - r.top) / r.height;
+      rail.style.setProperty('--tl-draw', Math.max(0, Math.min(1, d)).toFixed(4));
+      if (finale) {
+        var fr = finale.getBoundingClientRect();
+        // the connector sits just above the 2025 — start it once the spine is done
+        var fd = (ref - (fr.top - 16 - FINALE_LINE)) / FINALE_LINE;
+        finale.style.setProperty('--finale-draw', Math.max(0, Math.min(1, fd)).toFixed(4));
+      }
+      drawTicking = false;
+    }
+    window.addEventListener('scroll', function () {
+      if (!drawTicking) { requestAnimationFrame(drawUpdate); drawTicking = true; }
+    }, { passive: true });
+    window.addEventListener('resize', drawUpdate, { passive: true });
+    drawUpdate();
+  })();
+
   /* ── Folder deck: per-card sticky offset ─────────────────────── */
   // Cards pin at 96px below the top — unless a card is taller than the
   // viewport (mobile), in which case it pins once its BOTTOM is 16px above

@@ -476,7 +476,8 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   .timeline-group { opacity: 1; transform: none; transition: none; }
 }
 .timeline-year {
-  font-size: 1.5rem; font-weight: 800; letter-spacing: -.01em;
+  font-family: 'Neudron', 'GT America', system-ui, sans-serif; font-synthesis: none;
+  font-size: 1.8rem; font-weight: 800; letter-spacing: -.01em;
   color: var(--primary); margin-bottom: 20px;
 }
 .timeline-item {
@@ -1014,7 +1015,7 @@ body.cs-lock::before { opacity: 1; }
   .timeline-photo { width: 50vw; margin-inline: auto; }
   .belief-text { position: static; }
   .timeline { gap: 44px; }
-  .timeline-group { text-align: left; }
+  .timeline-group { text-align: center; }   /* centre to match desktop + the about timeline */
   .community-photo img { height: 220px; }
   .community-photo:nth-child(even) img { height: 185px; }
   .community-photo:nth-child(3n) img { height: 200px; }
@@ -1186,10 +1187,11 @@ body.cs-lock::before { opacity: 1; }
 
 /* ── The rail ───────────────────────────────────────────────────── */
 .timeline-rail { position: relative; max-width: var(--max); margin: 0 auto; padding: 72px 32px 80px; }
-/* Continuous central spine */
+/* Continuous central spine — draws top→bottom on scroll (--tl-draw set in main.js) */
 .timeline-rail::before {
   content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
-  width: 2px; transform: translateX(-50%);
+  width: 2px; transform: translateX(-50%) scaleY(var(--tl-draw, 1));
+  transform-origin: top center;
   background: var(--border);
 }
 
@@ -1437,20 +1439,30 @@ body.cs-lock::before { opacity: 1; }
   .btn { width: 100%; justify-content: center; }
   /* Let touches scroll the page (which drives the globe journey) instead of grabbing the globe. */
   .globe-wrap canvas { pointer-events: none; }
-  .timeline-rail { padding: 48px 20px 56px; }
-  .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 14px; padding-left: 0; margin-bottom: 104px; }
+  .timeline-rail { padding: 48px 20px 8px; }   /* small bottom pad so the spine doesn't dangle into the 2025 gap */
+  .globe-intro { padding-top: 72px; }          /* pull the 2025 up closer (still clears the nav) */
+  /* The 2025 lives in the globe section (separate from the timeline spine), so
+     give it its own connecting line above it — matching the other years — and
+     put it in the globe stage so the blackout can't cut it off. */
+  .globe-intro .story-finale-year { position: relative; }
+  .globe-intro .story-finale-year::before {
+    content: ''; position: absolute; left: 50%; bottom: calc(100% + 16px);
+    transform: translateX(-50%) scaleY(var(--finale-draw, 1)); transform-origin: top center;
+    width: 2px; height: 56px; background: var(--border);   /* 56px reaches up to meet the spine's end (no break) */
+  }
+  /* Each entry gets a solid bg so it masks the central spine across its whole
+     area (year, photo, text and their gaps). The connecting line then shows
+     ONLY in the even gap between entries — linking one paragraph to the next
+     year. */
+  .tl-row { grid-template-columns: 1fr; column-gap: 0; row-gap: 16px; padding: 16px 0; margin-bottom: 40px; background: var(--bg); }
   .tl-hold { height: 170vh; }
-  /* stack as: year → photo → text, all centred on the spine */
+  /* stack as: year → photo → text, all centred */
   .tl-media, .tl-card, .tl-node { grid-column: 1 !important; grid-row: auto !important; }
-  .tl-node  { position: static; left: auto; top: auto; transform: none; justify-self: center; align-items: center; order: 0; }
+  .tl-node  { position: static; left: auto; top: auto; transform: none; justify-self: center; align-items: center; order: 0; margin: 0; }
   .tl-media { order: 1; }
-  /* solid bg on the media + text so they mask the central spine — the line
-     shows only in the gaps between elements, connecting the years. */
-  .tl-media { background: var(--bg); }
-  .tl-card  { padding: 0 8px; order: 2; text-align: center; background: var(--bg); }
+  .tl-card  { padding: 0 8px; order: 2; text-align: center; }
   .tl-card::before { display: none; }   /* drop the blurred parallax backdrop on mobile (it overflowed the card) */
-  /* keep the year's solid bg so it masks the spine, and centre it */
-  .tl-year { padding: 6px 14px; }
+  .tl-year { padding: 6px 14px; margin: 0; line-height: 1; }   /* tight box so the year sits evenly under the line */
   /* Nest the tagline toward the bottom so the video shows above it on mobile too. */
   .story-head {
     min-height: 88vh;
