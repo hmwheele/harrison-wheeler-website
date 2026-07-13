@@ -155,8 +155,16 @@
     var PEEK = 8;   // each folder pins 8px lower so the previous tops peek out
     function setTops() {
       var vh = window.innerHeight || document.documentElement.clientHeight;
+      // One shared base derived from the TALLEST card — so every folder pins at
+      // base + i*PEEK (strictly increasing). A per-card base broke the order:
+      // a taller card's value dropped below the 96 cap, pinning it higher than
+      // its shorter neighbours and popping it out in front.
+      var maxH = 0;
+      cards.forEach(function (c) { if (c.offsetHeight > maxH) maxH = c.offsetHeight; });
+      var base = Math.min(96, vh - maxH - 16);
       cards.forEach(function (c, i) {
-        c.style.setProperty('--stick-top', (Math.min(96, vh - c.offsetHeight - 16) + i * PEEK) + 'px');
+        c.style.setProperty('--stick-top', (base + i * PEEK) + 'px');
+        c.style.zIndex = String(i + 1);   // later folders always stack in front
       });
     }
     window.addEventListener('resize', setTops, { passive: true });
