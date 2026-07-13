@@ -247,8 +247,7 @@
       return {
         pin: w.querySelector('.phead'),
         head: w.querySelector('[data-phead]'),
-        body: w.querySelector('.phead-body'),
-        grid: w.querySelector('.cs-grid')
+        body: w.querySelector('.phead-body')
       };
     }).filter(function (i) { return i.pin && i.head && i.body; });
     if (!items.length) return;
@@ -266,14 +265,6 @@
         var fade = Math.max(0, Math.min(1, (r.bottom - bodyTop) / h));
         it.head.style.opacity = (1 - fade).toFixed(3);
         it.head.style.transform = 'translateY(' + (-fade * 36).toFixed(1) + 'px)';
-        if (it.grid) {
-          // Grid behind the case-study cards: fade in as the section enters, out as it leaves.
-          var vh = window.innerHeight || document.documentElement.clientHeight;
-          var b = it.body.getBoundingClientRect();
-          var fIn = Math.max(0, Math.min(1, (vh - b.top) / (vh * 0.5)));
-          var fOut = Math.max(0, Math.min(1, b.bottom / (vh * 0.5)));
-          it.grid.style.opacity = (Math.min(fIn, fOut) * 0.5).toFixed(3);
-        }
       });
     }
     window.addEventListener('scroll', function () {

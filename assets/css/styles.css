@@ -620,19 +620,6 @@ main > .phead-wrap { padding-top: var(--gap); }
 /* Select Work: no opaque block — the folder cards themselves scroll over the
    pinned header text (cards carry their own opaque bg). */
 main > .phead-wrap > .phead-body { background: transparent; }
-/* Grid pattern behind the case-study cards — over the solid bg, behind the cards.
-   Opacity driven by main.js: fades in as the section enters, out as it leaves. */
-.cs-grid {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 100vw; height: 100%; z-index: -1; pointer-events: none; opacity: 0;
-  background-image:
-    linear-gradient(var(--border-soft) 1px, transparent 1px),
-    linear-gradient(90deg, var(--border-soft) 1px, transparent 1px);
-  background-size: 40px 40px;
-  background-position: 20px 0, 20px 0;   /* nudge the grid to the right */
-  -webkit-mask-image: linear-gradient(transparent 0, #000 7%, #000 90%, transparent 100%);
-          mask-image: linear-gradient(transparent 0, #000 7%, #000 90%, transparent 100%);
-}
 @media (prefers-reduced-motion: reduce) {
   .phead { position: static; padding-bottom: 0; }
   .phead [data-phead] { opacity: 1 !important; transform: none !important; }
@@ -1102,6 +1089,20 @@ body.cs-lock::before { opacity: 1; }
 }
 .story-head-grid { display: grid; grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 40px; max-width: var(--max); margin: 0 auto; padding-inline: 32px; position: relative; z-index: 1; }
 .story-head-text { max-width: 72em; margin: 0 auto; }
+/* Big "ABOUT" in the video area — same treatment as the homepage hero name
+   (Neudron, uppercase, vertically stretched, white → mint gradient). */
+.story-bigname {
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  text-transform: uppercase; font-synthesis: none;
+  margin: 0; max-width: none; text-align: center;
+  font-size: clamp(3.6rem, 18vw, 14rem); font-weight: 800;
+  line-height: .92; letter-spacing: -.01em;
+  transform: scaleY(1.5); transform-origin: bottom center;
+  color: #b9f2c8;   /* fallback for browsers without background-clip: text */
+  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
 /* Background hero video filling the section. */
 .story-head-video {
   position: absolute; inset: 0; z-index: 0; overflow: hidden; background: #0f0e13;
@@ -1130,13 +1131,13 @@ body.cs-lock::before { opacity: 1; }
     padding-top: 200px; padding-bottom: 64px;
   }
 }
-/* The hero heading is the .story-tagline <h1>; its size is set below. */
+/* Tagline band — sits below the hero video, centered on the page bg. */
+.story-tagline-band { text-align: center; padding-block: 64px 8px; }
 .story-tagline {
-  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 400; font-synthesis: none;
-  font-size: clamp(2.4rem, calc(9vw - 16px), 5.5rem); line-height: 1.05; letter-spacing: -.01rem;
-  color: var(--text); max-width: 30em; margin: 0 auto 26px;
-  text-shadow: 0 3px 16px rgba(0, 0, 0, .3);
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: clamp(1.5rem, 3.2vw, 2.4rem); font-weight: 300; letter-spacing: -.02em;
+  line-height: 1.4;
+  color: var(--text); max-width: 30em; margin: 0 auto;
 }
 .story-intro {
   max-width: 42em; margin: 0;
@@ -1163,6 +1164,13 @@ body.cs-lock::before { opacity: 1; }
 .story-head-text > *:nth-child(2) { animation-delay: .13s; }
 .story-head-text > *:nth-child(3) { animation-delay: .21s; }
 .story-head-text > *:nth-child(4) { animation-delay: .27s; }
+/* Bigname keeps its vertical stretch through and after the entrance
+   (the shared story-hero-up ends on transform:none, which would flatten it). */
+@keyframes story-bigname-up {
+  from { opacity: 0; transform: translateY(28px) scaleY(1.5); }
+  to   { opacity: 1; transform: scaleY(1.5); }
+}
+.story-head-text > .story-bigname { animation-name: story-bigname-up; }
 @keyframes story-hero-right {
   from { opacity: 0; transform: translateX(48px); }
   to   { opacity: 1; transform: none; }
@@ -1263,6 +1271,8 @@ body.cs-lock::before { opacity: 1; }
   font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
   color: #b9f2c8; background: var(--bg); padding: 8px 16px;
+  /* Stretch the glyphs taller without widening them (matches the hero bigname). */
+  display: inline-block; transform: scaleY(1.5); transform-origin: center;
 }
 
 /* Media well (image, or the Street View iframe on the first block) */
@@ -1514,6 +1524,7 @@ body.cs-lock::before { opacity: 1; }
   /* Consistent vertical rhythm on mobile: equal section gaps, tighter myStory→timeline */
   .story-about-band { padding-block: 40px; }
   .story-band { padding-block: 40px 16px; }
+  .story-band h2 { font-size: 4rem; letter-spacing: .01rem; }
   .footer-inner { justify-content: center; text-align: center; }
   .footer-nav { justify-content: center; width: 100%; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }
