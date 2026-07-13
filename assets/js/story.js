@@ -166,15 +166,21 @@
     if (sec) sec.classList.add('is-static');
   }
 
-  // Bail to the text fallback if WebGL isn't available.
+  // Bail to the text fallback if WebGL isn't available. Mapbox GL v3 needs
+  // WebGL2; where only WebGL1 exists (older iOS Safari, Lockdown Mode) we
+  // load the v2 line instead, which still supports the globe projection.
+  var hasWebGL2 = false;
   try {
     var test = document.createElement('canvas');
-    if (!(window.WebGLRenderingContext &&
-          (test.getContext('webgl') || test.getContext('experimental-webgl')))) {
+    hasWebGL2 = !!(window.WebGL2RenderingContext && test.getContext('webgl2'));
+    var hasWebGL1 = !!(window.WebGLRenderingContext &&
+          (test.getContext('webgl') || test.getContext('experimental-webgl')));
+    if (!hasWebGL2 && !hasWebGL1) {
+      console.warn('[globe] no WebGL context available — showing text fallback');
       showFallback();
       return;
     }
-  } catch (e) { showFallback(); return; }
+  } catch (e) { console.warn('[globe] WebGL probe threw — text fallback', e); showFallback(); return; }
 
   /* ── Config ─────────────────────────────────────────────────────
      Mapbox public access token (starts with "pk."). Get one from
@@ -184,7 +190,8 @@
   var MAPBOX_TOKEN = 'pk.eyJ1IjoiaG13aGVlbGUiLCJhIjoiY21yZXpzMzk3MHQ4NDJ3b282YmQzZzFoYyJ9.eMJQn_b6U2Fl3uD4IOEJnw';
   var MAP_STYLE    = 'mapbox://styles/mapbox/dark-v11';
   var ACCENT       = '#d0bcff';
-  var GL_VER       = 'v3.9.3';
+  // v3 requires WebGL2 — fall back to the v2 line on WebGL1-only browsers.
+  var GL_VER       = hasWebGL2 ? 'v3.9.3' : 'v2.15.0';
 
   // Load Mapbox GL JS (+ its CSS) from CDN, then init.
   var link = document.createElement('link');
@@ -195,7 +202,10 @@
   var s = document.createElement('script');
   s.src = 'https://api.mapbox.com/mapbox-gl-js/' + GL_VER + '/mapbox-gl.js';
   s.async = true;
-  s.onerror = showFallback;
+  s.onerror = function () {
+    console.warn('[globe] Mapbox GL JS failed to load from CDN (blocked or offline?) — text fallback');
+    showFallback();
+  };
   s.onload = initGlobe;
   document.head.appendChild(s);
 
@@ -233,13 +243,19 @@
         renderWorldCopies: false,
         dragRotate: false
       });
-    } catch (err) { showFallback(); return; }
+    } catch (err) {
+      console.warn('[globe] Mapbox Map construction failed (WebGL context?) — text fallback', err);
+      showFallback(); return;
+    }
 
     map.on('error', function () {});       // swallow transient tile/style hiccups
 
     map.on('load', function () {
+      // If decoration/journey setup trips partway (e.g. terrain on a
+      // memory-constrained mobile GPU), keep the globe we already have —
+      // don't demote a working globe to the text fallback.
       try { onReady(mapboxgl, map, SF, ASIA, FAR, NEAR, DOCK_ALT); }
-      catch (err) { showFallback(); }
+      catch (err) { console.warn('[globe] post-load setup failed — continuing with plain globe', err); }
     });
   }
 
