@@ -143,7 +143,13 @@ ul { list-style: none; }
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 200;
   background: transparent;
+  transition: opacity .5s ease;
 }
+/* Home intro: while the HW logo fades from white to dark, lock the viewport and
+   keep the nav hidden. The lock class (on <html>) is added by an inline script in
+   index.html and removed after the logo has darkened (~1.5s). */
+html.hero-intro-lock, html.hero-intro-lock body { overflow: hidden; }
+html.hero-intro-lock .nav { opacity: 0; pointer-events: none; }
 /* (Removed the full-width blurred header backdrop — the floating nav pill
    is the only chrome at the top now.) */
 .nav-inner {
@@ -308,9 +314,16 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   0%, 30% { filter: brightness(1); }
   100%    { filter: brightness(0); }
 }
-/* Name, tagline + buttons stay hidden through the logo's white→black beat */
-.hero-stage-content { animation: hero-content-fade .6s ease 1.4s both; }
-@keyframes hero-content-fade { from { opacity: 0; } to { opacity: 1; } }
+/* Name, tagline + buttons stay hidden through the logo's white→dark beat, then
+   fade UP from the bottom once the logo has darkened (delay syncs with the
+   ~1.5s scroll-unlock). .intro-played (added on animationend in main.js) clears
+   the animation so the copy's scroll parallax (--plx-name) can take back over. */
+.hero-stage-content { animation: hero-content-rise .7s cubic-bezier(.22, 1, .36, 1) 1.5s both; }
+.hero-stage-content.intro-played { animation: none; }
+@keyframes hero-content-rise {
+  from { opacity: 0; transform: translateY(48px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .hero--stage .hero-bigimg, .hero-contour { animation: none; }
   .hero-drag-cursor { display: none; }
@@ -325,9 +338,11 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 
 .bigname-br { display: none; }
 
-/* HW logo — centered backdrop behind the hero copy (above the grid, below the text) */
+/* HW logo — backdrop behind the hero copy (above the grid, below the text).
+   Centered to the viewport (top:50%) so it reads centered on mobile and web,
+   even though the copy sits lower. */
 .hero--stage .hero-logo-bg {
-  position: absolute; left: 50%; top: 58%;
+  position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%) translateY(var(--plx-logo, 0px));
   width: min(440px, 82vw); height: auto; z-index: 2; pointer-events: none;
   filter: brightness(0);
@@ -609,8 +624,8 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .globe-cta .section-head.head-display.head-gt h2 {
   text-transform: uppercase; font-weight: 800; line-height: .92;
   transform: scaleY(1.5); transform-origin: bottom center;
-  color: #b9f2c8;
-  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  color: var(--light-pink);
+  background: linear-gradient(to top, #ffe9f0 0%, #ffdfea 20%, #ffd8e4 48%);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1406,6 +1421,14 @@ body.cs-lock::before { opacity: 1; }
   opacity: 0; pointer-events: none; z-index: 90; will-change: opacity;
 }
 
+/* Starfield behind the globe — sits at the back of the stage and fades in once
+   the globe docks into place (opacity driven in story.js). */
+.globe-stars {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0; transition: opacity .5s linear;
+}
+.globe-star { position: absolute; border-radius: 50%; background: #fff; }
+
 /* Tall section provides the scroll distance; the stage is pinned inside it. */
 .globe-scrolly { position: relative; height: 500vh; }
 .globe-stage {
@@ -1522,7 +1545,7 @@ body.cs-lock::before { opacity: 1; }
 
 /* Static fallback (reduced motion / no WebGL): no pinning, normal flow */
 .globe-scrolly.is-static { height: auto; }
-.globe-scrolly.is-static .globe-stage { position: static; height: auto; padding: 70px 0 90px; }
+.globe-scrolly.is-static .globe-stage { position: relative; height: auto; padding: 70px 0 90px; }
 .globe-scrolly.is-static .globe-wrap {
   position: relative; left: auto; top: auto; transform: none;
   width: 100%; max-width: 680px; height: 520px; margin: 28px auto 0;
@@ -1582,8 +1605,9 @@ body.cs-lock::before { opacity: 1; }
   .story-about-band { padding-block: 40px; }
   .story-band { padding-block: 40px 16px; }
   .story-band h2 { font-size: 4rem; letter-spacing: .01rem; }
-  .footer-inner { justify-content: center; text-align: center; }
-  .footer-nav { justify-content: center; width: 100%; }
+  /* Social links first, copyright underneath them */
+  .footer-inner { flex-direction: column; justify-content: center; text-align: center; }
+  .footer-nav { order: -1; justify-content: center; width: 100%; }
   .globe-scrolly.is-static .globe-wrap { width: 100%; height: 380px; }
 }
 

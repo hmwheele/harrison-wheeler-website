@@ -168,6 +168,24 @@
   var mount = document.getElementById('globe');
   if (!wrap || !mount) return;
 
+  // Build the starfield once (spread across the stage). Opacity stays 0 until
+  // the globe docks — see apply() / the static fallback below.
+  var starsEl = document.querySelector('[data-globe-stars]');
+  (function makeStars() {
+    if (!starsEl || starsEl.childElementCount) return;
+    for (var i = 0; i < 90; i++) {
+      var st = document.createElement('span');
+      st.className = 'globe-star';
+      var size = Math.random() < 0.16 ? 2 : 1;
+      st.style.left = (Math.random() * 100).toFixed(2) + '%';
+      st.style.top = (Math.random() * 100).toFixed(2) + '%';
+      st.style.width = size + 'px';
+      st.style.height = size + 'px';
+      st.style.opacity = (0.25 + Math.random() * 0.7).toFixed(2);
+      starsEl.appendChild(st);
+    }
+  })();
+
   function showFallback() {
     wrap.classList.add('no-webgl');
     var sec = document.getElementById('globe-scrolly');
@@ -422,6 +440,12 @@
     var ctaEl    = document.querySelector('[data-globe-cta]');
     var yearEl     = document.querySelector('.globe-cta .cta-year');
     var yearLineEl = document.querySelector('.globe-cta .cta-tl-line');
+    // "Let's work together" title, subtext + buttons — faded in with the 2026.
+    // Opacity is set on each element (never the .globe-cta wrapper) so the wrapper
+    // stays free of a stacking context and the title can still sit behind the globe.
+    var ctaHeadEl    = document.querySelector('.globe-cta .section-head');
+    var ctaSubEl     = document.querySelector('.globe-cta .head-sub');
+    var ctaActionsEl = document.querySelector('.globe-cta .cta-actions');
 
     // ── Static fallback: reduced motion or no scrolly section ──
     // (Mobile gets the full scroll journey too — modern iOS Safari keeps
@@ -429,6 +453,7 @@
     // "rAF stalls on mobile" concern no longer applies.)
     if (reduceMotion || !section) {
       if (section) section.classList.add('is-static');
+      if (starsEl) starsEl.style.opacity = '1';   // globe is shown in place → stars on
       resize();
       requestAnimationFrame(resize);
       routeSrc.setData({ type: 'FeatureCollection', features: (function () {
@@ -646,8 +671,14 @@
       // journey — the fade runs as the CTA docks and rises (past DOCK_END), never
       // during the tracing itself.
       var yearOp = clamp01((p - DOCK_END) / (FREE_START - DOCK_END) * 1.4);
-      if (yearEl) yearEl.style.opacity = yearOp.toFixed(3);
-      if (yearLineEl) yearLineEl.style.opacity = yearOp.toFixed(3);
+      var yearOpStr = yearOp.toFixed(3);
+      if (yearEl) yearEl.style.opacity = yearOpStr;
+      if (yearLineEl) yearLineEl.style.opacity = yearOpStr;
+      if (ctaHeadEl) ctaHeadEl.style.opacity = yearOpStr;
+      if (ctaSubEl) ctaSubEl.style.opacity = yearOpStr;
+      if (ctaActionsEl) ctaActionsEl.style.opacity = yearOpStr;
+      // Stars fade in as the globe finishes the journey and docks into place.
+      if (starsEl) starsEl.style.opacity = (p <= ZOUT ? 0 : clamp01((p - ZOUT) / (DOCK_END - ZOUT))).toFixed(3);
       if (blackout) blackout.style.opacity = dark.toFixed(3);
       if (intro) {
         intro.style.opacity = clamp01(introOp).toFixed(3);

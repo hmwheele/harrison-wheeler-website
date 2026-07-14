@@ -46,6 +46,21 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/styles.css" />
 
+  <!-- Home intro: lock the viewport + hide the nav until the HW logo has faded
+       from white to dark (~1.5s). Added before first paint so the nav never
+       flashes; self-releasing so a script error can't leave scroll locked. -->
+  <script>
+    (function () {
+      try {
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce) return;
+        var de = document.documentElement;
+        de.classList.add('hero-intro-lock');
+        setTimeout(function () { de.classList.remove('hero-intro-lock'); }, 1500);
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- Structured data -->
   <script type="application/ld+json">
   {

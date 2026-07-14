@@ -459,6 +459,16 @@
 })();
 
 
+/* ── Hero intro: once the fade-up finishes, drop the animation so the copy's
+   scroll parallax (--plx-name) can take back over the transform. ── */
+(function () {
+  var content = document.querySelector('.hero--stage .hero-stage-content');
+  if (!content) return;
+  content.addEventListener('animationend', function (e) {
+    if (e.animationName === 'hero-content-rise') content.classList.add('intro-played');
+  });
+})();
+
 /* ── Hero parallax: logo backdrop lags behind the name/copy on scroll ── */
 (function () {
   var hero = document.querySelector('.hero--stage');
