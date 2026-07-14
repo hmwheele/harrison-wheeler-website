@@ -466,20 +466,38 @@
   if (!hero || !logo) return;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
+  // The hero clips its overflow, so the drifting logo must never cross the
+  // hero's bottom edge (it was getting chopped there on phones). Measure the
+  // room below the logo and pace the drift so it lands on that edge exactly
+  // as the fade completes — full parallax, no cut-off, on any viewport.
+  var EDGE = 12;        // breathing room above the hero's clip edge
+  var avail = 0, fadeEnd = 1;
+  function measure() {
+    var heroH = hero.offsetHeight;
+    fadeEnd = (window.innerHeight || document.documentElement.clientHeight) * 0.5;
+    // logo is centered on its `top` line, so its bottom = offsetTop + half height
+    avail = Math.max(0, heroH - (logo.offsetTop + logo.offsetHeight / 2) - EDGE);
+  }
+
   var ticking = false;
   function update() {
     ticking = false;
     var y = window.scrollY || window.pageYOffset;
     if (y > hero.offsetHeight) return;   // hero scrolled past — nothing to do
-    /* logo (background layer) lags the most; copy lags a little */
-    hero.style.setProperty('--plx-logo', (y * 0.45).toFixed(1) + 'px');
+    /* logo (background layer) drifts down within its room; copy rises a little */
+    var t = Math.min(1, y / fadeEnd);
+    hero.style.setProperty('--plx-logo', (t * avail).toFixed(1) + 'px');
     hero.style.setProperty('--plx-name', (y * -0.35).toFixed(1) + 'px');
-    /* dissolve the logo before its parallax drift reaches the next section */
-    var fade = Math.max(0, 1 - y / (window.innerHeight * 0.5));
-    hero.style.setProperty('--plx-fade', fade.toFixed(3));
+    /* dissolve the logo before its drift reaches the hero's edge */
+    hero.style.setProperty('--plx-fade', (1 - t).toFixed(3));
   }
   window.addEventListener('scroll', function () {
     if (!ticking) { ticking = true; requestAnimationFrame(update); }
   }, { passive: true });
+  window.addEventListener('resize', function () { measure(); update(); }, { passive: true });
+  if (logo.complete) { measure(); } else {
+    logo.addEventListener('load', function () { measure(); update(); });
+    measure();   // provisional numbers until the SVG lands
+  }
 })();
 

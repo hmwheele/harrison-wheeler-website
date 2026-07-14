@@ -122,9 +122,18 @@ ul { list-style: none; }
 /* Filled (primary) variant */
 .btn-primary, .btn-hero { background: var(--primary); color: var(--on-primary); border-color: transparent; }
 .btn-primary:hover, .btn-hero:hover { background: var(--primary-hover); transform: translateY(-1px); }
-/* Ghost (secondary) variant */
-.btn-ghost, .btn-hero-ghost { background: transparent; color: var(--text); border-color: var(--border); }
-.btn-ghost:hover, .btn-hero-ghost:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-1px); }
+/* Ghost (secondary) variant — frosted glass */
+.btn-ghost, .btn-hero-ghost {
+  background: rgba(255, 255, 255, .08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  color: var(--text); border-color: rgba(255, 255, 255, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.btn-ghost:hover, .btn-hero-ghost:hover {
+  background: rgba(255, 255, 255, .14);
+  border-color: var(--primary); color: var(--primary); transform: translateY(-1px);
+}
 /* Disabled / "coming soon" CTA — unclickable, visually muted */
 .btn:disabled, .btn[disabled] { opacity: .5; cursor: not-allowed; }
 .btn:disabled:hover, .btn[disabled]:hover { background: var(--primary); transform: none; }
@@ -292,13 +301,21 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   to   { transform: translate(-50%, -50%); }
 }
 @keyframes hero-cursor-out { to { opacity: 0; } }
-/* Name, tagline + buttons stay hidden through the drag, then fade in once it settles */
-.hero-stage-content { animation: hero-content-fade .5s ease .1s both; }
+/* Load sequence: the HW logo arrives white, holds a beat, sinks to black —
+   and only then does the copy in front fade in. */
+.hero--stage .hero-logo-bg { animation: hero-logo-tone 1.4s ease .1s both; }
+@keyframes hero-logo-tone {
+  0%, 30% { filter: brightness(1); }
+  100%    { filter: brightness(0); }
+}
+/* Name, tagline + buttons stay hidden through the logo's white→black beat */
+.hero-stage-content { animation: hero-content-fade .6s ease 1.4s both; }
 @keyframes hero-content-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .hero--stage .hero-bigimg, .hero-contour { animation: none; }
   .hero-drag-cursor { display: none; }
   .hero-stage-content { animation: none; }
+  .hero--stage .hero-logo-bg { animation: none; }
 }
 /* Content layered in front, centered to the page */
 .hero--stage { justify-content: center; }
@@ -637,16 +654,24 @@ main > .phead-wrap > .phead-body { background: transparent; }
 @media (prefers-reduced-motion: reduce) { .timeline-photo { transform: rotate(-3.5deg); } }
 
 .community-track { display: flex; flex: 0 0 auto; align-items: flex-start; gap: 24px; width: max-content; padding-right: 24px; padding-block: 48px 12px; }
-.community-photo { margin: 0; flex: 0 0 auto; }
+.community-photo { margin: 0; flex: 0 0 auto; position: relative; }
 /* Alternate heights + vertical offsets so the strip isn't a straight line */
 .community-photo:nth-child(odd) { transform: translateY(-28px); }
 .community-photo:nth-child(even) { transform: translateY(20px); }
 .community-photo:nth-child(even) img { height: 280px; }
 .community-photo:nth-child(3n) img { height: 300px; }
+/* Caption pinned onto its own photo (glass pill) — the staggered offsets made
+   free-floating captions read as detached from their images. */
 .community-photo figcaption {
-  margin-top: 10px;
+  position: absolute; left: 10px; bottom: 10px; max-width: calc(100% - 20px);
+  padding: 6px 12px; border-radius: 100px;
+  background: rgba(13, 12, 17, .55);
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+  border: 0.5px solid rgba(255, 255, 255, .16);
   font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, .92);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .community-photo img {
   height: 340px; width: auto; display: block;
@@ -1363,7 +1388,10 @@ body.cs-lock::before { opacity: 1; }
   will-change: transform;
 }
 
-/* ── Reveal on scroll (fade in entering, fade out leaving) ───────── */
+/* ── Reveal on scroll — pure opacity, no movement ───────────────── */
+/* Rows only fade (no slide — the slide read as too much motion). They fade OUT
+   only once fully off-screen (see story.js), so scrolling back up fades just
+   the row you've scrolled away from, never one still on screen. */
 [data-reveal] {
   opacity: 0;
   transition: opacity .7s cubic-bezier(.22,1,.36,1);
@@ -1418,7 +1446,13 @@ body.cs-lock::before { opacity: 1; }
 .globe-intro .story-finale-year {
   font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
-  color: #b9f2c8; margin-bottom: 16px;
+  color: #b9f2c8; margin-bottom: 24px;
+}
+/* Stretch the 2025 glyphs taller to match .tl-year and the other timeline dates.
+   Scaling an inner span (not the <p>) keeps the mobile connector — the ::before
+   on .story-finale-year — undistorted. */
+.globe-intro .story-finale-year .finale-year-num {
+  display: inline-block; transform: scaleY(1.5); transform-origin: center;
 }
 .globe-intro h2 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
 .globe-intro .globe-sub { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; line-height: 1.8; color: #fff; max-width: 34em; margin: 0 auto 18px; }
@@ -1447,6 +1481,26 @@ body.cs-lock::before { opacity: 1; }
   /* no background box — keep legible over the globe with a soft shadow */
   text-shadow: 0 2px 24px rgba(0, 0, 0, .7);
 }
+/* 64px timeline connector between the 2026 and "Let's work together" — echoes
+   the spine that leads into each year, carrying the timeline motif to the finale. */
+.globe-cta .cta-tl-line {
+  display: block; width: 2px; height: 64px;
+  /* "Let's work together" is scaleY(1.5) from its bottom, so its glyphs bleed
+     upward by ~half its font size. Clear that bleed (plus a 24px gap) so the bar
+     sits cleanly between the 2026 and the heading at any viewport width. */
+  margin: 0 auto calc(clamp(3.3rem, 8.25vw, 5.8rem) * 0.5 + 24px);
+  background: var(--border); position: relative; z-index: 3;
+}
+/* 2026 — the chapter after the journey. Same treatment as the timeline dates
+   (.tl-year): Neudron, mint, vertically stretched. Leads into the CTA title. */
+.globe-cta .cta-year {
+  position: relative; z-index: 3;
+  font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
+  font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
+  color: #b9f2c8; text-shadow: none;
+  display: inline-block; transform: scaleY(1.5); transform-origin: bottom center;
+  margin-bottom: 24px;
+}
 /* The title crests up from BEHIND the docked globe (z-index 1 < globe's 2),
    while the supporting text + buttons stay in FRONT (z-index 3) and clickable. */
 .globe-cta .section-head { position: relative; z-index: 1; text-shadow: none; }
@@ -1455,6 +1509,9 @@ body.cs-lock::before { opacity: 1; }
 /* Lift the title up out of the docked dome so only its bottom edge tucks
    behind the globe (interactive journey only — the static fallback has no dome). */
 .globe-scrolly:not(.is-static) .globe-cta .section-head { transform: translateY(-14vh); }
+/* The 2026 + its connector ride with the title (year keeps its vertical stretch). */
+.globe-scrolly:not(.is-static) .globe-cta .cta-year { transform: translateY(-14vh) scaleY(1.5); }
+.globe-scrolly:not(.is-static) .globe-cta .cta-tl-line { transform: translateY(-14vh); }
 /* Pull the supporting text + buttons up so they sit close under the lifted title. */
 .globe-scrolly:not(.is-static) .globe-cta .head-sub,
 .globe-scrolly:not(.is-static) .globe-cta .cta-actions { transform: translateY(calc(-11vh - 16px)); }

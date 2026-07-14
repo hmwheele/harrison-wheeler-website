@@ -37,12 +37,20 @@
       target.querySelectorAll('[data-reveal]').forEach(function (r) { r.classList.toggle('in', on); });
     }
 
+    // Fade IN once a row is meaningfully in view; fade OUT only after it has
+    // fully left the viewport. In between (partly visible, under the threshold)
+    // nothing changes — so a row still on screen is never faded out. Scrolling
+    // back up therefore only fades the row you've actually scrolled away from,
+    // not the ones still in view.
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        // Toggling on AND off gives the fade-in / fade-out both directions.
-        setIn(en.target, en.isIntersecting);
+        if (en.isIntersecting && en.intersectionRatio >= 0.12) {
+          setIn(en.target, true);
+        } else if (!en.isIntersecting) {
+          setIn(en.target, false);
+        }
       });
-    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
+    }, { threshold: [0, 0.12, 0.6] });
 
     var observed = [];
     els.forEach(function (el) {
@@ -412,6 +420,8 @@
     var intro    = document.querySelector('[data-globe-intro]');
     var placeEl  = document.querySelector('[data-globe-place]');
     var ctaEl    = document.querySelector('[data-globe-cta]');
+    var yearEl     = document.querySelector('.globe-cta .cta-year');
+    var yearLineEl = document.querySelector('.globe-cta .cta-tl-line');
 
     // ── Static fallback: reduced motion or no scrolly section ──
     // (Mobile gets the full scroll journey too — modern iOS Safari keeps
@@ -632,6 +642,12 @@
       // A city label fades in once its flight line is ≥80% of the way there.
       updateLabels(rp, p < ZOUT);
       if (ctaEl) ctaEl.style.setProperty('--cta-up', clamp01(ctaUp).toFixed(3));
+      // The 2026 + its bar fade in only AFTER the globe has finished tracing the
+      // journey — the fade runs as the CTA docks and rises (past DOCK_END), never
+      // during the tracing itself.
+      var yearOp = clamp01((p - DOCK_END) / (FREE_START - DOCK_END) * 1.4);
+      if (yearEl) yearEl.style.opacity = yearOp.toFixed(3);
+      if (yearLineEl) yearLineEl.style.opacity = yearOp.toFixed(3);
       if (blackout) blackout.style.opacity = dark.toFixed(3);
       if (intro) {
         intro.style.opacity = clamp01(introOp).toFixed(3);
