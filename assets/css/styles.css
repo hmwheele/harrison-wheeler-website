@@ -1334,6 +1334,32 @@ body.cs-lock::before { opacity: 1; }
 /* Cap the width of portrait/vertical photos so they don't run too tall */
 .tl-media.is-portrait { max-width: 340px; justify-self: center; }
 
+/* 2011 auto-crossfade carousel: 3 stacked images fade between each other on a
+   timer (no controls). Keeps a fixed frame, overriding the single-photo
+   has-photo/is-portrait behaviour so all slides share one box. */
+.tl-media--carousel,
+.tl-media--carousel.has-photo,
+.tl-media--carousel.is-portrait { aspect-ratio: 16 / 11; max-width: none; background: #1a1922; }
+.tl-media--carousel img,
+.tl-media--carousel.has-photo img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; border-radius: 16px;
+  opacity: 0; animation: tl-xfade 15s linear infinite;
+}
+.tl-media--carousel img:nth-of-type(2) { animation-delay: 5s; }
+.tl-media--carousel img:nth-of-type(3) { animation-delay: 10s; }
+@keyframes tl-xfade {
+  0%   { opacity: 0; }
+  5%   { opacity: 1; }
+  33%  { opacity: 1; }
+  40%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tl-media--carousel img { animation: none; opacity: 0; }
+  .tl-media--carousel img:first-of-type { opacity: 1; }
+}
+
 /* Street View backdrop for the 1996 chapter — black base + (placeholder) Street
    View, full-bleed and fixed; opacity is driven by scroll in story.js. */
 .sv-bg {
