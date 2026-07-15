@@ -447,6 +447,27 @@
     var ctaSubEl     = document.querySelector('.globe-cta .head-sub');
     var ctaActionsEl = document.querySelector('.globe-cta .cta-actions');
 
+    // The paragraph + buttons appear on a timed beat — half a second AFTER the
+    // "Let's work together" title has fully revealed — rather than tracking scroll
+    // position. Scrolling back up before the title lands cancels the pending reveal.
+    var CTA_BODY_DELAY = 500;
+    var ctaBodyShown = false, ctaBodyTimer = null;
+    function setCtaBody(on) {
+      if (ctaSubEl) ctaSubEl.style.opacity = on ? '1' : '0';
+      if (ctaActionsEl) { ctaActionsEl.style.opacity = on ? '1' : '0'; ctaActionsEl.style.pointerEvents = on ? '' : 'none'; }
+    }
+    function revealCtaBody(titleFull) {
+      if (titleFull) {
+        if (!ctaBodyShown && ctaBodyTimer === null) {
+          ctaBodyTimer = setTimeout(function () { ctaBodyTimer = null; ctaBodyShown = true; setCtaBody(true); }, CTA_BODY_DELAY);
+        }
+      } else {
+        if (ctaBodyTimer !== null) { clearTimeout(ctaBodyTimer); ctaBodyTimer = null; }
+        ctaBodyShown = false;
+        setCtaBody(false);
+      }
+    }
+
     // ── Static fallback: reduced motion or no scrolly section ──
     // (Mobile gets the full scroll journey too — modern iOS Safari keeps
     // dispatching scroll events through momentum scrolling, so the old
@@ -670,13 +691,16 @@
       // The 2026 + its bar fade in only AFTER the globe has finished tracing the
       // journey — the fade runs as the CTA docks and rises (past DOCK_END), never
       // during the tracing itself.
-      var yearOp = clamp01((p - DOCK_END) / (FREE_START - DOCK_END) * 1.4);
+      var headRaw = (p - DOCK_END) / (FREE_START - DOCK_END);   // 0→1 across the dock
+      var yearOp = clamp01(headRaw * 1.4);                      // 2026, line + title: full by ~0.71
       var yearOpStr = yearOp.toFixed(3);
       if (yearEl) yearEl.style.opacity = yearOpStr;
-      if (yearLineEl) yearLineEl.style.opacity = yearOpStr;
+      // The connector draws itself (scaleY 0→1) rather than fading, carrying the
+      // timeline spine's draw-on-scroll motif into the 2026 finale.
+      if (yearLineEl) { yearLineEl.style.opacity = '1'; yearLineEl.style.setProperty('--cta-line-draw', yearOpStr); }
       if (ctaHeadEl) ctaHeadEl.style.opacity = yearOpStr;
-      if (ctaSubEl) ctaSubEl.style.opacity = yearOpStr;
-      if (ctaActionsEl) ctaActionsEl.style.opacity = yearOpStr;
+      // Paragraph + buttons: revealed 500ms after the title fully lands.
+      revealCtaBody(yearOp >= 0.999);
       // Stars fade in as the globe finishes the journey and docks into place.
       if (starsEl) starsEl.style.opacity = (p <= ZOUT ? 0 : clamp01((p - ZOUT) / (DOCK_END - ZOUT))).toFixed(3);
       if (blackout) blackout.style.opacity = dark.toFixed(3);

@@ -559,7 +559,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .card:nth-child(odd) .card-media { order: 2; }
 .card:nth-child(odd) .card-body  { order: 1; }
 .card:hover { transform: translateY(-3px); }
-.card:hover h3 { background-position: 0% 0%; }   /* fill the near-white with light pink */
+.card:hover h3 { background-position: 0% 0%; }   /* fill the title to all light pink */
 /* Sticky deck (all sizes): each folder pins and the next one scrolls up over
    it. --stick-top is set per card in main.js so folders taller than the
    viewport (mobile) scroll fully into view before pinning. */
@@ -574,13 +574,12 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   text-transform: uppercase; font-size: clamp(40px, 6.5vw, 88px); font-weight: 700;
   letter-spacing: -.01em; line-height: .92; margin-bottom: 12px;
-  /* light-pink gradient; on hover the near-white body fills in with pink.
-     Gradients can't be transitioned directly, so we use a double-height
-     gradient (pink up top, near-white below) and slide it via
-     background-position — which IS animatable. */
-  color: var(--light-pink);   /* fallback for no background-clip: text */
-  background: linear-gradient(to bottom, #ffd8e4 0%, #ffd8e4 50%, #ffeef4 60%, #ffeef4 100%);
-  background-size: 100% 200%; background-position: 0% 100%;   /* default: near-white body, pink top */
+  /* Pink→white gradient text; on hover it fills to all light pink. A double-height
+     gradient (pink top half, white bottom half) is slid via background-position,
+     which — unlike the gradient itself — is animatable. */
+  color: #ffd8e4;   /* fallback for no background-clip: text */
+  background: linear-gradient(to bottom, #ffd8e4 0%, #ffd8e4 50%, #ffffff 62%, #ffffff 100%);
+  background-size: 100% 200%; background-position: 0% 100%;   /* default: pink→white */
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
   transition: background-position .6s ease;
@@ -1317,13 +1316,13 @@ body.cs-lock::before { opacity: 1; }
 
 /* Media well (image, or the Street View iframe on the first block) */
 .tl-media {
-  aspect-ratio: 16 / 11; border-radius: 4px; overflow: hidden;
+  aspect-ratio: 16 / 11; border-radius: 16px; overflow: hidden;
   border: 1px solid var(--border);
   background: linear-gradient(135deg, #2a2833, #3a3747);
   position: relative;
   width: 90%; justify-self: center;   /* trim the photo width by 10% */
 }
-.tl-media img, .tl-media iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; }
+.tl-media img, .tl-media iframe { width: 100%; height: 100%; object-fit: cover; display: block; border: 0; border-radius: 16px; }
 /* Once a real photo loads, the well conforms to the image's own dimensions
    (no fixed ratio, no cropping). story.js adds .has-photo when it loads. */
 .tl-media.has-photo { aspect-ratio: auto; background: none; }
@@ -1381,7 +1380,7 @@ body.cs-lock::before { opacity: 1; }
   font-family: var(--mono); font-size: .7rem; font-weight: 500;
   letter-spacing: .18em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;
 }
-.tl-card h3 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
+.tl-card h3 { font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none; font-size: 3rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; margin-bottom: 14px; }
 .tl-body { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; color: #fff; line-height: 1.8; max-width: 34em; }
 
 /* Smaller blurred copy of the row's image, sitting behind the text and
@@ -1477,7 +1476,7 @@ body.cs-lock::before { opacity: 1; }
 .globe-intro .story-finale-year .finale-year-num {
   display: inline-block; transform: scaleY(1.5); transform-origin: center;
 }
-.globe-intro h2 { font-size: clamp(1.2rem, 2.2vw, 1.65rem); font-weight: 800; letter-spacing: -.02em; line-height: 1.2; margin-bottom: 14px; }
+.globe-intro h2 { font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none; font-size: 3rem; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; margin-bottom: 14px; }
 .globe-intro .globe-sub { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; line-height: 1.8; color: #fff; max-width: 34em; margin: 0 auto 18px; }
 .globe-scrollcue { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-dim); }
 
@@ -1512,12 +1511,17 @@ body.cs-lock::before { opacity: 1; }
      upward by ~half its font size. Clear that bleed (plus a 24px gap) so the bar
      sits cleanly between the 2026 and the heading at any viewport width. */
   margin: 0 auto calc(clamp(3.3rem, 8.25vw, 5.8rem) * 0.5 + 24px);
-  background: var(--border); position: relative; z-index: 3;
+  /* z-index 1 (< globe's 2): the connector crests up from BEHIND the docked globe,
+     matching the "Let's work together" title. */
+  background: var(--border); position: relative; z-index: 1;
+  /* Draws top→down as the finale scrolls in (--cta-line-draw set in story.js);
+     defaults to 1 so the static / reduced-motion fallback shows it fully. */
+  transform: scaleY(var(--cta-line-draw, 1)); transform-origin: top center;
 }
 /* 2026 — the chapter after the journey. Same treatment as the timeline dates
    (.tl-year): Neudron, mint, vertically stretched. Leads into the CTA title. */
 .globe-cta .cta-year {
-  position: relative; z-index: 3;
+  position: relative; z-index: 1;
   font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
   color: #b9f2c8; text-shadow: none;
@@ -1529,15 +1533,22 @@ body.cs-lock::before { opacity: 1; }
 .globe-cta .section-head { position: relative; z-index: 1; text-shadow: none; }
 .globe-cta .head-sub,
 .globe-cta .cta-actions { position: relative; z-index: 3; }
+/* Nudge just the paragraph up 16px, tightening it under the title (buttons unaffected). */
+.globe-cta .head-sub { top: -16px; }
 /* Lift the title up out of the docked dome so only its bottom edge tucks
    behind the globe (interactive journey only — the static fallback has no dome). */
 .globe-scrolly:not(.is-static) .globe-cta .section-head { transform: translateY(-14vh); }
 /* The 2026 + its connector ride with the title (year keeps its vertical stretch). */
 .globe-scrolly:not(.is-static) .globe-cta .cta-year { transform: translateY(-14vh) scaleY(1.5); }
-.globe-scrolly:not(.is-static) .globe-cta .cta-tl-line { transform: translateY(-14vh); }
+.globe-scrolly:not(.is-static) .globe-cta .cta-tl-line { transform: translateY(-14vh) scaleY(var(--cta-line-draw, 1)); }
 /* Pull the supporting text + buttons up so they sit close under the lifted title. */
 .globe-scrolly:not(.is-static) .globe-cta .head-sub,
-.globe-scrolly:not(.is-static) .globe-cta .cta-actions { transform: translateY(calc(-11vh - 16px)); }
+.globe-scrolly:not(.is-static) .globe-cta .cta-actions {
+  transform: translateY(calc(-11vh - 16px));
+  /* Hidden until story.js reveals them a beat after the title lands; the fade
+     itself eases over .45s. (Static / reduced-motion fallback keeps them visible.) */
+  opacity: 0; transition: opacity .45s ease;
+}
 
 .globe-fallback { display: none; padding: 40px 24px; }
 .globe-wrap.no-webgl #globe { display: none; }
@@ -1620,8 +1631,8 @@ body.cs-lock::before { opacity: 1; }
 .subpop-panel {
   position: relative;
   width: 320px; max-width: calc(100vw - 48px);
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 22px 22px 20px; box-shadow: 0 24px 60px rgba(0,0,0,.55);
+  background: #fff; border: 1px solid rgba(0,0,0,.12); border-radius: var(--radius);
+  padding: 22px 22px 20px; box-shadow: 0 24px 60px rgba(0,0,0,.28);
   transform-origin: bottom right; transform: translateY(12px) scale(.96); opacity: 0;
   visibility: hidden; pointer-events: none;
   transition: transform .26s cubic-bezier(.22,1,.36,1), opacity .2s, visibility .26s;
@@ -1630,19 +1641,19 @@ body.cs-lock::before { opacity: 1; }
 .subpop-close {
   position: absolute; top: 12px; right: 12px; width: 28px; height: 28px;
   display: grid; place-items: center; border-radius: 100px; cursor: pointer;
-  background: transparent; border: 0; color: var(--text-muted); transition: color .2s, background .2s;
+  background: transparent; border: 0; color: #75717f; transition: color .2s, background .2s;
 }
-.subpop-close:hover { color: var(--text); background: var(--surface-2); }
-.subpop-eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
-.subpop-title { font-family: 'GT America', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 8px; color: var(--text); }
-.subpop-copy { font-size: .92rem; line-height: 1.5; color: var(--text-muted); margin-bottom: 16px; max-width: 30ch; }
+.subpop-close:hover { color: #16151c; background: #f0eff3; }
+.subpop-eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; color: var(--on-primary); margin-bottom: 8px; }
+.subpop-title { font-family: 'Neudron', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-synthesis: none; font-size: 2rem; font-weight: 700; letter-spacing: -.01rem; line-height: 1.05; text-transform: uppercase; margin-bottom: 4px; color: #16151c; }
+.subpop-copy { font-family: 'Merriweather', Georgia, serif; font-weight: 300; font-size: 1.05rem; line-height: 1.5; color: #36333c; margin-bottom: 16px; max-width: 30ch; }
 .subpop-form { display: flex; flex-direction: column; gap: 10px; }
 .subpop-input {
   width: 100%; padding: 12px 14px; border-radius: var(--radius-sm);
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+  background: #f5f4f7; border: 1px solid rgba(0,0,0,.14); color: #16151c;
   font-family: var(--font); font-size: .95rem; transition: border-color .2s;
 }
-.subpop-input::placeholder { color: var(--text-muted); }
+.subpop-input::placeholder { color: #8b8794; }
 .subpop-input:focus { outline: none; border-color: var(--primary); }
 .subpop-input.invalid { border-color: #ff6b8a; }
 .subpop-submit {
@@ -1654,7 +1665,7 @@ body.cs-lock::before { opacity: 1; }
 }
 .subpop-submit:hover { background: var(--primary-hover); transform: translateY(-1px); }
 .subpop-submit:disabled { opacity: .6; cursor: default; transform: none; }
-.subpop-msg { font-size: .9rem; line-height: 1.45; margin-top: 12px; color: var(--text-muted); }
+.subpop-msg { font-size: .9rem; line-height: 1.45; margin-top: 12px; color: #75717f; }
 .subpop-msg.ok { color: #7ee0a8; }
 .subpop-msg.err { color: #ff9bb0; }
 @media (max-width: 560px) {
