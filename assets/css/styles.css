@@ -150,6 +150,21 @@ ul { list-style: none; }
    index.html and removed after the logo has darkened (~1.5s). */
 html.hero-intro-lock, html.hero-intro-lock body { overflow: hidden; }
 html.hero-intro-lock .nav { opacity: 0; pointer-events: none; }
+/* Intro loading bar — sweeps left→right across the top as the HW logo tones in,
+   then fades out as the intro ends (~1.5s). */
+.hero-loadbar {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  width: 100%; height: 3px; pointer-events: none;
+  transform: scaleX(0); transform-origin: left center;
+  background: linear-gradient(90deg, #ffe9f0, #ffd8e4, #ff9ec4);
+  animation: hero-load 1.6s ease forwards;
+}
+@keyframes hero-load {
+  0%   { transform: scaleX(0); opacity: 1; }
+  86%  { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .hero-loadbar { display: none; } }
 /* (Removed the full-width blurred header backdrop — the floating nav pill
    is the only chrome at the top now.) */
 .nav-inner {
