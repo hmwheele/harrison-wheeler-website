@@ -394,8 +394,22 @@
     function open() { root.classList.add('is-open'); }
     function close() { root.classList.remove('is-open'); remember(); }
 
-    // Pop up by default a moment after load, unless already dismissed/subscribed.
-    if (!dismissed()) { setTimeout(open, 900); }
+    // Appear once the user starts scrolling down (after a short delay), unless
+    // already dismissed/subscribed.
+    if (!dismissed()) {
+      var SCROLL_TRIGGER = 150;   // px scrolled down before it arms
+      var APPEAR_DELAY = 1000;    // ms after that before the popover opens
+      var armed = false;
+      var onScrollArm = function () {
+        if (armed) return;
+        if ((window.scrollY || window.pageYOffset || 0) > SCROLL_TRIGGER) {
+          armed = true;
+          window.removeEventListener('scroll', onScrollArm);
+          setTimeout(function () { if (!dismissed() && !isOpen()) open(); }, APPEAR_DELAY);
+        }
+      };
+      window.addEventListener('scroll', onScrollArm, { passive: true });
+    }
 
     if (closeB) closeB.addEventListener('click', close);
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen()) close(); });

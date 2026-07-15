@@ -13,7 +13,7 @@
   var triggers = document.querySelectorAll('[data-cs]');
   if (!triggers.length || !window.CASE_STUDIES) return;
 
-  var overlay, sheet, topbar, progressFill, lastFocus;
+  var overlay, sheet, topbar, progressFill, lastFocus, savedScrollY = 0;
 
   function build() {
     overlay = document.createElement('div');
@@ -237,6 +237,7 @@
     if (!render(key)) return;
 
     lastFocus = document.activeElement;
+    savedScrollY = window.scrollY || window.pageYOffset || 0;
     document.body.classList.add('cs-lock');
     overlay.scrollTop = 0;
     if (canMorph(originEl)) {
@@ -260,7 +261,7 @@
       });
     }
     var c = sheet.querySelector('.cs-close');
-    if (c) c.focus();
+    if (c) c.focus({ preventScroll: true });
   }
 
   function close(skipHistory) {
@@ -271,7 +272,16 @@
     overlay.classList.remove('open');
     document.body.classList.remove('cs-lock');
     if (!skipHistory && history.state && history.state.cs) history.back();
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+    // Closing must not jump the page to the top: focusing the trigger card and
+    // the history back-nav can both nudge scroll, so pin the page back to where
+    // it was when the modal opened (repeated across the next frame + task to
+    // beat any async scroll restoration).
+    var y = savedScrollY;
+    var restoreScroll = function () { window.scrollTo(0, y); };
+    restoreScroll();
+    requestAnimationFrame(restoreScroll);
+    setTimeout(restoreScroll, 0);
     setTimeout(function () { if (!overlay.classList.contains('open')) sheet.innerHTML = ''; }, 450);
   }
 
