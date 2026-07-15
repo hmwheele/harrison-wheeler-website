@@ -157,11 +157,16 @@ html.hero-intro-lock .nav { opacity: 0; pointer-events: none; }
   width: 100%; height: 3px; pointer-events: none;
   transform: scaleX(0); transform-origin: left center;
   background: linear-gradient(90deg, #ffe9f0, #ffd8e4, #ff9ec4);
-  animation: hero-load 1.6s ease forwards;
+  opacity: 0;   /* only appears while the intro runs (see below) */
 }
+/* Sweep only during the initial hero/logo intro. The intro's inline head script
+   adds .hero-intro-lock on genuine home loads; on bfcache/back-navigation (or
+   any load where the intro doesn't run) the class is absent, so the bar stays
+   hidden. Finishes just before the 1.5s lock is released, so no snap. */
+html.hero-intro-lock .hero-loadbar { animation: hero-load 1.4s ease forwards; }
 @keyframes hero-load {
   0%   { transform: scaleX(0); opacity: 1; }
-  86%  { transform: scaleX(1); opacity: 1; }
+  80%  { transform: scaleX(1); opacity: 1; }
   100% { transform: scaleX(1); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .hero-loadbar { display: none; } }
