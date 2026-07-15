@@ -12,6 +12,7 @@ window.CASE_STUDIES = {
     body: [
       '<h1>Building a Surface for Growth</h1>',
       '<p class="cs-deck">How a self-serve mandate became the foundation for experimentation, lifecycle thinking, and a new audience for Campaign Manager, and how a usability problem everyone had deprioritized became the business case for a new top-level surface.</p>',
+      '<div class="cs-figure cs-hero-video" style="aspect-ratio:auto"><video autoplay loop muted playsinline preload="metadata" aria-label="Marketing Overview surface demo" style="width:100%;height:auto;display:block"><source src="assets/case_studies/growth/growth-demo.mp4" type="video/mp4"></video></div>',
       '<h2 id="overview">Overview</h2>',
       '<p>LinkedIn Marketing Solutions was an enterprise product moving toward self-serve. Three things were true at the same time, and none of them were connected: there was a company-wide mandate to fix product quality, a company-wide bet on self-serve to bring in more customers, and proof, from campaign boosting on the consumer side, that self-serve actually worked. My job was to build the connective tissue between them: a single surface, grounded in how marketers actually work over time, that turned a backlog of usability complaints into a funded growth strategy.</p>',
       '<ul class="bullets">',
@@ -33,6 +34,7 @@ window.CASE_STUDIES = {
       '<li><em>"I find the overall process of setting up ads on LinkedIn to be awkward, challenging, and not user-friendly. Please, check out the Google, Microsoft, and Facebook interfaces… much easier setup."</em></li>',
       '<li><em>"This is the most UN user friendly interface. I have had to redo this 3 times. This was HAAARD!!!! and FRUSTRATING."</em></li>',
       '</ul>',
+      '<figure class="cs-shot"><div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/growth/campaign_reporting.jpg" alt="Campaign Manager reporting" style="height:auto;object-fit:contain" loading="lazy"></div><figcaption>Campaign reporting</figcaption></figure>',
 
       '<h2 id="approach">Approach</h2>',
       '<p>The work followed a repeatable arc, discover, understand the data, identify the gaps, develop a systems-level narrative, earn buy-in, and build, with two craft artifacts doing most of the persuading: an illustration of the marketing lifecycle, and a narrative that gave every surface a place in one story.</p>',
@@ -143,6 +145,9 @@ window.CASE_STUDIES = {
       '<li><strong>Campaign Manager onboarding</strong>: Q2 FY2024.</li>',
       '<li><strong>Measurement insights</strong>: Q3 FY2024.</li>',
       '</ul>',
+      '<figure class="cs-shot"><div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/pods/campaing_automation.jpg" alt="AI-assisted campaign creation in Campaign Manager" style="height:auto;object-fit:contain" loading="lazy"></div><figcaption>AI-assisted campaign creation</figcaption></figure>',
+      '<figure class="cs-shot"><div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/pods/onboarding.jpg" alt="Campaign Manager onboarding" style="height:auto;object-fit:contain" loading="lazy"></div><figcaption>Campaign Manager onboarding</figcaption></figure>',
+      '<figure class="cs-shot"><div class="cs-figure" style="aspect-ratio:auto;background:#fff"><img src="assets/case_studies/pods/measurement_insights.jpg" alt="Measurement insights" style="height:auto;object-fit:contain" loading="lazy"></div><figcaption>Measurement insights</figcaption></figure>',
 
       '<h2 id="reflection">Reflection</h2>',
       '<p><strong>Morale is a systems signal, not a motivation problem.</strong> The team\'s low score wasn\'t about effort, it was about unclear priorities, invisible impact, and ambiguous roles. Fixing the system of work fixed the morale, and the score nearly inverted from an all-time low to an all-time high.</p>',
