@@ -615,6 +615,7 @@
     { lng:  151.2093, lat: -33.8688, t: 'Sydney' }
   ];
   var deckGlobeInited = false, deckGlobeMap = null;
+  var globePins = [];    // {el, lng, lat} per city, for the rotate-out fade
 
   // The wireframe globe is hidden by default (so it never flashes on load);
   // reveal it only when Mapbox can't run.
@@ -652,55 +653,8 @@
     document.head.appendChild(sc);
   }
 
-  /* The travel trail, San Francisco → Sydney. Same treatment as the about
-     page's globe: each leg is a quadratic bezier that bows perpendicular to
-     the leg so it lifts off like a flight-map route, with longitudes
-     unwrapped the short way so the Pacific crossing doesn't sweep over the
-     pole. A dark casing under the white line keeps it legible over land. */
-  function globeFlightArc(a, b, n) {
-    var lng0 = a[0], lat0 = a[1];
-    var dLng = ((b[0] - lng0 + 540) % 360) - 180;
-    var lng1 = lng0 + dLng, lat1 = b[1];
-    var dx = lng1 - lng0, dy = lat1 - lat0;
-    var chord = Math.sqrt(dx * dx + dy * dy);
-    if (chord < 1e-6) return [[lng0, lat0], [lng1, lat1]];
-    var nx = -dy / chord, ny = dx / chord;
-    if (ny < 0) { nx = -nx; ny = -ny; }
-    var bow = chord * Math.min(0.22, 0.10 + chord * 0.004);
-    var cx = (lng0 + lng1) / 2 + nx * bow;
-    var cy = (lat0 + lat1) / 2 + ny * bow;
-    var pts = [];
-    for (var i = 0; i <= n; i++) {
-      var t = i / n, u = 1 - t;
-      pts.push([u * u * lng0 + 2 * u * t * cx + t * t * lng1,
-                u * u * lat0 + 2 * u * t * cy + t * t * lat1]);
-    }
-    return pts;
-  }
-
-  function addGlobeRoute(map) {
-    var feats = [];
-    for (var i = 0; i < GLOBE_PLACES.length - 1; i++) {
-      var a = GLOBE_PLACES[i], b = GLOBE_PLACES[i + 1];
-      feats.push({
-        type: 'Feature',
-        geometry: { type: 'LineString', coordinates: globeFlightArc([a.lng, a.lat], [b.lng, b.lat], 48) }
-      });
-    }
-    try {
-      map.addSource('deck-route', { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
-      map.addLayer({
-        id: 'deck-route-casing', type: 'line', source: 'deck-route',
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': 'rgba(0,0,0,0.55)', 'line-width': 3.6, 'line-blur': 0.8, 'line-opacity': 0.85 }
-      });
-      map.addLayer({
-        id: 'deck-route-line', type: 'line', source: 'deck-route',
-        layout: { 'line-cap': 'round', 'line-join': 'round' },
-        paint: { 'line-color': '#ffffff', 'line-width': 1.6, 'line-opacity': 0.85, 'line-blur': 0.2 }
-      });
-    } catch (e) {}
-  }
+  /* The globe shows the stops alone — no connecting trail between them.
+     (The about page's globe still draws its flight-path arcs.) */
 
   function buildDeckGlobe(mount) {
     var mapboxgl = window.mapboxgl;
@@ -727,9 +681,10 @@
     // event can stall in globe projection while it waits on all tiles.
     var setup = function () {
       try {
+        // No atmospheric glow: the sphere sits on the dark slide unhaloed.
         map.setFog({
-          color: 'rgba(12, 14, 22, 0.9)', 'high-color': 'rgba(60, 50, 110, 0.5)',
-          'horizon-blend': 0.02, 'space-color': 'rgba(0, 0, 0, 0)', 'star-intensity': 0
+          color: 'rgba(12, 14, 22, 0.9)', 'high-color': 'rgba(0, 0, 0, 0)',
+          'horizon-blend': 0, 'space-color': 'rgba(0, 0, 0, 0)', 'star-intensity': 0
         });
       } catch (e) {}
       // hide the base style's place labels; keep borders
@@ -738,13 +693,19 @@
           if (l.type === 'symbol') try { map.setLayoutProperty(l.id, 'visibility', 'none'); } catch (e) {}
         });
       } catch (e) {}
-      addGlobeRoute(map);
+      /* Dots only — no city names. The marker is centred on its coordinate,
+         since there's no label to sit to one side of it. */
       GLOBE_PLACES.forEach(function (p) {
         var pin = document.createElement('div');
         pin.className = 'deck-globe-pin';
-        pin.innerHTML = '<span class="deck-globe-pin-dot"></span><span class="deck-globe-pin-lbl"></span>';
-        pin.querySelector('.deck-globe-pin-lbl').textContent = p.t;
-        try { new mapboxgl.Marker({ element: pin, anchor: 'left', opacityWhenCovered: '0' }).setLngLat([p.lng, p.lat]).addTo(map); } catch (e) {}
+        pin.innerHTML = '<span class="deck-globe-pin-dot"></span>';
+        pin.setAttribute('aria-label', p.t);
+        try {
+          new mapboxgl.Marker({
+            element: pin, anchor: 'center', opacityWhenCovered: '0'
+          }).setLngLat([p.lng, p.lat]).addTo(map);
+          globePins.push({ el: pin, lng: p.lng, lat: p.lat });
+        } catch (e) {}
       });
       // real globe is up → hide the wireframe fallback (visibility, not
       // display, so it keeps defining the container's square height)
@@ -757,16 +718,40 @@
     else map.on('style.load', setup);
   }
 
+  /* Fade each label out as its city rotates toward the limb. The measure is
+     the angle between the city and the point facing the camera: 1 dead
+     centre, 0 at the edge of the visible hemisphere. Mapbox's
+     opacityWhenCovered only cuts labels once they're fully round the back,
+     which pops — this eases them out before they get there. */
+  var FADE_OUT = 0.42, FADE_IN = 0.72;   // cos of the angle from centre
+  function updateGlobePinFade(map) {
+    if (!globePins.length) return;
+    var c;
+    try { c = map.getCenter(); } catch (e) { return; }
+    var rad = Math.PI / 180;
+    var clat = c.lat * rad, clng = c.lng * rad;
+    var sinC = Math.sin(clat), cosC = Math.cos(clat);
+    globePins.forEach(function (p) {
+      var lat = p.lat * rad;
+      var cosGamma = sinC * Math.sin(lat) + cosC * Math.cos(lat) * Math.cos(p.lng * rad - clng);
+      var t = (cosGamma - FADE_OUT) / (FADE_IN - FADE_OUT);
+      t = t < 0 ? 0 : t > 1 ? 1 : t;
+      p.el.style.opacity = (t * t * (3 - 2 * t)).toFixed(3);   // smoothstep
+    });
+  }
+
   // Slow auto-spin, paused when the slide isn't the active one.
   function spinDeckGlobe(map, mount) {
-    if (reduce) return;
     var slide = mount.closest('.deck-slide');
+    updateGlobePinFade(map);
+    if (reduce) return;
     var last = null;
     (function frame(ts) {
       if (last === null) last = ts;
       var dt = Math.min(64, ts - last); last = ts;
       if (slide && slide.classList.contains('is-active') && !document.hidden) {
         try { var ctr = map.getCenter(); ctr.lng += dt * 0.0016; map.setCenter(ctr); } catch (e) {}
+        updateGlobePinFade(map);
       }
       requestAnimationFrame(frame);
     })(0);
@@ -816,7 +801,6 @@
       ]);
     });
     return el('section.deck-slide.deck-slide--timeline', { 'data-label': 'Career' }, [
-      el('p.deck-eyebrow', null, ['Career']),
       el('h2.deck-title', null, ['A decade leading design']),
       el('div.deck-timeline', null, rows)
     ]);
@@ -894,7 +878,6 @@
     }
     var kids = [];
     if (wall) kids.push(wall);
-    kids.push(el('p.deck-eyebrow', null, ['Podcast']));
     kids.push(el('h2.deck-title', null, ['Technically Speaking']));
     kids.push(el('p.deck-body', null, [text('.podcast-overlay .head-sub')]));
     kids.push(el('div.deck-actions', null, [
@@ -1398,6 +1381,35 @@
     ]);
   }
 
+  /* How I lead: three principles, numbered, each with the reasoning under
+     it. Same card grid as the About slide it follows. */
+  var LEAD_PRINCIPLES = [
+    { h: 'Through clarity and trust',
+      p: 'A clear idea of what the goal is, plus transparency and communication, sets the tone for everything else.' },
+    { h: 'Set the altitude and why',
+      p: "However deep in the weeds I am, or however horizontally I'm thinking, I don't lose sight of what the motivation is." },
+    { h: 'Give designers the room to grow',
+      p: 'People need to understand their purpose and their role, then get the room to reach potential they have not tapped yet.' }
+  ];
+
+  function slideHowILead() {
+    return el('section.deck-slide.deck-slide--aboutcards.deck-slide--lead', { 'data-label': 'How I lead' }, [
+      el('h2.deck-title', null, ['How I lead']),
+      /* The numeral is a sibling of the card, not a child: it has to paint
+         *behind* the card's surface, and a child can't sit under its own
+         parent's background. */
+      el('div.deck-about-grid', null, LEAD_PRINCIPLES.map(function (c, i) {
+        return el('div.deck-lead-cell', null, [
+          el('span.deck-lead-num', { 'aria-hidden': 'true' }, [String(i + 1)]),
+          el('article.deck-about-card', null, [
+            el('h3', null, [c.h]),
+            el('p', null, [c.p])
+          ])
+        ]);
+      }))
+    ]);
+  }
+
   /* Closing About slide: three rows of image placeholders drifting left
      behind a centred serif statement. Each row's tiles are duplicated so
      the -50% translate loops seamlessly; rows differ in speed/offset so
@@ -1771,7 +1783,7 @@
   function slideDgmVenn() { return diagramSlide('Overview', 'Marketing overview', diagramVenn()); }
 
   var HOME_BUILDERS = [
-    slideTitle, slideBelief, slidePlaces, slideAboutCards, slidePhotoWall, slideTimeline, slideWork,
+    slideTitle, slideBelief, slidePlaces, slideAboutCards, slideHowILead, slidePhotoWall, slideTimeline, slideWork,
     slidePodcast, slideCTA
   ];
   /* Cut from the main flow (the builders are still defined and can be

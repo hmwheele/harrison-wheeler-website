@@ -89,7 +89,7 @@ html.deck-mode main {
   /* Container steps — cqi is % of the containing box's inline size */
   /* Each cqi figure is calibrated so the text matches its old rendered
      size at the 1400px design width, then tracks the box from there. */
-  --tc-head:  clamp(1.05rem, 8.3cqi, 1.5rem);     /* about-card heading */
+  --tc-head:  clamp(1.35rem, 10.6cqi, 2rem);      /* about-card heading */
   --tc-body:  clamp(0.85rem, 5.8cqi, 1.05rem);    /* about-card body */
   --tc-cell:  clamp(0.66rem, 2.9cqi, 0.92rem);    /* legacy 2x2 cell */
   --tc-cap:   clamp(0.85rem, 5.9cqi, 1.35rem);    /* triptych caption */
@@ -348,6 +348,52 @@ html.deck-reduce .deck-charts-grid {
 
 /* ── "How I work" cards (mirrors the about page's .about-card set) ─── */
 .deck-slide--aboutcards { justify-content: center; }
+/* How I lead: same card grid, but titled, and each card numbered in place
+   of the About slide's illustration. Title sits at the top of the slide,
+   centred over the row. */
+.deck-slide--lead { justify-content: flex-start; }
+.deck-slide--lead .deck-title {
+  width: 100%;
+  text-align: center;
+  margin-bottom: clamp(34px, 5vh, 68px);
+}
+/* Cards centre in the space under the title. */
+.deck-slide--lead .deck-about-grid { flex: 1 1 auto; align-content: center; }
+/* Each cell holds the oversized numeral and the card that overlaps it. */
+.deck-lead-cell { position: relative; display: flex; min-width: 0; }
+.deck-lead-cell .deck-about-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  /* solid deck surface — the numeral disappears behind it, not through it */
+  background: var(--bg);
+}
+.deck-lead-num {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 50%;
+  /* rides high on the card: only the feet of the numeral tuck behind it, so
+     the shoulders and crests read clear above the edge */
+  transform: translate(-50%, -76%);
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: clamp(5.5rem, 11vw, 12rem);
+  line-height: 1;
+  padding-block: 0.06em;   /* headroom so background-clip doesn't shave caps */
+  pointer-events: none;
+  /* mint at the baseline fading up to white, as on the closing slide */
+  color: #b9f2c8;          /* fallback if background-clip:text is unsupported */
+  background: linear-gradient(to top, #b9f2c8 0%, #d9f8e3 42%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* The cards' entrance is keyed off their own position in the grid, which is
+   now the cell's. */
+.deck-lead-cell:nth-child(2) .deck-about-card { transition-delay: 0.12s; }
+.deck-lead-cell:nth-child(3) .deck-about-card { transition-delay: 0.24s; }
 .deck-about-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -498,21 +544,12 @@ html.deck-reduce .deck-places-media .deck-globe {
 /* hide Mapbox's own logo/attribution chrome inside the slide */
 .deck-globe .mapboxgl-control-container { display: none; }
 /* location pins on the real globe */
-.deck-globe-pin { display: flex; align-items: center; gap: 8px; transform: translateX(3px); pointer-events: none; }
+/* Dots only — the cities are marked, not named. */
+.deck-globe-pin { display: flex; align-items: center; pointer-events: none; }
 .deck-globe-pin-dot {
-  width: 9px; height: 9px; border-radius: 50%;
+  width: 1px; height: 1px; border-radius: 50%;
   background: var(--light-pink);
-  box-shadow: 0 0 0 3px rgba(255, 216, 228, 0.22);
-}
-.deck-globe-pin-lbl {
-  /* GT America here, matching the about page's globe labels — the deck's
-     usual mono reads as a UI chip rather than a place name. */
-  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
-  color: var(--text);
-  /* No chip behind the name — a shadow carries it over the globe instead,
-     the same way the about page's labels read. */
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
-  white-space: nowrap;
+  flex: 0 0 auto;
 }
 /* ── Media placeholders overlapping the globe (fade in after it spins) ── */
 .deck-globe-media { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
