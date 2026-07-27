@@ -433,12 +433,8 @@ html.deck-reduce .deck-about-card {
   font-size: var(--t-copy);
   color: var(--text);
 }
-.deck-facts li::before {
-  content: '';
-  position: absolute; left: 0; top: 0.62em;
-  width: 16px; height: 2px;
-  background: var(--primary);
-}
+/* Each fact leads with its own emoji, so there is no rule marker as well. */
+.deck-facts li { padding-left: 0; }
 /* Globe + the outgoing portrait share one cell. The portrait is absolute so
    it never affects the globe's square box. */
 .deck-places-media { position: relative; min-width: 0; }
@@ -509,10 +505,14 @@ html.deck-reduce .deck-places-media .deck-globe {
   box-shadow: 0 0 0 3px rgba(255, 216, 228, 0.22);
 }
 .deck-globe-pin-lbl {
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+  /* GT America here, matching the about page's globe labels — the deck's
+     usual mono reads as a UI chip rather than a place name. */
+  font-family: var(--font); font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
   color: var(--text);
-  background: rgba(13, 12, 17, 0.6);
-  padding: 1px 7px; border-radius: 5px; white-space: nowrap;
+  /* No chip behind the name — a shadow carries it over the globe instead,
+     the same way the about page's labels read. */
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.95);
+  white-space: nowrap;
 }
 /* ── Media placeholders overlapping the globe (fade in after it spins) ── */
 .deck-globe-media { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
@@ -962,6 +962,9 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
   font-synthesis: none; font-weight: 800; font-size: 54px; fill: var(--viz-ink);
 }
 .viz-svg .dgm-cycle-hub { font-family: var(--mono); font-size: 38px; font-weight: 400; fill: var(--viz-ink); letter-spacing: -0.01em; }
+/* Team / Organization / Company on the priorities diagram read as display
+   type, not diagram chrome. */
+.viz-svg .dgm-scope-lbl { font-family: var(--display); font-synthesis: none; font-weight: 800; font-size: 46px; }
 .viz-svg .dgm-lane-lbl { font-size: 24px; }
 .dgm-lane-row { fill: var(--viz-ink-muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; }
 .dgm-callout-item  { fill: var(--viz-ink-muted); font-family: var(--mono); font-size: 15px; }
@@ -1257,6 +1260,69 @@ html.deck-reduce .deck-guest-row { animation: none; }
 .deck-btn--ghost { border-color: var(--border); color: var(--text); }
 .deck-btn--ghost:hover { border-color: var(--primary); color: var(--primary); }
 
+/* ── Contact slide ─────────────────────────────────────────────────
+   The closing slide is a composition, not a content slide: everything
+   centres on both axes, and the heading takes the about page's CTA
+   treatment (stretched Neudron caps in the light-pink gradient). */
+.deck-slide--cta {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.deck-slide--cta .deck-title {
+  font-family: var(--display);
+  font-synthesis: none;
+  text-transform: uppercase;
+  font-weight: 800;
+  /* set below the hero size so the 2.1x stretch still clears the slide */
+  font-size: calc(var(--t-hero) * 0.8);
+  /* tight leading: the scaleY below multiplies it */
+  line-height: 0.72;
+  padding-block: 0.14em;
+  letter-spacing: -0.01em;
+  /* stretched harder than slide one — this is the closing statement */
+  transform: scaleY(2.1);
+  transform-origin: center;
+  /* the stretch grows both ways, so reserve room above and below */
+  margin-block: clamp(18px, 4vh, 52px);
+  color: #b9f2c8;   /* fallback if background-clip:text is unsupported */
+  /* light green at the baseline, fading up to white */
+  background: linear-gradient(to top, #b9f2c8 0%, #d9f8e3 42%, #ffffff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.deck-slide--cta .deck-lede { margin-inline: auto; }
+.deck-slide--cta .deck-actions { justify-content: center; }
+
+/* The podcast slide centres vertically too, so it sits with the closer. */
+.deck-slide--podcast { justify-content: center; }
+
+/* Buttons here match the site's: mono label, filled primary, frosted ghost. */
+.deck-slide--cta .deck-btn {
+  font-family: var(--mono);
+  font-size: 1.05rem;
+  font-weight: 500;
+  padding: 14px 28px;
+  border-width: 0.5px;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+.deck-slide--cta .deck-btn--primary:hover { transform: translateY(-1px); }
+.deck-slide--cta .deck-btn--ghost {
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.deck-slide--cta .deck-btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+.deck-btn-ext { width: 0.82em; height: 0.82em; flex: 0 0 auto; }
+
 /* ── Controls (bottom) ─────────────────────────────────────────────── */
 .deck-controls {
   position: absolute;
@@ -1372,13 +1438,14 @@ html.deck-reduce .deck-guest-row { animation: none; }
 }
 
 /* ── Outside influences: three gradient forms with pill captions ───── */
+/* Statement slide: the line alone, centred on both axes. */
 .deck-slide--influences {
-  justify-content: flex-start;
+  justify-content: center;
   align-items: center;
   text-align: center;
   padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(40px, 6vh, 80px);
 }
-.deck-slide--influences .deck-title { margin: 0 0 clamp(20px, 4vh, 56px); }
+.deck-slide--influences .deck-title { margin: 0; }
 .deck-infl-row {
   flex: 1 1 auto;
   min-height: 0;
@@ -1522,18 +1589,20 @@ html.deck-reduce .deck-guest-row { animation: none; }
   counter-increment: deck-enum;
   content: counter(deck-enum, upper-roman);
 }
+/* No chip behind the numeral: the numeral itself is the mark, set in
+   Neudron at display scale in the deck's mint green. */
 .deck-enum-mark {
   flex: none;
-  width: clamp(26px, 2.4vw, 34px);
-  height: clamp(26px, 2.4vw, 34px);
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--on-primary);
+  min-width: 1.6em;
   display: grid;
-  place-items: center;
-  font-family: var(--mono);
-  font-size: var(--t-nano);
-  margin-top: 0.3em;
+  place-items: start center;
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: clamp(2.2rem, 4vw, 3.6rem);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+  color: #b9f2c8;
 }
 .deck-enum-text {
   margin: 0;
@@ -1553,16 +1622,29 @@ html.deck-reduce .deck-guest-row { animation: none; }
   padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(64px, 10vh, 116px);
 }
 .deck-slide--top50 .deck-title { margin: 0 0 clamp(20px, 3vh, 40px); }
+/* Single column now that the screenshot is gone — the verbatims run down
+   the slide on their own. */
 .deck-top50-body {
   flex: 1 1 auto;
   min-height: 0;
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(20px, 3vw, 48px);
   align-items: stretch;
 }
-.deck-quote-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(12px, 1.8vh, 22px); justify-content: center; }
+/* Centred in the slide: the verbatims are the whole point of it. */
+.deck-quote-list {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  width: min(100%, 62rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8vh, 22px);
+  justify-content: center;
+  text-align: center;
+}
 /* Sticky-note styling, same as the yellow callouts on the original slide. */
 .deck-quote-note {
   padding: clamp(12px, 1.4vw, 20px);
@@ -2128,6 +2210,43 @@ html.deck-reduce .deck-guest-row { animation: none; }
 .deck-slide--titlefig .deck-body { max-width: 30ch; color: var(--text-dim); }
 .deck-slide--titlefig .deck-fig-ph { height: 100%; max-height: 100%; }
 
+/* ── Role slide ────────────────────────────────────────────────────
+   "Role" alone in the left rail at full display size; what the role
+   actually owned listed on the right. */
+.deck-slide--role .deck-title { font-size: var(--t-title); }
+.deck-role-body { display: flex; flex-direction: column; gap: clamp(16px, 2.6vh, 30px); }
+.deck-role-title {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.deck-role-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.9vh, 22px);
+}
+.deck-role-list li {
+  position: relative;
+  padding-left: 30px;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-copy);
+  line-height: 1.4;
+  color: var(--text);
+}
+.deck-role-list li::before {
+  content: '';
+  position: absolute; left: 0; top: 0.62em;
+  width: 16px; height: 2px;
+  background: var(--primary);
+}
+
 /* Principles: lead-in bold, the rest as running serif copy. */
 .deck-principles {
   list-style: none;
@@ -2330,6 +2449,14 @@ html.deck-reduce .deck-guest-row { animation: none; }
   /* nudged down so the status-bar area sits clear of the dynamic island */
   transform: translateY(8px) scale(1.065);
 }
+/* Whole-screenshot variant: the capture isn't the template's aspect ratio,
+   so it sits inside the well complete instead of being cropped to fill. */
+.deck-phone--fit .deck-phone-screen { background: #000; }
+.deck-phone--fit .deck-phone-screen img {
+  object-fit: contain;
+  object-position: center;
+  transform: none;
+}
 /* A screenshot that already has its own device chrome — no template, just
    the image sized to the media column. */
 .deck-figtext-shot {
@@ -2377,6 +2504,9 @@ html.deck-reduce .deck-guest-row { animation: none; }
   object-position: top center;
   display: block;
 }
+/* Cover art: a full-app screenshot leads with its left nav, so the crop
+   comes off the right rather than splitting the rail down the middle. */
+.deck-cs-device--laptop .deck-laptop-screen img { object-position: top left; }
 .deck-laptop-lbl {
   font-family: var(--mono);
   font-size: var(--t-nano);
@@ -2742,6 +2872,15 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
   border-radius: 12px;
 }
 
+/* Phone-shaped cover art: the render already includes the device, so it
+   takes the phone mock's narrow slot instead of the wide landscape one. */
+.deck-cs-cover-art--phone {
+  top: 50%;
+  right: 12%;
+  width: clamp(280px, 29vw, 420px);
+}
+.deck-cs-cover-art--phone img { max-height: 84vh; }
+
 /* MacBook template on a case-study cover: same slot as the desktop mock,
    sized a little larger so the machine reads at cover scale. */
 /* Sized and bled off the viewport exactly like the Dual Creator Cam
@@ -2853,27 +2992,9 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
 .deck-cs-paper .cs-main p,
 .deck-cs-paper .cs-main ul.bullets { max-width: none; }
 
-/* A little "N / M" section chip at the top-right of each case-study slide */
-.deck-slide--cs::before {
-  content: attr(data-label);
-  position: absolute;
-  top: clamp(14px, 2.4vw, 26px);
-  left: 50%;
-  transform: translateX(-50%);
-  max-width: 70vw;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-family: var(--mono);
-  font-size: 0.74rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  z-index: 2;
-  pointer-events: none;
-}
-/* The title slide already shows the name as an <h1> — no chip needed. */
-.deck-slide--cs-title::before { display: none; }
+/* The section-name chip that used to sit at the top of each case-study
+   slide is gone: on most slides it just restated the heading directly
+   below it. `data-label` stays on the section — the controller reads it. */
 
 /* Back button variant (bottom-left, while in a case study) */
 .deck-exit--back { color: var(--text); }

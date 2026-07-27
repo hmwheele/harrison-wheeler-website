@@ -438,7 +438,7 @@
 
   // Which case studies read as a phone (portrait) vs. desktop (landscape)
   // placeholder on their cover. Edit this map to taste.
-  var PHONE_CASE_STUDIES = ['video-recorder'];
+  var PHONE_CASE_STUDIES = ['video-recorder', 'events'];
   function deviceFor(key) { return PHONE_CASE_STUDIES.indexOf(key) >= 0 ? 'phone' : 'desktop'; }
 
   // A device-shaped image placeholder that bleeds off the slide edge.
@@ -590,11 +590,29 @@
 
   /* ── Mapbox globe (reuses the site's token; SVG wireframe fallback) ── */
   var MAPBOX_TOKEN = 'pk.eyJ1IjoiaG13aGVlbGUiLCJhIjoiY21yZXpzMzk3MHQ4NDJ3b282YmQzZzFoYyJ9.eMJQn_b6U2Fl3uD4IOEJnw';
-  // Places to pin on the deck globe. Edit here.
+  /* The sabbatical itinerary, in travel order — the same list the about
+     page's globe uses (story.js PLACES), starting from home in San
+     Francisco and ending in Sydney. Keep the two in sync. */
   var GLOBE_PLACES = [
-    { lng: -87.9065, lat: 43.0389, t: 'Milwaukee' },
-    { lng: -122.4194, lat: 37.7749, t: 'Bay Area' },
-    { lng: 139.6917, lat: 35.6895, t: 'Tokyo' }
+    { lng: -122.4194, lat:  37.7749, t: 'San Francisco' },
+    { lng:  139.6503, lat:  35.6762, t: 'Tokyo' },
+    { lng:  135.7681, lat:  35.0116, t: 'Kyoto' },
+    { lng:  129.0756, lat:  35.1796, t: 'Busan' },
+    { lng:  126.9780, lat:  37.5665, t: 'Seoul' },
+    { lng:  126.5312, lat:  33.4996, t: 'Jeju' },
+    { lng:  121.4737, lat:  31.2304, t: 'Shanghai' },
+    { lng:  104.0668, lat:  30.5728, t: 'Chengdu' },
+    { lng:  106.9123, lat:  29.4316, t: 'Chongqing' },
+    { lng:  114.1694, lat:  22.3193, t: 'Hong Kong' },
+    { lng:  121.5654, lat:  25.0330, t: 'Taipei' },
+    { lng:  120.3014, lat:  22.6273, t: 'Kaohsiung' },
+    { lng:  105.8342, lat:  21.0278, t: 'Hanoi' },
+    { lng:  108.2022, lat:  16.0544, t: 'Da Nang' },
+    { lng:  100.5018, lat:  13.7563, t: 'Bangkok' },
+    { lng:  106.6297, lat:  10.8231, t: 'Ho Chi Minh City' },
+    { lng:  103.8198, lat:   1.3521, t: 'Singapore' },
+    { lng:  115.1889, lat:  -8.4095, t: 'Bali' },
+    { lng:  151.2093, lat: -33.8688, t: 'Sydney' }
   ];
   var deckGlobeInited = false, deckGlobeMap = null;
 
@@ -634,6 +652,56 @@
     document.head.appendChild(sc);
   }
 
+  /* The travel trail, San Francisco → Sydney. Same treatment as the about
+     page's globe: each leg is a quadratic bezier that bows perpendicular to
+     the leg so it lifts off like a flight-map route, with longitudes
+     unwrapped the short way so the Pacific crossing doesn't sweep over the
+     pole. A dark casing under the white line keeps it legible over land. */
+  function globeFlightArc(a, b, n) {
+    var lng0 = a[0], lat0 = a[1];
+    var dLng = ((b[0] - lng0 + 540) % 360) - 180;
+    var lng1 = lng0 + dLng, lat1 = b[1];
+    var dx = lng1 - lng0, dy = lat1 - lat0;
+    var chord = Math.sqrt(dx * dx + dy * dy);
+    if (chord < 1e-6) return [[lng0, lat0], [lng1, lat1]];
+    var nx = -dy / chord, ny = dx / chord;
+    if (ny < 0) { nx = -nx; ny = -ny; }
+    var bow = chord * Math.min(0.22, 0.10 + chord * 0.004);
+    var cx = (lng0 + lng1) / 2 + nx * bow;
+    var cy = (lat0 + lat1) / 2 + ny * bow;
+    var pts = [];
+    for (var i = 0; i <= n; i++) {
+      var t = i / n, u = 1 - t;
+      pts.push([u * u * lng0 + 2 * u * t * cx + t * t * lng1,
+                u * u * lat0 + 2 * u * t * cy + t * t * lat1]);
+    }
+    return pts;
+  }
+
+  function addGlobeRoute(map) {
+    var feats = [];
+    for (var i = 0; i < GLOBE_PLACES.length - 1; i++) {
+      var a = GLOBE_PLACES[i], b = GLOBE_PLACES[i + 1];
+      feats.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: globeFlightArc([a.lng, a.lat], [b.lng, b.lat], 48) }
+      });
+    }
+    try {
+      map.addSource('deck-route', { type: 'geojson', data: { type: 'FeatureCollection', features: feats } });
+      map.addLayer({
+        id: 'deck-route-casing', type: 'line', source: 'deck-route',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': 'rgba(0,0,0,0.55)', 'line-width': 3.6, 'line-blur': 0.8, 'line-opacity': 0.85 }
+      });
+      map.addLayer({
+        id: 'deck-route-line', type: 'line', source: 'deck-route',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#ffffff', 'line-width': 1.6, 'line-opacity': 0.85, 'line-blur': 0.2 }
+      });
+    } catch (e) {}
+  }
+
   function buildDeckGlobe(mount) {
     var mapboxgl = window.mapboxgl;
     if (!mapboxgl || !MAPBOX_TOKEN || MAPBOX_TOKEN.indexOf('pk.') !== 0) { showGlobeFallback(mount); return; }
@@ -644,7 +712,7 @@
         container: mount,
         style: 'mapbox://styles/mapbox/dark-v11',
         projection: 'globe',
-        center: [-40, 32],
+        center: [112, 16],   // opens on Asia, where most of the itinerary sits
         zoom: 1.45,
         interactive: false,
         antialias: true,
@@ -670,6 +738,7 @@
           if (l.type === 'symbol') try { map.setLayoutProperty(l.id, 'visibility', 'none'); } catch (e) {}
         });
       } catch (e) {}
+      addGlobeRoute(map);
       GLOBE_PLACES.forEach(function (p) {
         var pin = document.createElement('div');
         pin.className = 'deck-globe-pin';
@@ -705,7 +774,13 @@
 
   // "About / personal" slide — bullet facts on the left, globe on the right.
   function slidePlaces() {
-    var facts = ['Born in Milwaukee', 'Based in the Bay Area', 'Always traveling Asia', 'Photography & drone'];
+    var facts = [
+      '🏙️ Born in Milwaukee',
+      '🏈 Former D1 athlete',
+      '✈️ One-year sabbatical in Asia',
+      '📷 Avid photographer and drone lover',
+      '🐱 I have a pet cat, Luna'
+    ];
     return el('section.deck-slide.deck-slide--places.deck-slide--split', { 'data-label': 'About' }, [
       el('div.deck-split-copy', null, [
         el('h2.deck-title', null, ['About']),
@@ -851,19 +926,25 @@
     ]);
   }
 
+  /* The site's outbound-link glyph, same as the home page's ghost button. */
+  function extLinkIcon() {
+    return sEl('svg', {
+      class: 'deck-btn-ext', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor',
+      'stroke-width': '2.4', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true'
+    }, [
+      sEl('path', { d: 'M7 7h10v10' }),
+      sEl('path', { d: 'M7 17 17 7' })
+    ]);
+  }
+
   function slideCTA() {
     return el('section.deck-slide.deck-slide--cta', { 'data-label': 'Contact' }, [
-      el('p.deck-eyebrow', null, ["Let's work together"]),
       el('h2.deck-title', null, [text('.cta-section h2') || "Let's work together"]),
-      el('p.deck-lede', null, [
-        text('.cta-section .head-sub') ||
-        "I'm available for full-time roles, speaking, coaching, and advisory work."
-      ]),
       el('div.deck-actions', null, [
         el('a.deck-btn.deck-btn--primary', { href: 'mailto:hello@harrisonwheeler.com' }, ['Get in touch']),
         el('a.deck-btn.deck-btn--ghost', {
           href: 'https://www.linkedin.com/in/hmwheeler', target: '_blank', rel: 'noopener'
-        }, ['Connect on LinkedIn'])
+        }, ['Connect on LinkedIn', extLinkIcon()])
       ])
     ]);
   }
@@ -1671,10 +1752,15 @@
   }
 
   // One diagram per full-page slide.
-  function diagramSlide(label, title, svg) {
+  /* `shared` marks the diagram stage as a persistent element: consecutive
+     slides carrying the same key cut rather than cross-fade, so a diagram
+     that only changes which nodes are lit reads as one drawing changing
+     state instead of two slides swapping. */
+  function diagramSlide(label, title, svg, shared) {
+    var stageAttrs = shared ? { 'data-shared': shared } : null;
     return el('section.deck-slide.deck-slide--diagram-full', { 'data-label': label }, [
       el('h2.deck-title', null, [title]),
-      el('div.deck-diagram-stage', null, [svg])
+      el('div.deck-diagram-stage', stageAttrs, [svg])
     ]);
   }
   function slideDgmTree() { return diagramSlide('Marketing', 'Marketing solutions', diagramTree()); }
@@ -1686,10 +1772,12 @@
 
   var HOME_BUILDERS = [
     slideTitle, slideBelief, slidePlaces, slideAboutCards, slidePhotoWall, slideTimeline, slideWork,
-    slideLeadcraft, slidePodcast, slideCommunity, slideCTA
+    slidePodcast, slideCTA
   ];
   /* Cut from the main flow (the builders are still defined and can be
      dropped back into the list above at any point):
+       slideLeadcraft   'LeadCraft'    LeadCraft
+       slideCommunity   'Community'    Community
        slideStatement   'Context'      statement slide
        slideStatHero    'Results'      stat figures
        slideDgmTree     'Marketing'    Marketing solutions
@@ -1744,15 +1832,12 @@
     { kind: 'right',  label: 'Clear value' }
   ];
 
+  /* A statement slide: the line alone, centred on both axes. The shapes and
+     pills that used to sit under it are gone — INFLUENCES is kept in case
+     they're wanted back. */
   function slideOutsideInfluences() {
     return el('section.deck-slide.deck-slide--influences', { 'data-label': 'Influences' }, [
-      el('h2.deck-title', null, ['Outside competitive influences']),
-      el('div.deck-infl-row', null, INFLUENCES.map(function (s, i) {
-        return el('div.deck-infl', null, [
-          el('div.deck-infl-art', null, [influenceShape(s.kind, 'deck-infl-grad-' + i)]),
-          el('span.deck-infl-pill', null, [s.label])
-        ]);
-      }))
+      el('h2.deck-title', null, ['Outside competitive influences'])
     ]);
   }
 
@@ -1850,8 +1935,8 @@
   function slideTop50() {
     return el('section.deck-slide.deck-slide--top50', { 'data-label': 'Top 50 issues' }, [
       el('h2.deck-title', null, ['Top 50 issues were put on the backlog for new revenue driving projects']),
+      // The verbatims carry this slide on their own — no screenshot beside them.
       el('div.deck-top50-body', null, [
-        figurePlaceholder('wide', 'Campaign Manager screenshot'),
         el('ul.deck-quote-list', null, TOP50_QUOTES.map(function (q) {
           return el('li.deck-quote-note', null, [q]);
         }))
@@ -2335,8 +2420,15 @@
     return svgRoot(W, H, k);
   }
 
-  function slideEventsLifecycle() { return diagramSlide('Lifecycle', 'Events lifecycle', diagramCycle()); }
-  function slideFocusStory() { return diagramSlide('Focus', 'Focus the story', diagramCycle(['Attract', 'Engage', 'Live Event'])); }
+  /* One diagram, two states: the full lifecycle, then the same drawing with
+     the three stages we focused on lit. Same title and a shared stage, so
+     advancing lights the nodes up in place rather than swapping slides. */
+  function slideEventsLifecycle() {
+    return diagramSlide('Lifecycle', 'Events lifecycle', diagramCycle(), 'events-cycle');
+  }
+  function slideFocusStory() {
+    return diagramSlide('Focus', 'Events lifecycle', diagramCycle(['Attract', 'Engage', 'Live Event']), 'events-cycle');
+  }
 
   // Ad experience across the three moments of an event.
   var AD_MOMENTS = [
@@ -2375,7 +2467,9 @@
     // the label sitting in its screen well.
     var art = shape === 'laptop'
       ? laptopFrame(phLabel, shot)
-      : figurePlaceholder(shape, phLabel);
+      : (shape === 'phone' && shot)
+        ? phoneFrame(phLabel, shot, true)
+        : figurePlaceholder(shape, phLabel);
     if (shape === 'laptop') art.classList.add('deck-laptop--spec');
     var cols = [el('div.deck-spec-col', null, left.map(specCard)), art];
     if (right.length) cols.push(el('div.deck-spec-col', null, right.map(specCard)));
@@ -2394,7 +2488,7 @@
     ], [
       { lbl: 'Promote associated products and services', desc: 'Provide discovery to products and services that users may be curious about demoing or have skills' },
       { lbl: 'Increase network engagement', desc: 'Enhance the existing event surface with an in-person tentpole context.' }
-    ]);
+    ], null, 'assets/slide/events_hero/pre-event.png');
   }
 
   function slideAttendeeCheckIn() {
@@ -2404,7 +2498,7 @@
           el('h2.deck-title', null, ['Attendee Event Experience']),
           el('p.deck-split-sub', null, ['How businesses can build lasting connections with their attendees.'])
         ]),
-        el('div.deck-figtext-media', null, [figurePlaceholder('phone', 'Event check-in pass')])
+        el('div.deck-figtext-media', null, [phoneFrame('Event check-in pass', 'assets/slide/events_hero/pass.png')])
       ])
     ]);
   }
@@ -2572,7 +2666,7 @@
       var nz = vizNoise({ tag: 'circle', cx: cx, cy: cy, r: R }, { opacity: '0.42' });
       nz.defs.forEach(function (d) { defs.appendChild(d); });
       k.push(nz.layer);
-      k.push(sEl('text', { x: cx, y: cy + 13, 'text-anchor': 'middle', class: 'dgm-cycle-hub', text: t.scope }));
+      k.push(sEl('text', { x: cx, y: cy + 13, 'text-anchor': 'middle', class: 'dgm-cycle-hub dgm-scope-lbl', text: t.scope }));
       // tier badge straddles the bottom edge, as on the source slide
       k.push(sEl('circle', {
         cx: cx, cy: cy + R, r: badge,
@@ -2688,12 +2782,15 @@
   /* iPhone template, same idea as laptopFrame: the well is measured to the
      artwork's screen and sits under the transparent PNG, so the bezel and
      dynamic island paint over whatever is in it. */
-  function phoneFrame(label, src) {
+  /* `fit` shows the whole screenshot rather than filling the well with it —
+     for captures that aren't the template's exact aspect ratio and would
+     otherwise lose an edge to the crop. */
+  function phoneFrame(label, src, fit) {
     var screen = el('div.deck-phone-screen', null, [
       src ? el('img', { src: src, alt: '' })
           : el('span.deck-laptop-lbl', null, [label])
     ]);
-    return el('figure.deck-phone', null, [
+    return el('figure.deck-phone' + (fit ? '.deck-phone--fit' : ''), null, [
       screen,
       el('img.deck-phone-art', { src: 'assets/templates/iphone1.png', alt: '' })
     ]);
@@ -2713,17 +2810,20 @@
   function slideDccFigma() {
     return titleFigureSlide('Core screens', 'Designing core screens in Figma',
       'Figma core screens',
-      'The spec came first. Agents build far better against a defined target than a description.');
+      'The spec came first. Agents build far better against a defined target than a description.',
+      'assets/slide/dual_creator_cam/figma.png');
   }
   function slideDccPlaygrounds() {
     return titleFigureSlide('Playgrounds', 'Building playgrounds to test concepts',
       'Concept playground',
-      'Throwaway builds to feel an interaction on device before it earned a place in the app.');
+      'Throwaway builds to feel an interaction on device before it earned a place in the app.',
+      'assets/slide/dual_creator_cam/xcode.png');
   }
   function slideDccClaudeXcode() {
     return titleFigureSlide('Claude to Xcode', 'From Claude to Xcode',
       'Claude Code ↔ Xcode',
-      'Figma via MCP into Claude Code, straight into the Swift build, then back on device.');
+      'Figma via MCP into Claude Code, straight into the Swift build, then back on device.',
+      'assets/slide/dual_creator_cam/claude.png');
   }
 
   /* The agents slide: the four standing roles I delegate to, arranged
@@ -2934,7 +3034,35 @@
   /* Deck-only cover art, per case study. Without an entry here the cover
      falls back to the device mock. */
   var CS_COVER_ART = {
-    'video-recorder': 'assets/slide/dual_creator_cam/title.png'
+    'video-recorder': 'assets/slide/dual_creator_cam/title.png',
+    'leadcraft': 'assets/slide/growth/hero.jpg',
+    'events': 'assets/slide/events_hero/hero.png',
+    'pods': 'assets/slide/pods/hero.jpg'
+  };
+
+  /* Cover art that presents inside the MacBook template rather than
+     free-floating. */
+  var CS_COVER_IN_LAPTOP = ['leadcraft', 'pods'];
+
+  /* Real captions for body media, keyed by the image's file name. Anything
+     not listed here still falls back to the placeholder. */
+  var CS_CAPTIONS = {
+    'campaign_reporting.jpg': 'When users onboarded to Campaign Manager, they were typically dumped into this reporting view without a way to know where to start.'
+  };
+  function captionFor(src) {
+    var name = String(src || '').split('/').pop();
+    return CS_CAPTIONS[name] || 'Caption placeholder';
+  }
+
+  /* Studies whose body hero art does NOT get its own slide after the cover:
+     the cover already opens on that same image, so the slide just repeats
+     it. Keyed by study. */
+  var CS_SKIP_COVER_MEDIA = ['events'];
+
+  /* Studies whose cover media slide plays later in the deck rather than
+     straight after the cover. Value is the label it should follow. */
+  var CS_COVER_MEDIA_AFTER = {
+    leadcraft: 'Solution insights'
   };
 
   /* Sections whose screenshots present inside the MacBook template.
@@ -2961,6 +3089,43 @@
      slide (h1 + deck subtitle + hero media), and each <h2> section
      becomes its own slide. Content keeps its .cs-main styling on a
      light "paper" card. ─────────────────────────────────────────── */
+  /* Every study's Overview lists a "Role:" bullet that reads as one long
+     sentence. It carries more weight as its own slide, so we lift it out of
+     the Overview list and split it into the role itself plus what it owned.
+     Returns null when a study has no Role bullet. */
+  function roleSlideFrom(nodes, label) {
+    var li = null;
+    nodes.forEach(function (n) {
+      if (li || n.nodeType !== 1) return;
+      Array.prototype.forEach.call(n.querySelectorAll ? n.querySelectorAll('li') : [], function (cand) {
+        if (li) return;
+        var strong = cand.querySelector('strong');
+        if (strong && /^role:?$/i.test(strong.textContent.trim())) li = cand;
+      });
+    });
+    if (!li) return null;
+
+    var strongEl = li.querySelector('strong');
+    var body = li.textContent.replace(strongEl ? strongEl.textContent : '', '').trim();
+    li.parentNode.removeChild(li);          // it lives on its own slide now
+
+    // "Design lead, owned the data narrative, the lifecycle framing, and …"
+    // → title "Design lead", then one bullet per clause.
+    var cut = body.indexOf(',');
+    var title = cut > 0 ? body.slice(0, cut).trim() : body.replace(/\.$/, '').trim();
+    var rest = cut > 0 ? body.slice(cut + 1) : '';
+    var items = rest.split(/[,;]|\band\b/)
+      .map(function (s) { return s.replace(/\.$/, '').trim(); })
+      .filter(function (s) { return s.length > 1; })
+      .map(function (s) { return s.charAt(0).toUpperCase() + s.slice(1); });
+
+    var right = el('div.deck-role-body', null, [
+      el('p.deck-role-title', null, [title]),
+      el('ul.deck-role-list', null, items.map(function (t) { return el('li', null, [t]); }))
+    ]);
+    return titleSideSlide(label, 'Role', right, '.deck-slide--role');
+  }
+
   function buildCaseStudySlides(key) {
     var data = window.CASE_STUDIES && window.CASE_STUDIES[key];
     if (!data || !data.body) return null;
@@ -2983,6 +3148,7 @@
     if (!groups.length) return null;
 
     var slides = [];
+    var roleSlide = null;      // built from the Overview list, placed below
     groups.forEach(function (g, i) {
       // Split each section: text stays on the section slide; media becomes
       // its own slide with a caption placeholder. A carousel is one slide
@@ -3015,8 +3181,15 @@
            it is in the body — it still gets its own slide. */
         var coverSrc = CS_COVER_ART[key];
         var coverArt;
-        if (coverSrc) {
+        if (coverSrc && CS_COVER_IN_LAPTOP.indexOf(key) >= 0) {
+          coverArt = laptopFrame('', coverSrc);
+          coverArt.classList.add('deck-cs-device', 'deck-cs-device--laptop');
+          coverArt.setAttribute('aria-hidden', 'true');
+        } else if (coverSrc) {
           coverArt = el('div.deck-cs-cover-art', { 'aria-hidden': 'true' }, [el('img', { src: coverSrc, alt: '' })]);
+          // Art that is already a phone render stands in for the mock, so it
+          // gets the phone's narrow slot rather than the wide landscape one.
+          if (deviceFor(key) === 'phone') coverArt.classList.add('deck-cs-cover-art--phone');
         } else if (deviceFor(key) === 'desktop') {
           // Desktop studies open on the MacBook template rather than the
           // drawn browser window — same slot, same entrance.
@@ -3033,6 +3206,9 @@
         if (deckn) coverKids.push(el('div.deck-cs-cover-desc', null, [deckn]));
         slides.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-title', { 'data-label': label }, coverKids));
       } else {
+        // Lift the Role bullet out before the section slide is built, so it
+        // isn't listed twice — it becomes its own slide immediately after.
+        if (label === 'Overview') roleSlide = roleSlideFrom(textNodes, 'Role');
         var mainT = el('div.cs-main');
         textNodes.forEach(function (n) { mainT.appendChild(n); });
         slides.push(el('section.deck-slide.deck-slide--cs', { 'data-label': label }, [el('div.deck-cs-paper', null, [mainT])]));
@@ -3042,6 +3218,9 @@
       // rather than as bare images on the slide.
       var inLaptop = (CS_LAPTOP_MEDIA[key] || []).indexOf(label) >= 0;
 
+      // The cover's own hero art, when the cover already opens on it.
+      if (i === 0 && CS_SKIP_COVER_MEDIA.indexOf(key) >= 0) mediaEls = [];
+
       mediaEls.forEach(function (group) {
         var body;
         if (inLaptop && group.length === 1 && group[0].tagName === 'IMG') {
@@ -3050,7 +3229,7 @@
         } else {
           var figCls = 'figure.deck-cs-media' + (group.length > 1 ? '.deck-cs-media--row' : '');
           body = el(figCls, null, group.map(function (m) { return m.cloneNode(true); }).concat([
-            el('figcaption.deck-cs-caption', null, ['Caption placeholder'])
+            el('figcaption.deck-cs-caption', null, [captionFor(group[0].getAttribute('src'))])
           ]));
         }
         slides.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-media', { 'data-label': label + ' — image' }, [body]));
@@ -3073,6 +3252,32 @@
       });
       if (at >= 0) slides.splice.apply(slides, [at + 1, 0].concat(byAfter[after]));
     });
+
+    /* Cover media that plays later in the deck: pull the slide out and drop
+       it back in behind its named anchor. */
+    var moveAfter = CS_COVER_MEDIA_AFTER[key];
+    if (moveAfter) {
+      var coverMediaLabel = (data.title || 'Overview') + ' — image';
+      var fromAt = -1, toAt = -1;
+      slides.forEach(function (s, si) {
+        var lbl = s.getAttribute('data-label');
+        if (fromAt < 0 && lbl === coverMediaLabel) fromAt = si;
+        if (lbl === moveAfter) toAt = si;
+      });
+      if (fromAt >= 0 && toAt >= 0) {
+        var moved = slides.splice(fromAt, 1)[0];
+        slides.forEach(function (s, si) { if (s.getAttribute('data-label') === moveAfter) toAt = si; });
+        slides.splice(toAt + 1, 0, moved);
+      }
+    }
+
+    /* The Role slide goes in after the extras, so it lands directly behind
+       the Overview slide rather than behind that section's extra slides. */
+    if (roleSlide) {
+      var ovAt = -1;
+      slides.forEach(function (s, si) { if (ovAt < 0 && s.getAttribute('data-label') === 'Overview') ovAt = si; });
+      slides.splice(ovAt >= 0 ? ovAt + 1 : 1, 0, roleSlide);
+    }
 
     var skip = CS_SKIP_SECTIONS[key];
     if (skip) {
