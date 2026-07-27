@@ -3,3 +3,6 @@
 
 # Claude Code local tooling / preview server (not part of the site)
 .claude/
+
+# Local scratch pages (device mockup sandbox)
+lab/

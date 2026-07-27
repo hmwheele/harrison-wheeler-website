@@ -1,0 +1,2923 @@
+/* =====================================================================
+   deck.css — "Present" mode. Turns the home page into a full-screen,
+   keyboard-navigable slide deck. All rules are scoped under
+   html.deck-mode (or .deck-*) so nothing leaks into the normal site.
+   Uses the sitewide design tokens from styles.css.
+   ===================================================================== */
+
+/* ── While presenting: lock the page, hide the normal chrome ───────── */
+html.deck-mode,
+html.deck-mode body {
+  overflow: hidden;
+  height: 100%;
+}
+html.deck-mode body > .nav,
+html.deck-mode body > .footer,
+html.deck-mode body > .hero-loadbar,
+html.deck-mode [data-subpop],
+html.deck-mode main {
+  display: none !important;
+}
+
+/* ── The deck surface ──────────────────────────────────────────────── */
+.deck {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+  color: var(--text);
+  /* The deck uses no GT America: display is Neudron, running copy is
+     Merriweather, everything else (chrome, labels, diagram text) is mono.
+     The root falls back to mono so nothing inherits the site sans. */
+  font-family: var(--mono);
+  /* faint lavender wash so slides don't read as flat black */
+  background-image:
+    radial-gradient(1200px 800px at 80% -10%, rgba(208, 188, 255, 0.10), transparent 60%),
+    radial-gradient(900px 700px at -10% 110%, rgba(255, 216, 228, 0.06), transparent 55%);
+}
+.deck[hidden] { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════════
+   DECK TYPE SCALE — every font-size on a slide comes from here.
+   Two families of step, and the difference matters:
+
+   --t-*    viewport steps. The slide is the frame, so these track the
+            window. Titles, ledes, body copy, standalone labels.
+   --tc-*   container steps, in `cqi` — the text sizes off the width of
+            the box it sits in, not the window. Used where a card, cell,
+            or caption is the real constraint: a 3-up card grid is much
+            narrower at 1280px than at 1920px, and viewport clamps can't
+            see that. The box needs `container-type: inline-size`.
+            The clamp() min/max are floor and ceiling, not the size.
+
+   Chart cards deliberately stay on viewport steps — they sit side by
+   side at different widths and their titles must still match.
+   ═══════════════════════════════════════════════════════════════════ */
+.deck {
+  /* Where the title sits on every content slide — one origin, so the
+     eye lands in the same place on every advance. The left edge is the
+     slide's own side padding. */
+  --title-top: clamp(32px, 4.5vh, 60px);
+  /* deep enough to clear the fixed controls */
+  --deck-pad-bottom: clamp(104px, 13vh, 152px);
+  /* where the copy column hangs on the two About slides */
+  --about-copy-top: clamp(72px, 18vh, 170px);
+
+  /* Display — 7 steps, largest to smallest */
+  --t-hero:     clamp(2.6rem, 14.5vw, 13rem);     /* opening name */
+  --t-cover:    clamp(4rem, 11.2vw, 9.6rem);      /* case-study cover */
+  --t-title:    clamp(2.8rem, 7.6vw, 6.4rem);     /* default slide title */
+  --t-title-lg: clamp(2.3rem, 5.1vw, 4.5rem);
+  --t-title-md: clamp(2.2rem, 4.6vw, 4rem);       /* the common section title */
+  --t-title-sm: clamp(1.9rem, 4.1vw, 3.4rem);     /* dense slides */
+  --t-title-xs: clamp(1.75rem, 3.6vw, 3.1rem);    /* densest */
+
+  /* Figures + quotes */
+  --t-stat:     clamp(3.6rem, 9vw, 8.5rem);
+  --t-quote:    clamp(1.6rem, 4.2vw, 3.6rem);
+  --t-quote-sm: clamp(1.3rem, 3.2vw, 2.8rem);
+
+  /* Copy — 6 steps */
+  --t-lede:  clamp(1.05rem, 1.9vw, 1.8rem);       /* lede + body, one step */
+  --t-item:  clamp(1.15rem, 2vw, 1.85rem);        /* named rows: timeline, work list */
+  --t-copy:  clamp(1rem, 1.6vw, 1.55rem);
+  --t-list:  clamp(0.95rem, 1.35vw, 1.25rem);
+  --t-label: clamp(0.8rem, 1.1vw, 1.05rem);
+  --t-micro: clamp(0.62rem, 0.88vw, 0.85rem);     /* uppercase mono chips */
+  --t-nano:  clamp(0.55rem, 0.75vw, 0.7rem);      /* the smallest legible step */
+
+  /* Container steps — cqi is % of the containing box's inline size */
+  /* Each cqi figure is calibrated so the text matches its old rendered
+     size at the 1400px design width, then tracks the box from there. */
+  --tc-head:  clamp(1.05rem, 8.3cqi, 1.5rem);     /* about-card heading */
+  --tc-body:  clamp(0.85rem, 5.8cqi, 1.05rem);    /* about-card body */
+  --tc-cell:  clamp(0.66rem, 2.9cqi, 0.92rem);    /* legacy 2x2 cell */
+  --tc-cap:   clamp(0.85rem, 5.9cqi, 1.35rem);    /* triptych caption */
+  --tc-label: clamp(0.55rem, 3.4cqi, 0.7rem);     /* spec-card label */
+  --tc-desc:  clamp(0.68rem, 4.4cqi, 0.92rem);    /* spec-card body */
+}
+
+/* Moving grid, drawn once on the deck itself so it never remounts —
+   slides swap on top of it, so the drift stays continuous with no reset.
+   White content slides are opaque and simply cover it. The pan distance
+   equals the tile size, so the loop is seamless. */
+.deck::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(208, 188, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(208, 188, 255, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 88% at 50% 42%, #000 22%, transparent 82%);
+  mask-image: radial-gradient(ellipse 100% 88% at 50% 42%, #000 22%, transparent 82%);
+  /* very slow horizontal drift — one tile every 40s (~1.2px/s) */
+  animation: deck-grid-drift 40s linear infinite;
+  /* Only shown on the title / about / case-study-cover slides. It keeps
+     animating underneath either way, so the drift never resets. */
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.deck--grid::before { opacity: 1; }
+@keyframes deck-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 48px 0, 48px 0; }
+}
+html.deck-reduce .deck::before { animation: none; }
+
+/* Keyboard focus: a clear ring on every interactive element in the deck */
+.deck a:focus-visible,
+.deck button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── Progress bar (top) ────────────────────────────────────────────── */
+.deck-progress {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--border-soft);
+  z-index: 3;
+}
+.deck-progress-fill {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--primary), var(--light-pink));
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.deck-reduce .deck-progress-fill { transition: none; }
+
+/* ── Slide viewport ────────────────────────────────────────────────── */
+.deck-stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.deck-slide {
+  grid-area: 1 / 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Title first, pinned to --title-top; content flows beneath it. Slides
+     used to centre their whole stack, which put the title at a different
+     height on every one (36px to 400px measured across the deck). */
+  justify-content: flex-start;
+  box-sizing: border-box;
+  /* extra bottom padding so content never sits under the fixed controls */
+  padding: var(--title-top) clamp(28px, 8vw, 160px) var(--deck-pad-bottom);
+  max-width: 1400px;
+  margin: 0 auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: none;
+  transition: none;
+  pointer-events: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.deck-slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+}
+/* leaving-backwards direction */
+.deck-slide.is-prev { transform: none; }
+/* Cut (no transition) between slides that share a persistent element,
+   so that element stays put instead of cross-fading. */
+.deck--cut .deck-slide { transition: none !important; }
+html.deck-reduce .deck-slide {
+  transition: none;
+  transform: none;
+}
+
+/* ── Visualization entrance ─────────────────────────────────────────
+   Slides now cut, so the copy is on screen the instant you advance.
+   The chart/diagram then rises up into place a beat later. The delay is
+   mirrored in deck.js (VIZ_IN_MS) so the internal chart builds — bars
+   growing, lines tracing — start after the panel has landed. */
+.deck-diagram-stage,
+.deck-vizsplit-chart,
+.deck-charts-grid {
+  opacity: 0;
+  transform: translateY(28px);
+  /* no transition at rest — a slide you leave re-arms instantly, so the
+     entrance always plays in full when you come back to it */
+  transition: none;
+}
+.deck-slide.is-active .deck-diagram-stage,
+.deck-slide.is-active .deck-vizsplit-chart,
+.deck-slide.is-active .deck-charts-grid {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease 0.34s,
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.34s;
+}
+html.deck-reduce .deck-diagram-stage,
+html.deck-reduce .deck-vizsplit-chart,
+html.deck-reduce .deck-charts-grid {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* ── Slide building blocks ─────────────────────────────────────────── */
+.deck-eyebrow {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin: 0 0 clamp(16px, 2.4vw, 28px);
+}
+/* Display type is Neudron (the site's headline face), not GT America.
+   Neudron is a single master, so font-synthesis:none keeps it from
+   being faux-bolded — same treatment as .hero-bigname / .cs-main h1. */
+.deck-title {
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  /* even out multi-line wrapping so a title never ends on a lone orphan */
+  text-wrap: balance;
+  line-height: 0.98;
+  letter-spacing: -0.01em;
+  /* Neudron is condensed, so it can carry a larger size than the sans did */
+  font-size: var(--t-title);
+  margin: 0 0 clamp(18px, 2.6vw, 32px);
+}
+/* Subtext + body copy use Merriweather Light, matching the home .lede
+   and the case-study prose. */
+.deck-lede,
+.deck-body,
+.deck-col li {
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+}
+.deck-lede {
+  font-size: var(--t-lede);
+  line-height: 1.45;
+  /* light pink, matching the hero lede on the site */
+  color: var(--light-pink);
+  max-width: 28ch;
+  margin: 0;
+}
+.deck-body {
+  font-size: var(--t-lede);
+  line-height: 1.55;
+  max-width: 34ch;
+  margin: 0;
+}
+.deck-slide .deck-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: clamp(28px, 4vw, 48px);
+}
+
+/* ── Split slides: copy on the left, portrait on the right ─────────── */
+.deck-slide--split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  /* start, not centre — the title has to sit at --title-top like every
+     other slide's; the media column centres itself below */
+  align-items: start;
+  align-content: start;
+  gap: clamp(20px, 3vw, 56px);
+  text-align: left;
+}
+.deck-split-copy { min-width: 0; position: relative; z-index: 1; }   /* above the grid */
+/* Force "Harrison / Wheeler" onto two lines here (the site only breaks
+   it on phones via .bigname-br). */
+.deck-slide--title .deck-title .bigname-br { display: inline; }
+.deck-portrait {
+  min-width: 0;
+  position: relative; z-index: 1;    /* above the grid background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.deck-slide--title { position: relative; isolation: isolate; }
+/* The two covers are compositions, not content slides — they keep their
+   own vertical centring and their own oversized type. */
+.deck-slide--title,
+.deck-slide--cs-title { justify-content: center; padding-top: clamp(48px, 7vw, 120px); }
+
+/* The two About slides (portrait + globe) share one composition: the copy
+   hangs from a fixed offset so the word "About" lands at the same height on
+   both, and the media beside it centres on the slide independently.
+
+   The row has to stretch for any of this to work — .deck-slide--split packs
+   its single row at the top, so by default the row is only as tall as its
+   content and there is nothing for an item to align inside. */
+.deck-slide--belief,
+.deck-slide--places {
+  align-content: stretch;
+  align-items: stretch;
+  grid-auto-rows: minmax(0, 1fr);
+}
+.deck-slide--belief .deck-split-copy,
+.deck-slide--places .deck-split-copy {
+  align-self: start;
+  padding-top: var(--about-copy-top);
+}
+.deck-slide--belief .deck-portrait,
+.deck-slide--places .deck-places-media {
+  align-self: center;
+  /* centre on the slide, not the padding box */
+  margin-bottom: calc(var(--title-top) - var(--deck-pad-bottom));
+}
+/* The cloned home-page photo card keeps its own .timeline-photo styling
+   (4:5 ratio, rounded, tilted, overhanging badge) — just size it here.
+   Note: don't set rules on `.deck-portrait img`, that would override the
+   absolutely-positioned .timeline-photo-img inside the card. */
+.deck-portrait .timeline-photo {
+  width: min(100%, 380px);
+  margin-inline: auto;
+}
+/* Small screens: single column, portrait drops away so the copy holds. */
+@media (max-width: 860px) {
+  .deck-slide--split { grid-template-columns: 1fr; }
+  .deck-portrait { display: none; }
+}
+
+/* ── "How I work" cards (mirrors the about page's .about-card set) ─── */
+.deck-slide--aboutcards { justify-content: center; }
+.deck-about-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 30px);
+  width: 100%;
+}
+.deck-about-card {
+  position: relative;
+  container-type: inline-size;   /* type sizes off the card, not the window */
+  border: 1px solid var(--border);
+  border-radius: clamp(14px, 1.4vw, 20px);
+  padding: clamp(20px, 2.4vw, 36px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+/* Grain, same recipe as the SVG viz (`vizNoiseFilter`): fractalNoise at
+   0.85 / 3 octaves, desaturated. `::before` so it paints under the text,
+   masked to fade top→bottom like the flat-surface grain elsewhere. */
+.deck-about-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+}
+/* Cards fade up from below, left→right. Keyed off `.is-active` (same as
+   `.v-plate`), so it replays every time the slide is re-entered. */
+.deck-about-card {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.55s ease, transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.deck-slide.is-active .deck-about-card { opacity: 1; transform: none; }
+.deck-about-card:nth-child(2) { transition-delay: 0.12s; }
+.deck-about-card:nth-child(3) { transition-delay: 0.24s; }
+html.deck-reduce .deck-about-card {
+  opacity: 1; transform: none; transition: none; transition-delay: 0s;
+}
+.deck-about-illo-wrap { display: block; margin-bottom: clamp(18px, 2.6vh, 34px); }
+.deck-about-illo { width: clamp(56px, 5vw, 84px); height: auto; display: block; }
+.deck-about-card h3 {
+  margin: 0 0 clamp(10px, 1.4vh, 18px);
+  color: var(--primary);
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: var(--tc-head);
+  /* Neudron is condensed — 1.25 reads airy on a multi-line card heading */
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+}
+.deck-about-card p {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--tc-body);
+  line-height: 1.6;
+  color: var(--text);
+}
+@media (max-width: 860px) {
+  .deck-about-grid { grid-template-columns: 1fr; gap: 14px; }
+  .deck-about-card p { display: none; }
+}
+
+/* ── About/personal slide: dash-bullet facts + wireframe globe ─────── */
+.deck-facts {
+  position: relative; z-index: 1;
+  list-style: none;
+  margin: clamp(20px, 3.4vh, 40px) 0 0;
+  padding: 0;
+  display: flex; flex-direction: column;
+  gap: clamp(12px, 1.9vh, 22px);
+}
+.deck-facts li {
+  position: relative;
+  padding-left: 30px;
+  font-family: var(--serif);
+  font-size: var(--t-copy);
+  color: var(--text);
+}
+.deck-facts li::before {
+  content: '';
+  position: absolute; left: 0; top: 0.62em;
+  width: 16px; height: 2px;
+  background: var(--primary);
+}
+/* Globe + the outgoing portrait share one cell. The portrait is absolute so
+   it never affects the globe's square box. */
+.deck-places-media { position: relative; min-width: 0; }
+.deck-places-media .deck-portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Slides off to the right as the globe comes in. Starts at rest so the
+     cut from the previous slide is seamless. */
+  transition: transform 0.85s cubic-bezier(0.5, 0, 0.2, 1),
+              opacity 0.4s ease 0.45s;
+}
+.deck-slide--places.is-active .deck-places-media .deck-portrait {
+  transform: translateX(135%);
+  opacity: 0;
+}
+/* The globe rises in behind it, a beat after the push starts. */
+.deck-places-media .deck-globe {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.6s ease 0.25s, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
+}
+.deck-slide--places.is-active .deck-places-media .deck-globe {
+  opacity: 1;
+  transform: none;
+}
+html.deck-reduce .deck-places-media .deck-portrait {
+  transition: none; opacity: 0; transform: translateX(135%);
+}
+html.deck-reduce .deck-places-media .deck-globe {
+  transition: none; opacity: 1; transform: none;
+}
+
+.deck-globe {
+  position: relative; z-index: 1;
+  min-width: 0;
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+}
+/* The SVG stays in flow (its 400×400 viewBox defines the square box height);
+   the Mapbox map mounts absolutely on top and fills it. */
+/* Hidden by default so it never flashes on load — JS reveals it only if
+   Mapbox can't run. It stays in flow (visibility, not display) so it keeps
+   defining the container's square height. */
+.deck-globe-svg { display: block; width: 100%; height: auto; visibility: hidden; }
+/* Two-class selector so it outranks Mapbox's own `.mapboxgl-map`
+   { position: relative } (injected later), which would collapse this to 0. */
+.deck-globe .deck-globe-map { position: absolute; inset: 0; background: transparent; }
+.deck-globe .deck-globe-map canvas,
+.deck-globe .mapboxgl-canvas { outline: none; background: transparent; }
+.deck-globe-lbl {
+  fill: var(--text-muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+/* hide Mapbox's own logo/attribution chrome inside the slide */
+.deck-globe .mapboxgl-control-container { display: none; }
+/* location pins on the real globe */
+.deck-globe-pin { display: flex; align-items: center; gap: 8px; transform: translateX(3px); pointer-events: none; }
+.deck-globe-pin-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--light-pink);
+  box-shadow: 0 0 0 3px rgba(255, 216, 228, 0.22);
+}
+.deck-globe-pin-lbl {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--text);
+  background: rgba(13, 12, 17, 0.6);
+  padding: 1px 7px; border-radius: 5px; white-space: nowrap;
+}
+/* ── Media placeholders overlapping the globe (fade in after it spins) ── */
+.deck-globe-media { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.deck-media-ph {
+  position: absolute;
+  margin: 0;
+  background: rgba(22, 21, 28, 0.72);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.5);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: var(--text-dim);
+  /* hidden until the globe-media wrapper gets .is-revealed */
+  opacity: 0;
+  transform: translateY(16px) scale(0.96);
+  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.deck-globe-media.is-revealed .deck-media-ph { opacity: 1; transform: none; }
+/* filled card: real media crossfades over the icon/label placeholder */
+.deck-media-ph--filled { overflow: hidden; }
+.deck-media-ph--filled .deck-media-ph-icon,
+.deck-media-ph--filled .deck-media-ph-label { display: none; }
+.deck-media-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.deck-media-img.is-shown { opacity: 1; }
+html.deck-reduce .deck-media-img { transition: none; }
+.deck-globe-media.is-revealed .deck-media-ph--portrait { transition-delay: 0.12s; }
+.deck-globe-media.is-revealed .deck-media-ph--square { transition-delay: 0.24s; }
+/* sizes + positions relative to the square .deck-globe, overlapping the disc */
+.deck-media-ph--landscape { width: 56%; aspect-ratio: 16 / 9; right: 4%; bottom: 4%; }
+.deck-media-ph--portrait  { width: 26%; aspect-ratio: 9 / 16; right: 0%; top: 12%; }
+.deck-media-ph--square    { width: 30%; aspect-ratio: 1 / 1;  left: -14%; top: 6%; }
+.deck-media-ph-icon svg { width: 26px; height: 26px; display: block; }
+.deck-media-ph-label {
+  font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase;
+}
+html.deck-reduce .deck-media-ph { transition: none; }
+
+@media (max-width: 860px) { .deck-globe { display: none; } }
+/* Name matches the home hero: Neudron caps, vertically stretched, filled
+   with the mint-green gradient (see .hero--stage .hero-bigname). */
+.deck-slide--title .deck-title {
+  font-family: var(--display);
+  font-synthesis: none;
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: var(--t-hero);
+  /* tight leading: scaleY(1.5) multiplies it, so 0.76 lands near normal */
+  line-height: 0.76;
+  /* glyphs overflow the 0.76 line box; background-clip:text only paints
+     inside the element's box, so pad it out or caps/baselines get shaved */
+  padding-block: 0.14em;
+  letter-spacing: -0.01em;
+  /* stretch the glyphs taller without widening them */
+  transform: scaleY(1.5);
+  transform-origin: bottom left;
+  /* the stretch grows upward, so reserve headroom above it */
+  margin-top: clamp(44px, 12vh, 132px);
+  margin-bottom: clamp(26px, 4vh, 48px);
+  color: #b9f2c8; /* fallback if background-clip:text is unsupported */
+  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.deck-logo-bg {
+  position: absolute;
+  right: -6vw;
+  bottom: -8vh;
+  width: min(58vh, 46vw);
+  opacity: 0.06;
+  pointer-events: none;
+  filter: grayscale(1) brightness(2);
+}
+
+/* ── Timeline slide ────────────────────────────────────────────────── */
+.deck-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.4vw, 16px);
+  margin-top: clamp(16px, 2.2vw, 28px);
+}
+.deck-tl-row {
+  display: grid;
+  grid-template-columns: 4.5ch auto 1fr;
+  align-items: center;
+  gap: clamp(14px, 2vw, 26px);
+  padding-bottom: clamp(10px, 1.4vw, 16px);
+  border-bottom: 1px solid var(--border-soft);
+}
+.deck-tl-row:last-child { border-bottom: 0; }
+.deck-tl-year {
+  font-family: var(--mono);
+  color: var(--text-dim);
+  font-size: var(--t-label);
+}
+.deck-tl-logo {
+  width: clamp(34px, 3.6vw, 52px);
+  height: clamp(34px, 3.6vw, 52px);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+.deck-tl-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.deck-tl-name {
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  font-size: var(--t-item);
+}
+.deck-tl-role { color: var(--text-muted); font-size: var(--t-list); }
+
+/* ── Charts slide ──────────────────────────────────────────────────────
+   Data-viz palette: a monochromatic purple ramp built around the site's
+   lavender (#9085e9). Series are distinguished by lightness, so the charts
+   read as a single hue. When series share a chart (line/donut), keep
+   adjacent slots far apart in lightness for legibility. */
+.deck-slide--charts {
+  --viz-surface: #16151c;   /* chart card surface (validated against) */
+  --viz-grid:    #2f2d39;   /* hairline gridlines / axes */
+  --viz-ink:     #ece9f1;   /* values, primary text */
+  --viz-ink-muted: #a39fb0; /* axis labels, secondary text */
+  --viz-s1: #d7ccff;  /* purple — lightest */
+  --viz-s2: #bcacf7;  /* purple */
+  --viz-s3: #a08cec;  /* purple — site lavender */
+  --viz-s4: #8874df;  /* purple */
+  --viz-s5: #705bc9;  /* purple */
+  --viz-s6: #5847ac;  /* purple — darkest */
+  /* pyramid: one violet fill + readable ink, per mode */
+  --viz-pyr-fill: #9085e9;
+  --viz-pyr-ink:  #17151b;
+}
+/* Dense slide — smaller header + tighter vertical padding so all four
+   cards fit without scrolling */
+.deck-slide--charts { padding-top: clamp(24px, 3.4vh, 44px); padding-bottom: clamp(78px, 9.8vh, 100px); }
+.deck-slide--charts .deck-eyebrow { margin-bottom: clamp(8px, 1vw, 14px); }
+.deck-slide--charts .deck-title {
+  margin-bottom: clamp(4px, 0.6vw, 10px);
+}
+/* Masonry-style grid: each card declares its width (viz-span-1/-2/-3,
+   from the chart config) and takes its natural height — charts keep
+   their aspect ratio, so a wider card is proportionally taller. */
+.deck-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: row dense;
+  align-items: start;
+  gap: clamp(12px, 1.4vw, 18px);
+  margin-top: clamp(10px, 1.4vw, 18px);
+}
+.viz-span-2 { grid-column: span 2; }
+.viz-span-3 { grid-column: span 3; }
+.viz-card {
+  background: var(--viz-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: clamp(12px, 1.2vw, 18px) clamp(14px, 1.4vw, 20px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.viz-card-head { margin-bottom: 10px; }
+.viz-card-title {
+  font-family: var(--display); font-synthesis: none;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  color: #ffffff;
+}
+.viz-light .viz-card-title { color: var(--viz-ink); }   /* white fails on light cards */
+/* no height cap: charts keep their viewBox ratio, so height follows the
+   card's column width */
+.viz-svg { width: 100%; height: auto; display: block; }
+.viz-svg text { font-family: var(--mono); }
+.viz-val { fill: var(--viz-ink); font-size: 12px; font-weight: 400; }
+.viz-axis { fill: var(--viz-ink-muted); font-size: 11px; }
+.viz-donut-lbl { fill: #ffffff; font-size: 12px; font-weight: 400; }
+.viz-donut-center {
+  fill: var(--viz-ink); font-size: 22px; font-weight: 800;
+  font-family: var(--display); font-synthesis: none;
+}
+.viz-donut-sub { fill: var(--viz-ink-muted); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
+/* pyramid labels: IBM Plex Mono like the rest of the deck, one ink per mode */
+.viz-pyr-lbl { font-family: var(--mono); font-size: 16px; font-weight: 500; fill: var(--viz-pyr-ink); }
+.viz-pyr-lbl--sm { font-size: 12px; }   /* apex label, so it clears the slopes */
+.viz-pyr-sub { font-family: var(--mono); font-size: 11px; opacity: 0.8; fill: var(--viz-pyr-ink); }
+
+/* legends — identity via a swatch + label, never color alone */
+.viz-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; }
+.viz-legend-item {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: var(--t-micro); color: var(--viz-ink-muted);
+}
+.viz-swatch { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+
+/* donut card: chart + labelled legend side by side */
+.viz-donut-wrap { display: flex; align-items: center; gap: clamp(12px, 1.6vw, 26px); }
+.viz-donut-wrap .viz-svg { flex: 0 0 auto; width: clamp(120px, 12vw, 168px); }
+.viz-donut-legend { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.viz-donut-legend .viz-legend-item { justify-content: flex-start; }
+.viz-legend-name { color: var(--viz-ink); }
+.viz-legend-val { margin-left: auto; padding-left: 12px; color: var(--viz-ink-muted); font-variant-numeric: tabular-nums; }
+
+/* stat tiles card */
+.viz-stats { display: flex; flex-direction: column; justify-content: center; gap: clamp(10px, 1.6vh, 20px); flex: 1 1 auto; }
+.viz-stat-num {
+  font-family: var(--display);
+  font-synthesis: none; font-weight: 800; line-height: 1;
+  font-size: clamp(1.8rem, 3vw, 2.8rem); color: var(--viz-ink);
+}
+.viz-stat-label { color: var(--viz-ink-muted); font-size: var(--t-label); margin-top: 3px; }
+
+/* header row: title on the left, light/dark toggle on the right */
+.deck-charts-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.viz-mode-toggle {
+  display: inline-flex; align-self: center; flex: 0 0 auto;
+  border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
+  background: var(--surface); cursor: pointer;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.viz-mode-opt { padding: 6px 13px; color: var(--text-dim); transition: color 0.2s ease, background 0.2s ease; }
+.viz-mode-opt.is-on { background: var(--primary); color: var(--on-primary); }
+
+/* ── Chart entrance animations (replayed on slide activate) ────────── */
+.viz-bar {
+  transform-box: fill-box; transform-origin: bottom;
+  transform: scaleY(0); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.viz-anim .viz-bar { transform: scaleY(1); }
+.viz-donut-ring {
+  transform-box: fill-box; transform-origin: center;
+  transform: rotate(40deg); opacity: 0;              /* spins counter-clockwise to rest */
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+}
+.viz-anim .viz-donut-ring { transform: rotate(0deg); opacity: 1; }
+.viz-line { transition: stroke-dashoffset 1.1s ease; }   /* traces via JS dash setup */
+.viz-pyr-layer { opacity: 0; transition: opacity 0.5s ease; }
+.viz-anim .viz-pyr-layer { opacity: 1; }
+.viz-pyr-lbl, .viz-pyr-sub { opacity: 0; transition: opacity 0.45s ease; }
+.viz-anim .viz-pyr-lbl { opacity: 1; }
+.viz-anim .viz-pyr-sub { opacity: 0.8; }
+html.deck-reduce .viz-pyr-layer, html.deck-reduce .viz-pyr-lbl { opacity: 1; transition: none; }
+html.deck-reduce .viz-pyr-sub { opacity: 0.8; transition: none; }
+.viz-val, .viz-dot, .viz-donut-lbl, .viz-donut-center, .viz-donut-sub {
+  opacity: 0; transition: opacity 0.45s ease;
+}
+.viz-anim .viz-val, .viz-anim .viz-dot, .viz-anim .viz-donut-lbl,
+.viz-anim .viz-donut-center, .viz-anim .viz-donut-sub { opacity: 1; transition-delay: 0.55s; }
+/* reduced motion → no movement, everything shown at rest */
+html.deck-reduce .viz-bar { transform: none; transition: none; }
+html.deck-reduce .viz-donut-ring { transform: none; opacity: 1; transition: none; }
+html.deck-reduce .viz-line { transition: none; }
+html.deck-reduce .viz-val, html.deck-reduce .viz-dot, html.deck-reduce .viz-donut-lbl,
+html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1; transition: none; }
+
+/* ── Light mode for the charts (toggle flips the --viz-* palette) ───── */
+.deck-slide--charts.viz-light {
+  --viz-surface: #f7f7f5;
+  --viz-grid: #e2e0e6;
+  --viz-ink: #17151b;
+  --viz-ink-muted: #5c5866;
+  --viz-s1: #3a2c86;  --viz-s2: #4d3daa;  --viz-s3: #5f50c2;
+  --viz-s4: #7364d2;  --viz-s5: #8677de;  --viz-s6: #9a8be7;
+  --viz-pyr-fill: #4a3aa7;
+  --viz-pyr-ink:  #ffffff;
+}
+.deck-slide--charts.viz-light .viz-card { border-color: #dcdae1; }
+
+@media (max-width: 860px) {
+  .deck-charts-grid { grid-template-columns: 1fr; }
+  .viz-span-2, .viz-span-3 { grid-column: auto; }
+  .deck-charts-head { flex-direction: column; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DATA-VIZ DESIGN SYSTEM — edit here, every chart/diagram follows.
+   Applies to .deck-slide--charts and .deck-slide--diagram-full.
+   ═══════════════════════════════════════════════════════════════════ */
+.deck-slide--charts,
+.deck-slide--diagram-full {
+  /* — Purple ramp (light → dark). The one ramp for every surface. — */
+  --v-p1: #e0d3ff;
+  --v-p2: #c4b2ff;
+  --v-p3: #a091f0;
+  --v-p4: #7a6ad6;
+  --v-p5: #5b4bb0;
+  /* — Accents, for contrast against the purples — */
+  --v-green: #b9f2c8;
+  --v-pink:  #ffd8e4;
+  /* — Ink & lines — */
+  --v-ink:       #ffffff;
+  --v-ink-muted: #a39fb0;
+  /* solid, not translucent — alpha compounds where connectors merge/cross
+     and those joints read brighter than the rest of the line */
+  --v-line:      #545260;
+  /* — Surface fills (translucent, so overlaps read) — */
+  --v-fill-1: rgba(208, 188, 255, 0.14);
+  --v-fill-2: rgba(160, 145, 240, 0.22);
+  --v-fill-3: rgba(122, 106, 214, 0.30);
+  /* — Stroke weights: three, no more — */
+  --v-stroke-hair: 1px;
+  --v-stroke:      1.5px;
+  --v-stroke-bold: 2.5px;
+  --v-dash: 2 5;                 /* the one dash pattern */
+  /* — Type scale — */
+  --v-font-display: var(--display);
+  --v-t-title: 30px;   /* headline number/title inside a viz */
+  --v-t-head:  24px;   /* section + callout headers      (Neudron) */
+  --v-t-node:  17px;   /* node / stage names             (Neudron) */
+  --v-t-label: 14px;   /* data-point labels              (mono) */
+  --v-t-micro: 11px;   /* axis ticks, captions           (mono) */
+}
+
+/* — Semantic SVG classes: use these instead of inline attributes — */
+.viz-svg .v-title { font-family: var(--v-font-display); font-synthesis: none; font-weight: 800; font-size: var(--v-t-title); fill: var(--v-ink); }
+.viz-svg .v-head  { font-family: var(--v-font-display); font-synthesis: none; font-weight: 800; font-size: var(--v-t-head);  fill: var(--v-ink); }
+.viz-svg .v-node  { font-family: var(--v-font-display); font-synthesis: none; font-weight: 800; font-size: var(--v-t-node);  fill: var(--v-ink); }
+.viz-svg .v-label { font-family: var(--mono); font-size: var(--v-t-label); fill: var(--v-ink); }
+.viz-svg .v-micro { font-family: var(--mono); font-size: var(--v-t-micro); fill: var(--v-ink-muted); letter-spacing: 0.08em; }
+.viz-svg .v-connector      { fill: none; stroke: var(--v-line); stroke-width: var(--v-stroke); }
+.viz-svg .v-connector-thin { fill: none; stroke: var(--v-line); stroke-width: var(--v-stroke-hair); }
+.viz-svg .v-connector-dash { fill: none; stroke: var(--v-line); stroke-width: var(--v-stroke); stroke-dasharray: var(--v-dash); }
+.viz-svg .v-surface   { fill: var(--v-fill-1); stroke: var(--v-p2); stroke-width: var(--v-stroke); }
+.viz-svg .v-surface-2 { fill: var(--v-fill-2); stroke: var(--v-p3); stroke-width: var(--v-stroke); }
+.viz-svg .v-surface-3 { fill: var(--v-fill-3); stroke: var(--v-p4); stroke-width: var(--v-stroke); }
+
+/* ── Framework diagrams — one per full-page slide ──────────────────── */
+.deck-slide--diagram-full {
+  --viz-ink: #ece9f1;
+  --viz-ink-muted: #a39fb0;
+  --dgm-line: #545260;   /* solid — see --v-line */
+  --dgm-node: rgba(208, 188, 255, 0.12);
+  --dgm-node-bd: rgba(208, 188, 255, 0.34);
+  --dgm-ink: var(--viz-ink);
+}
+/* Title pinned near the top; the diagram fills the space below it (the base
+   slide centers content, which pushed the title down onto the visual). */
+/* now inherited from .deck-slide — kept only for the doc trail */
+.deck-slide--diagram-full .deck-title {
+  margin: 0 0 clamp(12px, 3vh, 40px);
+}
+.deck-diagram-stage {
+  flex: 1 1 auto;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 0;
+  width: 100%;
+}
+.deck-diagram-stage .viz-svg {
+  width: 100%;
+  max-width: min(1100px, 100%);
+  max-height: 66vh;
+  height: auto;
+}
+/* The sitemap is the densest diagram — let it use the full stage width so the
+   node labels don't get scaled down into illegibility. */
+.deck-diagram-stage .viz-svg--sitemap,
+.deck-diagram-stage .viz-svg--wide,
+.deck-diagram-stage .viz-svg--buyin {
+  max-width: 100%;
+  max-height: 74vh;
+}
+/* Split viz slide: bullets on the left, chart on the right. */
+.deck-vizsplit {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  align-items: center;
+  gap: clamp(28px, 4vw, 72px);
+  min-height: 0;
+}
+.deck-vizsplit-chart .viz-svg { width: 100%; height: auto; max-height: 62vh; }
+/* Variant with the title inside the left column. Both columns centre on the
+   same axis, and the diagram sits in an outlined panel like the pod slides. */
+.deck-slide--vizsplit-top .deck-vizsplit { align-items: center; }
+.deck-slide--vizsplit-top .deck-vizsplit-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.deck-slide--vizsplit-top .deck-vizsplit-copy .deck-title {
+  margin: 0 0 clamp(14px, 2.4vh, 30px);
+}
+.deck-slide--vizsplit-top .deck-vizsplit-chart {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 2.4vw, 36px);
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+}
+.deck-slide--vizsplit .deck-facts { margin-top: 0; }
+.deck-slide--vizsplit .deck-facts li { font-size: var(--t-list); }
+@media (max-width: 860px) {
+  .deck-vizsplit { grid-template-columns: 1fr; }
+}
+.dgm-node-lbl { fill: var(--viz-ink); font-family: var(--mono); font-size: 13px; font-weight: 400; }
+/* Acquisition map: pill nodes, three tones — the doors, the steps between
+   them, and the destination in the deck's accent. */
+.dgm-acq-link {
+  stroke: var(--dgm-line);
+  stroke-width: 3.5;
+}
+.dgm-acq-pill { stroke-width: 1.5; }
+.dgm-acq-pill--mid { fill: rgba(208, 188, 255, 0.10); stroke: var(--dgm-node-bd); }
+.dgm-acq-pill--lit { fill: rgba(208, 188, 255, 0.22); stroke: rgba(208, 188, 255, 0.5); }
+.dgm-acq-pill--key { fill: var(--primary); stroke: var(--primary); }
+.dgm-acq-lbl {
+  font-family: var(--mono);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  fill: var(--viz-ink);
+}
+.dgm-acq-lbl--key { fill: #0d0c11; font-size: 17px; }
+/* Pod box headings — larger than a node label, sized for a 1360-unit canvas */
+.dgm-pod-lbl  { fill: var(--viz-ink); font-family: var(--mono); font-size: 23px; }
+.dgm-box-lbl  { fill: var(--viz-ink); font-family: var(--mono); font-size: 11px; }
+.dgm-cap      { fill: var(--viz-ink-muted); font-family: var(--mono); font-size: 9px; }
+.dgm-chev-lbl { fill: #ffffff; font-family: var(--mono); font-size: 11px; font-weight: 400; }
+.dgm-callout  { fill: var(--viz-ink); font-family: var(--mono); font-size: 10px; }
+/* `.viz-svg` in the selector so it outranks `.viz-svg text { font-family:
+   var(--mono) }`, which would otherwise keep the mono font. */
+.viz-svg .dgm-callout-title,
+.viz-svg .dgm-lane-lbl {
+  fill: #ffffff;
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+}
+.viz-svg .dgm-callout-title { font-size: 32px; }
+/* The buy-in timeline uses a 1600-unit viewBox (vs. 1200 elsewhere), so it
+   renders at ~0.67 scale — 48 user units lands at 32px on screen. */
+.viz-svg--buyin .dgm-callout-title { font-size: 48px; }
+/* `.viz-svg` prefix so it beats `.viz-svg text { font-family: var(--mono) }` */
+.viz-svg .dgm-cycle-lbl { font-family: var(--mono); font-size: 21px; font-weight: 400; }
+.viz-svg .dgm-stat-lbl {
+  font-family: var(--display);
+  font-synthesis: none; font-weight: 800; font-size: 54px; fill: var(--viz-ink);
+}
+.viz-svg .dgm-cycle-hub { font-family: var(--mono); font-size: 38px; font-weight: 400; fill: var(--viz-ink); letter-spacing: -0.01em; }
+.viz-svg .dgm-lane-lbl { font-size: 24px; }
+.dgm-lane-row { fill: var(--viz-ink-muted); font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; }
+.dgm-callout-item  { fill: var(--viz-ink-muted); font-family: var(--mono); font-size: 15px; }
+
+/* Timeline bar + swimlane ribbon grow in left→right: near-linear for most
+   of the run, easing out at the very end. */
+.dgm-grow-path {
+  transition: stroke-dashoffset 1.9s cubic-bezier(0.12, 0.12, 0.2, 1);
+}
+.dgm-grow-rect {
+  transform-box: fill-box;
+  transform-origin: left center;
+  transition: transform 1.9s cubic-bezier(0.12, 0.12, 0.2, 1);
+}
+html.deck-reduce .dgm-grow-path,
+html.deck-reduce .dgm-grow-rect { transition: none; }
+
+/* Stacked plates: each layer drops into place, bottom-up (per-plate delay
+   is set inline by the builder). Replays whenever the slide re-activates. */
+.v-plate {
+  opacity: 0;
+  transform: translateY(-26px);
+  transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.deck-slide.is-viz-in .v-plate { opacity: 1; transform: none; }
+html.deck-reduce .v-plate { opacity: 1; transform: none; transition: none; }
+
+/* Sankey: bars grow down, flows fade in behind them */
+.v-bar {
+  transform-box: fill-box; transform-origin: top;
+  transform: scaleY(0);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.deck-slide.is-viz-in .v-bar { transform: none; }
+.v-flow { opacity: 0; transition: opacity 0.8s ease; }
+.deck-slide.is-viz-in .v-flow { opacity: 1; }
+html.deck-reduce .v-bar, html.deck-reduce .v-flow { transform: none; opacity: 1; transition: none; }
+.dgm-venn-lbl { fill: var(--viz-ink-muted); font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em; }
+/* sitemap hierarchy levels — all one weight (400); hierarchy reads from
+   size and fill instead. */
+.dgm-l1-lbl { fill: #ffffff; font-family: var(--mono); font-size: 17px; font-weight: 400; }
+.dgm-l2-lbl { fill: #ffffff; font-family: var(--mono); font-size: 15px; font-weight: 400; }
+.dgm-l3-lbl { fill: var(--viz-ink); font-family: var(--mono); font-size: 13.5px; font-weight: 400; }
+/* The system slide is set entirely at 400, title included. */
+.deck-slide--diagram-full[data-label="System"],
+.deck-slide--diagram-full[data-label="System"] * {
+  font-weight: 400;
+}
+
+/* ── Title-slide photo placeholder (right column) ──────────────────── */
+.deck-photo-ph {
+  aspect-ratio: 4 / 5;
+  width: min(100%, 380px);
+  margin-inline: auto;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  color: var(--text-dim);
+}
+.deck-photo-ph-icon svg { width: 44px; height: 44px; display: block; }
+.deck-photo-ph-label {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+}
+
+/* ── Case-study image slide (one image + caption placeholder) ──────── */
+/* Doubled class beats `.deck-slide--cs { justify-content: flex-start }`,
+   which is declared later — keeps the figure vertically centered. */
+.deck-slide--cs.deck-slide--cs-media {
+  justify-content: center;
+  align-items: center;
+  background: #0d0c11;         /* dark backdrop so images read cleanly */
+  color: var(--text);
+}
+.deck-cs-media {
+  margin: 0;
+  display: flex; flex-direction: column; align-items: center;
+  gap: clamp(14px, 2.4vh, 28px);
+  max-width: 100%;
+}
+.deck-cs-media img,
+.deck-cs-media video {
+  max-width: min(100%, 1040px);
+  max-height: 64vh;
+  width: auto; height: auto;
+  border-radius: 12px;
+  display: block;
+  /* dark matte — letterboxes non-16:9 media without a white flash */
+  background: var(--surface);
+}
+/* Carousel frames shown all at once: one row, caption underneath. */
+.deck-cs-media--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(10px, 1.6vw, 22px);
+}
+.deck-cs-media--row img,
+.deck-cs-media--row video {
+  max-width: min(23%, 260px);
+  max-height: 62vh;
+}
+.deck-cs-media--row .deck-cs-caption { flex: 0 0 100%; text-align: center; }
+.deck-cs-caption {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: var(--t-list);
+  text-align: center;
+}
+
+/* ── Select work slide: title (left) + numbered list (right) ─────────── */
+.deck-work-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.32fr);   /* wider list */
+  align-items: start;     /* title sits at --title-top like every other */
+  gap: clamp(28px, 4vw, 80px);
+  width: 100%;
+  flex: 1 1 auto;         /* fill the slide so the list can centre in it */
+  min-height: 0;
+}
+/* This title centres opposite its list rather than pinning to the origin —
+   both columns share one vertical centre. */
+.deck-work-head {
+  align-self: center;
+  margin-bottom: calc(var(--title-top) - var(--deck-pad-bottom));
+}
+.deck-work-list { align-self: center; }
+.deck-work-head .deck-title { margin: 0; }
+@media (max-width: 860px) {
+  .deck-work-split { grid-template-columns: 1fr; gap: clamp(18px, 3vh, 32px); }
+}
+
+.deck-work-list {
+  --line: rgba(255, 255, 255, 0.22);
+  list-style: none;
+  padding: 0;
+  /* Centre against the slide, not the padding box — the bottom padding is
+     ~76px deeper than the top, which otherwise floats this 38px high. */
+  margin: 0 0 calc(var(--title-top) - var(--deck-pad-bottom));
+  /* Side lines live on the container, not the rows, so they run as one
+     unbroken vertical down the whole stack. Closed box with a bottom
+     border and all corners rounded. */
+  border: 1px solid var(--line);
+  border-radius: clamp(16px, 1.8vw, 26px);
+  overflow: hidden;
+}
+.deck-work-item {
+  position: relative;
+  /* full width of the slide's content container — every row matches */
+  background: transparent;
+  /* horizontal seam between rows only */
+  border-top: 1px solid var(--line);
+  transition: background 0.25s ease;
+}
+.deck-work-item:first-child { border-top: 0; }
+.deck-work-item:hover { background: rgba(255, 255, 255, 0.05); }
+.deck-work-link {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2.2vw, 30px);
+  padding: clamp(16px, 2.6vh, 30px) clamp(20px, 2.6vw, 40px);
+  text-decoration: none;
+  color: var(--text);
+  transition: color 0.2s ease;
+}
+.deck-work-link:hover,
+.deck-work-link:focus-visible { color: var(--primary); }
+.deck-work-num {
+  flex: 0 0 auto;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--text-dim);
+  min-width: 2.5ch;
+}
+.deck-work-title {
+  /* grow so the arrow is pushed to the right edge of the row */
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  font-size: var(--t-item);
+  line-height: 1.1;
+}
+.deck-work-arrow {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--text-dim);
+  transition: transform 0.25s ease, color 0.2s ease;
+}
+.deck-work-arrow svg { width: clamp(18px, 1.7vw, 24px); height: clamp(18px, 1.7vw, 24px); }
+.deck-work-link:hover .deck-work-arrow { color: var(--primary); transform: translateX(6px); }
+
+/* ── Podcast slide: guest wall behind copy ─────────────────────────── */
+/* Guest wall: pinned to the right half, fading out to the left so it
+   dissolves into the copy instead of sitting behind it. */
+.deck-slide--podcast .deck-guest-wall {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 56%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  opacity: 0.62;
+  pointer-events: none;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.28) 20%, rgba(0, 0, 0, 0.75) 45%, #000 72%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0, 0, 0, 0.28) 20%, rgba(0, 0, 0, 0.75) 45%, #000 72%);
+}
+.deck-guest-row {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  width: max-content;
+  /* slow leftward drift; rows differ in speed so it doesn't march in lockstep */
+  animation: deck-guest-drift 90s linear infinite;
+  will-change: transform;
+}
+.deck-guest-row:nth-child(2) {
+  /* stagger the middle row so the grid doesn't read as a rigid table */
+  margin-left: clamp(-90px, -6vw, -40px);
+  animation-duration: 66s;
+}
+.deck-guest-row:nth-child(3) { animation-duration: 112s; }
+.deck-guest-row img {
+  width: clamp(76px, 8.5vw, 132px);
+  flex: 0 0 auto;
+  aspect-ratio: 1;
+  border-radius: 14px;
+  object-fit: cover;
+  /* spacing via margin (not gap) so the duplicated set tiles exactly at -50% */
+  margin-right: 14px;
+}
+@keyframes deck-guest-drift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+/* don't burn frames while the podcast slide is off-screen */
+.deck-slide:not(.is-active) .deck-guest-row { animation-play-state: paused; }
+html.deck-reduce .deck-guest-row { animation: none; }
+.deck-slide--podcast .deck-eyebrow,
+.deck-slide--podcast .deck-title,
+.deck-slide--podcast .deck-body,
+.deck-slide--podcast .deck-actions { position: relative; z-index: 1; }
+
+/* ── Community columns slide ───────────────────────────────────────── */
+.deck-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(20px, 3vw, 44px);
+  margin-top: clamp(24px, 3vw, 40px);
+}
+.deck-col-label {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.deck-col ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.deck-col li { color: var(--text-muted); font-size: var(--t-list); line-height: 1.35; }
+
+/* ── Buttons reuse the site's .btn look, restated minimally ────────── */
+.deck-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: var(--t-label);
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+/* inline icons carry no width/height attrs, so size them here or they
+   collapse to 0 in the flex row */
+.deck-btn svg { width: 1em; height: 1em; flex: 0 0 auto; }
+.deck-btn--primary { background: var(--primary); color: var(--on-primary); }
+.deck-btn--primary:hover { background: var(--primary-hover); }
+.deck-btn--ghost { border-color: var(--border); color: var(--text); }
+.deck-btn--ghost:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ── Controls (bottom) ─────────────────────────────────────────────── */
+.deck-controls {
+  position: absolute;
+  bottom: clamp(18px, 2.6vw, 34px);
+  left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(20px, 4vw, 48px);
+  z-index: 4;
+  pointer-events: none;
+}
+.deck-controls > * { pointer-events: auto; }
+.deck-exit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.deck-exit:hover { color: var(--text); border-color: var(--text-dim); }
+.deck-nav-group { display: flex; align-items: center; gap: 14px; }
+.deck-counter {
+  font-family: var(--mono);
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.deck-counter .deck-counter-now { color: var(--text); }
+.deck-arrow {
+  width: 44px; height: 44px;
+  display: grid; place-items: center;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+.deck-arrow:hover:not(:disabled) { background: var(--surface-2); border-color: var(--primary); }
+.deck-arrow:disabled { opacity: 0.35; cursor: default; }
+.deck-arrow svg { width: 20px; height: 20px; }
+
+/* ── Pull quote: mono eyebrow over a large centered serif quote ────── */
+.deck-slide--pullquote {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: clamp(32px, 6vh, 80px) clamp(24px, 6vw, 96px);
+}
+.deck-pq-eyebrow {
+  margin: 0 0 clamp(18px, 3vh, 38px);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.deck-pq {
+  margin: 0;
+  /* no measure cap — the quote should sit on one line at desk width */
+  max-width: none;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-quote);
+  line-height: 1.22;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  color: var(--text);
+}
+
+/* ── Legacy enterprise model: 2×2 of labelled cells ────────────────── */
+.deck-slide--legacy {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(40px, 6vh, 80px);
+}
+.deck-slide--legacy .deck-title { margin: 0 0 clamp(22px, 4vh, 56px); }
+.deck-legacy-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: clamp(14px, 2vw, 28px);
+}
+.deck-legacy-cell {
+  display: flex;
+  container-type: inline-size;   /* type sizes off the cell */
+  align-items: center;
+  justify-content: center;
+  padding: clamp(14px, 2vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: clamp(12px, 1.4vw, 20px);
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: var(--tc-cell);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+@media (max-width: 860px) {
+  .deck-legacy-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+}
+
+/* ── Outside influences: three gradient forms with pill captions ───── */
+.deck-slide--influences {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(40px, 6vh, 80px);
+}
+.deck-slide--influences .deck-title { margin: 0 0 clamp(20px, 4vh, 56px); }
+.deck-infl-row {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 4vw, 72px);
+  align-items: end;
+}
+.deck-infl { display: flex; flex-direction: column; align-items: center; min-height: 0; gap: clamp(14px, 2.4vh, 30px); }
+.deck-infl-art { flex: 1 1 auto; min-height: 0; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.deck-infl-svg { width: 100%; height: 100%; max-height: 62vh; display: block; }
+/* Pill caption — mono, uppercase, matching the deck's other chip labels. */
+.deck-infl-pill {
+  flex: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: clamp(9px, 1.3vh, 14px) clamp(16px, 1.8vw, 28px);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text);
+  white-space: nowrap;
+}
+@media (max-width: 860px) {
+  .deck-infl-row { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .deck-infl-pill { white-space: normal; letter-spacing: 0.06em; }
+}
+
+/* ── Compounding debt: title, then three problem columns ───────────── */
+.deck-slide--debt {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(40px, 6vh, 80px);
+}
+.deck-slide--debt .deck-title { margin: 0 0 clamp(28px, 6vh, 76px); }
+.deck-debt-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 72px);
+  align-items: start;
+}
+.deck-debt-head {
+  margin: 0 0 clamp(14px, 2.4vh, 28px);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.deck-debt-list {
+  margin: 0;
+  padding-left: 1.15em;
+  list-style: disc;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-list);
+  line-height: 1.5;
+  color: var(--text);
+}
+.deck-debt-list li { margin-bottom: clamp(10px, 1.6vh, 22px); }
+.deck-debt-list li:last-child { margin-bottom: 0; }
+.deck-debt-list li::marker { color: var(--text-muted); }
+@media (max-width: 860px) {
+  .deck-debt-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+
+/* ── Slides carried over from the original LMS presentation ─────────
+      Shared bits first (figure placeholder, split head, footnote), then
+      the four layouts that use them. ──────────────────────────────── */
+
+/* Inline figure placeholder — stands in for a screenshot or diagram
+   export. Drop an <img> in place of the whole figure when one exists. */
+.deck-fig-ph {
+  margin: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.2vh, 14px);
+  padding: clamp(16px, 2vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: clamp(12px, 1.4vw, 20px);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  text-align: center;
+}
+.deck-fig-ph--wide { aspect-ratio: 16 / 9; }
+.deck-fig-ph--screen { aspect-ratio: 4 / 3; }
+.deck-fig-ph--phone { aspect-ratio: 9 / 16; max-width: 320px; margin-inline: auto; height: 100%; }
+.deck-fig-ph-icon svg { width: 26px; height: 26px; display: block; }
+.deck-fig-ph-label {
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.6;
+  max-width: 46ch;
+}
+/* Title + serif kicker, matching the "Understanding the data" slide. */
+.deck-split-head .deck-title { margin: 0; }
+.deck-split-sub {
+  margin: clamp(8px, 1.2vh, 14px) 0 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-copy);
+  color: var(--text-muted);
+}
+.deck-slide-note {
+  margin: clamp(16px, 2.4vh, 28px) 0 0;
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+/* Roman-numbered enumeration, centred on an otherwise empty slide. */
+.deck-slide--enum {
+  justify-content: center;
+  align-items: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 6vw, 96px);
+}
+.deck-enum {
+  counter-reset: deck-enum;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: min(100%, 58rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(22px, 4.5vh, 56px);
+}
+.deck-enum-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(14px, 1.6vw, 26px); align-items: start; }
+.deck-enum-mark::before {
+  counter-increment: deck-enum;
+  content: counter(deck-enum, upper-roman);
+}
+.deck-enum-mark {
+  flex: none;
+  width: clamp(26px, 2.4vw, 34px);
+  height: clamp(26px, 2.4vw, 34px);
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  margin-top: 0.3em;
+}
+.deck-enum-text {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-lede);
+  line-height: 1.35;
+  color: var(--text);
+}
+
+/* Quality talk: screenshot on the left, verbatim complaints on the right. */
+.deck-slide--top50 {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  /* extra bottom padding so the footnote clears the deck controls */
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(64px, 10vh, 116px);
+}
+.deck-slide--top50 .deck-title { margin: 0 0 clamp(20px, 3vh, 40px); }
+.deck-top50-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 48px);
+  align-items: stretch;
+}
+.deck-quote-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(12px, 1.8vh, 22px); justify-content: center; }
+/* Sticky-note styling, same as the yellow callouts on the original slide. */
+.deck-quote-note {
+  padding: clamp(12px, 1.4vw, 20px);
+  border-radius: clamp(8px, 1vw, 12px);
+  background: rgba(255, 216, 228, 0.14);
+  border: 1px solid rgba(255, 216, 228, 0.28);
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-style: italic;
+  font-size: var(--t-micro);
+  line-height: 1.45;
+  color: var(--text);
+}
+
+/* Title over a full-bleed figure. */
+.deck-slide--figure {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  /* clears the deck controls that float over the bottom edge */
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+
+.deck-slide--figure .deck-split-head { margin-bottom: clamp(18px, 3vh, 40px); }
+.deck-slide--figure .deck-fig-ph { aspect-ratio: auto; }
+
+/* Title left, list right. Named --pointsplit, not --split: the home deck's
+   Intro/About/Places slides already own .deck-slide--split. */
+.deck-slide--pointsplit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(28px, 5vw, 88px);
+  align-content: center;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px);
+}
+
+.deck-slide--pointsplit > * { width: 100%; }
+.deck-split-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 4vh, 48px);
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-copy);
+  line-height: 1.4;
+  color: var(--text);
+}
+.deck-split-list strong { font-weight: 400; color: var(--primary); }
+
+/* ── B2B Events slides ─────────────────────────────────────────────
+      figure + copy, big stat row, staircase, triptych, spec columns. */
+
+/* Figure one side, copy the other. `--figtext-rev` flips the order. */
+.deck-slide--figtext {
+  justify-content: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+.deck-figtext {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: clamp(28px, 5vw, 88px);
+  align-items: center;
+}
+.deck-slide--figtext-rev .deck-figtext { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); }
+.deck-figtext-media { display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 14px); min-height: 0; height: 100%; }
+.deck-figtext-cap {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  text-align: center;
+}
+.deck-figtext-copy { display: flex; flex-direction: column; gap: clamp(18px, 3vh, 38px); }
+.deck-figtext-copy p {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-lede);
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.deck-figtext-copy .deck-split-sub { margin: 0; }
+
+/* Centred pull-quote variant for the longer commitment line. */
+.deck-pq--tight { font-size: var(--t-quote-sm); max-width: 20ch; }
+/* Centred statement (the north star), with the emphasised phrases in bold.
+   Double class so it outranks .deck-slide--statement further down. */
+.deck-slide.deck-slide--statement-center { justify-content: center; align-items: center; text-align: center; }
+.deck-statement--center { text-align: center; max-width: 34ch; }
+.deck-statement--center strong { font-weight: 400; color: var(--primary); }
+
+/* Three headline multiples. */
+.deck-slide--bigstats {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+.deck-slide--bigstats .deck-title { margin-bottom: 0; }
+.deck-bigstats {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 28px);
+  /* cells hug their contents and centre in the row, rather than stretching
+     to the full height of the slide */
+  align-items: center;
+  align-content: center;
+}
+/* The multiplier reads as part of the figure, so it sits right beside the
+   numeral (not pushed to the cell edge like the morale slide's marker) and
+   is big enough to read. Scoped to this slide so that marker is unaffected. */
+.deck-slide--bigstats .deck-statfig-num { justify-content: flex-start; gap: 0.04em; }
+/* sized off the same scale as .deck-statfig-val — an em here would resolve
+   against the row's 1rem base, not the numeral, and come out tiny */
+.deck-statfig-mult {
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: var(--t-quote);
+  line-height: 1;
+  flex: none;
+  color: var(--text);
+  /* Neudron draws × as a maths glyph: its ink stops 0.174em above the
+     baseline, so baseline alignment alone leaves it floating. Drop it by
+     that much to sit the ink on the numeral's bottom. */
+  transform: translateY(0.174em);
+}
+
+/* Title on the left, steps as headed notes on the right. */
+.deck-slide--notes {
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.38fr);
+  gap: clamp(24px, 4vw, 72px);
+  align-content: center;
+  align-items: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+.deck-slide--notes .deck-title { margin: 0; }
+.deck-notes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(22px, 3.4vw, 56px) clamp(22px, 3vw, 52px);
+}
+.deck-note-head {
+  margin: 0 0 clamp(8px, 1.2vh, 14px);
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-copy);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.deck-note-body {
+  margin: 0;
+  font-size: var(--t-label);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+@media (max-width: 860px) {
+  .deck-slide--notes { grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 4vh, 36px); }
+  .deck-notes { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Three phones side by side, each captioned. */
+.deck-slide--triptych {
+  justify-content: flex-start;
+  align-items: center;
+  text-align: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+
+.deck-triptych {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(18px, 3vw, 56px);
+}
+.deck-triptych-col { display: flex; flex-direction: column; gap: clamp(10px, 1.6vh, 20px); min-height: 0; }
+.deck-triptych-cap {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--tc-cap);
+  color: var(--text-muted);
+}
+
+/* Labelled spec cards flanking a screen. */
+.deck-slide--specs {
+  justify-content: flex-start;
+  align-items: flex-start;
+  text-align: left;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+
+.deck-slide--specs .deck-split-head { margin-bottom: clamp(14px, 2.4vh, 30px); }
+.deck-specs {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1fr);
+  gap: clamp(16px, 2.4vw, 44px);
+  align-items: center;
+}
+/* No right-hand column — the screen widens into that space. */
+.deck-specs--wide { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr); }
+.deck-spec-col { display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 16px); }
+.deck-spec {
+  padding: clamp(10px, 1.4vw, 18px);
+  container-type: inline-size;   /* type sizes off the spec card */
+  border-radius: clamp(8px, 1vw, 12px);
+  background: var(--surface-2);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.deck-spec-lbl {
+  font-family: var(--mono);
+  font-size: var(--tc-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.deck-spec-desc {
+  font-size: var(--tc-desc);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--text);
+}
+.deck-slide--specs .deck-fig-ph { aspect-ratio: auto; height: 100%; }
+@media (max-width: 860px) {
+  .deck-figtext,
+  .deck-slide--figtext-rev .deck-figtext,
+  .deck-bigstats,
+  .deck-triptych,
+  .deck-specs { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Pods Over Silos slides ────────────────────────────────────────
+      Priority discs, a plain fact list, role rows, ritual columns. */
+
+/* Title on the left, points as a 2-up grid of headed notes on the right —
+   see .deck-slide--notes above; 'Discuss projects' uses that same type. */
+
+/* Role ladder: initial chip, role, and what the role is on the hook for. */
+.deck-slide--roles {
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+
+.deck-roles {
+  flex: 1 1 auto;
+  min-height: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(8px, 1.4vh, 16px);
+}
+.deck-role {
+  display: grid;
+  grid-template-columns: auto minmax(0, 0.9fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: clamp(12px, 2vw, 32px);
+  padding: clamp(10px, 1.4vw, 20px) clamp(14px, 1.8vw, 26px);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.deck-role-key {
+  width: clamp(30px, 3vw, 44px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(208, 188, 255, 0.14);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--primary);
+}
+.deck-role-name { font-size: var(--t-label); color: var(--text); }
+.deck-role-desc {
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-label);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+/* Rituals: two labelled columns of pills. */
+.deck-slide--rituals {
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+
+.deck-rituals {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(20px, 4vw, 80px);
+  align-content: center;
+}
+.deck-ritual-head {
+  margin: 0 0 clamp(12px, 2vh, 24px);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.deck-rituals ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 16px); }
+.deck-ritual-pill {
+  padding: clamp(11px, 1.6vh, 20px) clamp(16px, 2vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  text-align: center;
+  font-size: var(--t-label);
+  color: var(--text);
+}
+@media (max-width: 860px) {
+  .deck-role { grid-template-columns: auto minmax(0, 1fr); }
+  .deck-role-desc { grid-column: 2; }
+  .deck-rituals { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Annotated screen: placeholder left, numbered callouts right. */
+.deck-slide--annotated {
+  justify-content: center;
+  align-items: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px);
+}
+.deck-annotated {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 64px);
+  align-items: center;
+}
+.deck-callouts {
+  counter-reset: deck-callout;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vh, 24px);
+}
+.deck-callout { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(10px, 1.2vw, 16px); align-items: start; }
+.deck-callout::before {
+  counter-increment: deck-callout;
+  content: counter(deck-callout);
+  width: clamp(20px, 1.8vw, 26px);
+  height: clamp(20px, 1.8vw, 26px);
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  display: grid;
+  place-items: center;
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  margin-top: 0.1em;
+}
+.deck-callout-lbl {
+  display: block;
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.deck-callout-desc {
+  display: block;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-label);
+  line-height: 1.4;
+  color: var(--text);
+}
+@media (max-width: 860px) {
+  .deck-top50-body,
+  .deck-annotated { grid-template-columns: minmax(0, 1fr); }
+  .deck-slide--pointsplit { grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 4vh, 40px); }
+}
+
+/* ── Statement slide: one large paragraph, nothing else. Sits on the
+      shared dark deck surface. ─────────────────────────────────────── */
+.deck-slide--statement {
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  padding: clamp(32px, 6vh, 80px) clamp(24px, 5vw, 80px);
+}
+.deck-statement {
+  margin: 0;
+  /* Merriweather is a wide serif with a tall x-height — it needs a smaller
+     size and more leading than the condensed display face. */
+  max-width: 28ch;
+  font-family: var(--serif);
+  /* 200 resolves to the 300 face — that's the lightest Merriweather weight
+     loaded (and the lightest the family ships). */
+  font-weight: var(--serif-light);
+  font-size: clamp(1.5rem, 3.3vw, 2.9rem);
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  text-wrap: pretty;             /* no one-word orphan on the last line */
+  color: var(--text);
+}
+@media (max-width: 860px) {
+  .deck-statement { max-width: none; font-size: clamp(1.15rem, 4.6vw, 1.7rem); }
+}
+
+/* ── Overview: every slide as a live scaled preview (press G) ───────
+   Each card holds a real slide rendered at the live stage's size inside
+   .deck-ov-stage, then scaled to the card — so the preview is the slide
+   itself, in proportion, not a screenshot. */
+.deck-overview {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  padding: 0 clamp(24px, 5vw, 72px) clamp(48px, 8vh, 96px);
+}
+.deck-overview[hidden] { display: none; }
+/* The live deck keeps rendering behind it; hide the slide chrome so it
+   doesn't sit on top of the grid. */
+.deck--overview .deck-controls,
+.deck--overview .deck-hint { display: none; }
+
+.deck-ov-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: clamp(20px, 3vh, 32px) 0 clamp(12px, 2vh, 20px);
+  background: var(--bg);
+}
+.deck-ov-title {
+  margin: 0;
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: clamp(1.3rem, 2.2vw, 2rem);
+  color: var(--text);
+}
+.deck-ov-hint { margin: 0; font-size: var(--t-micro); color: var(--text-dim); letter-spacing: 0.06em; }
+.deck-ov-hint kbd {
+  font-family: var(--mono);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+.deck-ov-head {
+  margin: clamp(26px, 4vh, 44px) 0 clamp(12px, 1.8vh, 20px);
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: clamp(1.15rem, 1.9vw, 1.75rem);
+  color: var(--primary);
+}
+.deck-ov-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 22px);
+}
+.deck-ov-card {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  /* a button doesn't inherit colour or type — the slide inside it must */
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: block;
+  width: 100%;
+}
+.deck-ov-frame {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: var(--ov-ratio, 16 / 9);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+/* Mirrors .deck-stage so the cloned slide lays out exactly as it does
+   live; width/height/scale come from sizeOverview(). */
+.deck-ov-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.deck-ov-num {
+  display: block;
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+.deck-ov-card:hover .deck-ov-num,
+.deck-ov-card:focus-visible .deck-ov-num { color: var(--primary); }
+.deck-ov-card:hover .deck-ov-frame,
+.deck-ov-card:focus-visible .deck-ov-frame {
+  border-color: var(--primary);
+  outline: none;
+}
+@media (max-width: 1100px) { .deck-ov-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 780px)  { .deck-ov-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ── Dual Creator Cam: display title left, screenshot right ────────── */
+.deck-slide--titlefig {
+  justify-content: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+.deck-titlefig {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(28px, 5vw, 80px);
+  align-items: center;
+}
+.deck-titlefig-copy { display: flex; flex-direction: column; gap: clamp(14px, 2.4vh, 28px); }
+.deck-slide--titlefig .deck-title { font-size: var(--t-title-sm); margin: 0; }
+.deck-slide--titlefig .deck-body { max-width: 30ch; color: var(--text-dim); }
+.deck-slide--titlefig .deck-fig-ph { height: 100%; max-height: 100%; }
+
+/* Principles: lead-in bold, the rest as running serif copy. */
+.deck-principles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(20px, 3.4vh, 42px);
+}
+.deck-principle {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-lede);
+  line-height: 1.4;
+  color: var(--text);
+  max-width: 34ch;
+}
+.deck-principle strong { font-weight: 700; color: var(--primary); }
+
+/* Four figures as a 2×2 of the standard bordered stat cards. */
+.deck-statgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 22px);
+  align-content: center;
+  min-height: 0;
+}
+.deck-statgrid .deck-statfig-val { font-size: clamp(2rem, 4vw, 3.4rem); }
+.deck-statgrid .deck-statfig-label { margin-top: clamp(6px, 1vh, 12px); }
+@media (max-width: 860px) {
+  .deck-statgrid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Three figures stacked down the right column, each over its mono label. */
+.deck-numstack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(20px, 3.6vh, 48px);
+  min-height: 0;
+}
+.deck-numstack .deck-statfig-val { font-size: clamp(2.4rem, 5.4vw, 4.6rem); }
+.deck-numstack .deck-statfig-label { margin-top: clamp(6px, 1vh, 12px); max-width: 30ch; }
+
+/* The friction statement runs wider than the default 28ch measure. */
+.deck-statement--wide { max-width: 46ch; }
+
+/* Two jobs-to-be-done, side by side, each with a mono eyebrow. */
+.deck-slide--jobs {
+  position: relative;
+  overflow: hidden;
+  justify-content: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+.deck-jobs {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* wide enough that neither column runs into the lens in the middle */
+  gap: clamp(40px, 8vw, 130px);
+  /* both columns hang from one line, so the eyebrows align even when one
+     headline wraps to two lines and the other doesn't */
+  align-items: start;
+  align-content: center;
+}
+/* The two jobs sit inside the lobes of a Venn: hairline circles wide
+   enough to bleed off the slide, meeting in a narrow lens down the
+   middle — the overlap is the single take that serves both. */
+.deck-jobs-venn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+.deck-jobs-ring {
+  stroke: var(--border);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;   /* stays hairline through `slice` */
+}
+.deck-job { position: relative; z-index: 1; }
+.deck-job .deck-eyebrow { margin-bottom: clamp(14px, 2.2vh, 26px); }
+.deck-job .deck-title { font-size: var(--t-title-sm); margin: 0; }
+
+/* Expression collage: overlapping placeholders on a 4×4 grid, so the
+   frames step across each other instead of sitting in a tidy row. */
+.deck-collage {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: clamp(6px, 0.8vw, 12px);
+  height: 100%;
+  min-height: 0;
+}
+.deck-collage-item { margin: 0; height: 100%; aspect-ratio: auto; }
+.deck-collage-item--a { grid-area: 1 / 1 / 3 / 2; }
+.deck-collage-item--b { grid-area: 1 / 2 / 3 / 5; }
+.deck-collage-item--c { grid-area: 3 / 1 / 5 / 3; }
+.deck-collage-item--d { grid-area: 3 / 3 / 4 / 5; }
+@media (max-width: 860px) {
+  .deck-jobs { grid-template-columns: minmax(0, 1fr); }
+  .deck-collage { height: auto; grid-template-rows: repeat(4, minmax(70px, 1fr)); }
+}
+
+/* MacBook template. The artwork paints over the screen well, so the well
+   sits underneath and shows through the PNG's transparent screen. Insets
+   are measured off the template's white rectangle. */
+.deck-laptop {
+  position: relative;
+  margin: 0;
+  width: 100%;
+  align-self: center;
+}
+/* Oversized and bleeding off the right edge — the machine is the field the
+   copy sits on, not a figure sharing the row with it. Absolute, so the
+   grid column it came from collapses and the title keeps the left rail. */
+.deck-slide--laptop { position: relative; overflow: hidden; }
+/* Fixed, not absolute: the slide box is capped at 1400px and centred, so
+   anchoring to it would leave a gap on a wide screen. Fixed measures off
+   the viewport — and inside an overview card the scaled stage becomes the
+   containing block, so the preview stays true. */
+.deck-slide--laptop .deck-laptop {
+  position: fixed;
+  top: 50%;
+  /* pushed far enough that the right side of the machine is cut by the
+     viewport edge, and scaled up to match */
+  right: -16vw;
+  width: 78vw;
+  transform: translateY(-50%);
+  z-index: 0;
+}
+.deck-slide--laptop .deck-titlefig { grid-template-columns: minmax(0, 1fr); }
+.deck-slide--laptop .deck-titlefig-copy { position: relative; z-index: 1; max-width: 42%; }
+@media (max-width: 860px) {
+  .deck-slide--laptop .deck-laptop { position: relative; top: auto; right: -12%; width: 112%; transform: none; z-index: 0; }
+  .deck-slide--laptop .deck-titlefig-copy { max-width: none; }
+}
+/* Screenshot in the template on its own media slide: centred and as big
+   as the slide allows, rather than bleeding off the edge. */
+/* The screen well is positioned in % of the figure, so the figure has to
+   stay exactly as wide as the artwork — capping the <img> height instead
+   would shrink the art out from under the well. The template is 4:3
+   (3626×2720), so a height cap of 78vh is a width cap of 104vh. */
+.deck-laptop--media {
+  width: min(100%, 1180px, 104vh);
+  margin-inline: auto;
+}
+
+/* iPhone template. Screen well measured off the artwork (938×1916): the
+   display starts at 5.12% / 3.34% and runs 89.77% × 93.32%. */
+/* The figure carries the artwork's own ratio and the art fills it, so the
+   well stays registered to the screen at any size (a height-capped <img>
+   inside a wider figure would slide out from under it). */
+.deck-phone {
+  position: relative;
+  margin: 0 auto;
+  min-height: 0;
+  height: 100%;
+  aspect-ratio: 938 / 1916;
+  max-width: 100%;
+}
+.deck-phone-art {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* Run the well a little past the measured aperture on every side — the
+   bezel paints over the overflow, and it closes the dark hairline that
+   showed between the screen fill and the device. */
+.deck-phone-screen {
+  position: absolute;
+  z-index: 0;
+  left: 4.2%;
+  top: 2.2%;
+  width: 91.6%;
+  height: 95.6%;
+  border-radius: 7%/3.5%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* white, so anything the screenshot doesn't cover reads as app canvas
+     rather than a dark gap */
+  background: #fff;
+}
+/* The exported shots carry a transparent margin (~3% each side, ~1% top
+   and bottom), so at natural size the well shows through around them.
+   Scaling up by 1/0.94 pushes the actual screen content out to the bezel;
+   the overflow is clipped by the well. */
+.deck-phone-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+  /* nudged down so the status-bar area sits clear of the dynamic island */
+  transform: translateY(8px) scale(1.065);
+}
+/* A screenshot that already has its own device chrome — no template, just
+   the image sized to the media column. */
+.deck-figtext-shot {
+  margin: 0;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+}
+.deck-figtext-shot img {
+  max-height: 100%;
+  max-width: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* In a spec layout the template takes the middle column, centred in it —
+   scaled up 15% so the machine holds the slide against the cards. Scale
+   rather than width so it grows without reflowing the columns. */
+.deck-laptop--spec { align-self: center; width: 100%; transform: scale(1.15); }
+
+/* The artwork paints last: an absolutely-positioned screen well would
+   otherwise stack above the static image and cover the notch/camera. */
+.deck-laptop-art { position: relative; z-index: 1; display: block; width: 100%; height: auto; }
+.deck-laptop-screen {
+  z-index: 0;
+  position: absolute;
+  left: 12.6%;
+  top: 16%;
+  width: 75%;
+  height: 64.8%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #0d0c11;
+}
+/* Anchored to the top of the display: a screenshot's header/nav is the
+   part that has to stay, so any crop comes off the bottom. */
+.deck-laptop-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+.deck-laptop-lbl {
+  font-family: var(--mono);
+  font-size: var(--t-nano);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+  padding: 0 8%;
+}
+
+/* Agent roles sit at the four corners around the build placeholder. */
+.deck-agents {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 100%;
+  min-height: 0;
+}
+.deck-slide--agents .deck-fig-ph {
+  width: min(46%, 300px);
+  aspect-ratio: 4 / 3;
+  height: auto;
+}
+/* Roles ring the build placeholder — inset off the column edges so they
+   read as orbiting it, not as slide furniture pinned to the corners. */
+.deck-agent-lbl {
+  position: absolute;
+  font-size: var(--t-list);
+  line-height: 1.2;
+  color: var(--text);
+  white-space: nowrap;
+}
+.deck-agent-lbl--tl { top: 16%; left: 4%; }
+.deck-agent-lbl--tr { top: 16%; right: 4%; }
+.deck-agent-lbl--bl { bottom: 16%; left: 4%; }
+.deck-agent-lbl--br { bottom: 16%; right: 4%; }
+@media (max-width: 860px) {
+  .deck-titlefig { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Photo wall: image placeholders drifting left behind a statement ── */
+.deck-slide--photowall {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: clamp(32px, 6vh, 80px) clamp(24px, 5vw, 80px);
+  overflow: hidden;
+}
+.deck-wall {
+  /* Fixed, so the rows run the full width of the screen rather than
+     stopping at the 1400px slide box. No edge mask — the tiles are meant
+     to run off both sides, and fading them just made the ends murky. */
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: clamp(10px, 1.6vh, 22px);
+  z-index: 0;
+  pointer-events: none;
+}
+/* Veil over the photos: the tiles used to be flat dark boxes, so the
+   statement sat on them cleanly. Real photography is bright, so it needs
+   a scrim — heaviest behind the copy, lighter toward the edges. */
+.deck-wall::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(58% 52% at 50% 50%,
+    rgba(13, 12, 17, 0.93) 0%,
+    rgba(13, 12, 17, 0.78) 55%,
+    rgba(13, 12, 17, 0.55) 100%);
+}
+.deck-wall-row { overflow: hidden; }
+.deck-wall-track {
+  display: flex;
+  /* Spacing lives on the tiles, not as `gap` — with a gap the track's half
+     width would land mid-gutter and the loop would jump. */
+  width: max-content;
+  animation: deck-wall-drift 60s linear infinite;
+}
+/* Each tile is a 16:9 image placeholder; the row height drives the width. */
+.deck-wall-tile {
+  flex: 0 0 auto;
+  height: clamp(140px, 26vh, 320px);
+  aspect-ratio: 16 / 9;
+  margin-right: clamp(10px, 1.6vh, 22px);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.deck-wall-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;      /* 16:9 box, any source aspect — crop, don't squash */
+  display: block;
+}
+/* Half the track is the duplicate pass, so -50% lands on an identical frame. */
+@keyframes deck-wall-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+html.deck-reduce .deck-wall-track { animation: none; }
+.deck-wall-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 30ch;
+  text-align: center;
+  text-shadow: 0 2px 24px rgba(13, 12, 17, 0.55);
+}
+@media (max-width: 860px) {
+  .deck-wall-tile { height: clamp(96px, 18vh, 180px); }
+  .deck-wall-copy { max-width: none; }
+}
+
+/* ── Headline stat figures: big Neudron numbers on white ───────────── */
+/* No background of its own — the shared dark deck surface shows through,
+   same as every other dark slide. */
+/* Inherits the standard slide padding so its title shares the same
+   top-left origin as every other slide. */
+.deck-slide--statfigs { justify-content: flex-start; }
+/* Two columns: the title on the left, the figures stacked on the right. */
+.deck-statfigs-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(28px, 5vw, 88px);
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+/* Both columns share one vertical centre — whether the left column holds
+   the title or a list of points, it lines up with the figures beside it.
+   The negative bottom margin centres them on the slide rather than on the
+   padding box, whose bottom reserves room for the fixed controls. */
+.deck-statfigs-head,
+.deck-statfigs {
+  align-self: center;
+  margin-bottom: calc(var(--title-top) - var(--deck-pad-bottom));
+}
+.deck-statfigs-head { display: flex; justify-content: flex-start; }
+.deck-statfigs-head .deck-title { margin: 0; }
+.deck-statfigs {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(8px, 1.4vh, 16px);
+  /* fixed track width, centered in the column, so every box matches */
+  width: min(100%, 27rem);
+  margin-inline: auto;
+}
+/* Each figure sits in its own box. One padding value drives all four sides;
+   the stack is `fit-content` and the items stretch, so every box ends up the
+   same width as the widest caption. */
+.deck-statfig {
+  text-align: left;
+  padding: clamp(16px, 1.6vw, 24px);
+  border: 1px solid var(--border);
+  border-radius: clamp(12px, 1.2vw, 16px);
+}
+/* Number + delta marker share a baseline; the marker is optically raised
+   so it aligns with the cap height rather than the baseline. */
+/* Number left, delta marker pushed to the right edge of the box. */
+.deck-statfig-num {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.12em;
+}
+.deck-statfig-val {
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;   /* no width jitter while counting up */
+  font-size: var(--t-stat);
+  line-height: 0.9;
+  letter-spacing: -0.01em;
+}
+/* Delta marker: green, and it fades in only once the number has finished
+   counting up (countUp runs 950ms — see deck.js). */
+.deck-statfig-dir {
+  font-size: clamp(0.85rem, 1.9vw, 1.7rem);
+  line-height: 1;
+  transform: translateY(-1.05em);
+  flex: none;
+  color: #b9f2c8;              /* matches --v-green, which is scoped to the viz slides */
+
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  transition-delay: 0s;
+}
+.deck-slide.is-active .deck-statfig-dir {
+  opacity: 1;
+  transition-delay: 1s;
+}
+html.deck-reduce .deck-statfig-dir {
+  opacity: 1; transition: none; transition-delay: 0s;
+}
+/* A move in the wrong direction — light pink instead of the green. */
+.deck-statfig-dir--bad { color: var(--light-pink); }
+.deck-statfig-label {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: var(--t-micro);
+  line-height: 1.4;
+  color: var(--primary);          /* light purple #d0bcff */
+  margin-top: clamp(10px, 1.6vh, 22px);
+}
+@media (max-width: 860px) {
+  .deck-statfigs-split { grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 4vh, 40px); }
+}
+
+/* ── Case-study slides: dark, reusing .cs-main styling ─────────────── */
+.deck-slide--cs {
+  justify-content: flex-start;
+  align-items: center;
+  padding: clamp(56px, 8vh, 112px) clamp(24px, 6vw, 88px) clamp(84px, 11vh, 128px);
+  /* no background of its own — the shared dark deck surface shows through,
+     same as every other dark slide */
+  color: var(--text);
+}
+/* Title slide = the home-hero look: dark purple bg + green gradient name. */
+.deck-slide--cs-title {
+  justify-content: center;
+  align-items: flex-start;
+  text-align: left;
+  /* no background of its own: the dark deck surface + its moving grid
+     show through, with the content in front */
+  background: none;
+  color: var(--text);
+}
+/* Cover pages: title + description in a left text column; a device-shaped
+   image placeholder bleeds off the edge behind/beside the text. */
+.deck-slide--cs-title {
+  position: relative;
+  isolation: isolate;    /* contain the grid / device / text z-index layers */
+  overflow: hidden;      /* clip the device mockup where it bleeds off */
+  /* one shared side padding + one evenly-split column width, so the title
+     (left) and description (right) columns are exactly equal, with a
+     comfortable gutter between them */
+  --cs-pad: clamp(28px, 8vw, 160px);
+  --cs-col: calc((100vw - 2 * var(--cs-pad) - clamp(40px, 4.5vw, 84px)) / 2);
+  padding-left: var(--cs-pad);
+  padding-right: var(--cs-pad);
+}
+.deck-slide--cs-title .deck-cs-paper {
+  position: relative;
+  z-index: 3;            /* title above the scrim (2) and device (1) */
+  color: var(--text);
+  max-width: var(--cs-col);   /* left title column — even with the right */
+  margin-inline: 0;
+}
+.deck-slide--cs-title .cs-main { display: flex; flex-direction: column; }
+/* Scrim on the covers (not the outro): fades up in front of the device so
+   the placeholder/photo emerges from the dark, and the description reads
+   cleanly over it. Behind the title (z 3), above the device (z 1). */
+.deck-slide--cs-title:not(.deck-slide--cs-outro)::after {
+  content: '';
+  /* Fixed, not absolute: the slide box is capped at 1400px and centred,
+     so an absolute scrim left an unshaded band at the screen edges while
+     the laptop behind it runs the full width. */
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to top,
+    rgba(13, 12, 17, 0.96) 0%,
+    rgba(13, 12, 17, 0.78) 22%,
+    rgba(13, 12, 17, 0.32) 42%,
+    transparent 60%);
+}
+/* Description: bottom-right, right-justified, in front of the device. */
+.deck-cs-cover-desc {
+  position: absolute;
+  z-index: 3;
+  right: var(--cs-pad);
+  bottom: clamp(40px, 8vh, 84px);
+  width: var(--cs-col);       /* right column — even with the title column */
+  text-align: right;
+}
+.deck-cs-cover-desc .cs-deck {
+  margin: 0;
+  max-width: none;
+  color: var(--light-pink);   /* light pink, readable over the scrim */
+  font-size: 1.25rem;
+  line-height: 1.45;
+}
+/* Name: Neudron caps filled with the site's light-pink gradient
+   (--light-pink #ffd8e4), white at the baseline fading up into pink. */
+/* `.deck-cs-paper` is in the selector to outrank the content-slide rule
+   `.deck-cs-paper .cs-main h1`, which is defined later in this file. */
+.deck-slide--cs-title .deck-cs-paper .cs-main h1 {
+  text-wrap: balance;   /* no orphan on the last line */
+  font-size: var(--t-cover);
+  /* tight leading — scaleY(1.5) multiplies it back to about normal */
+  line-height: 0.76;
+  /* pad the paint box so background-clip:text doesn't shave the glyphs */
+  padding-block: 0.14em;
+  letter-spacing: -0.01em;
+  /* stretch the glyphs taller without widening them, as on slide one */
+  transform: scaleY(1.5);
+  transform-origin: bottom left;
+  /* the stretch grows upward, so reserve headroom above it */
+  margin: clamp(26px, 7vh, 78px) 0 0;
+  color: #ffd8e4; /* fallback if background-clip:text is unsupported */
+  background: linear-gradient(to top, #fff4f8 0%, #ffe7f0 20%, #ffd8e4 48%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+/* On the cover, only the title shows in the left column. */
+.deck-slide--cs-title .cs-main > *:not(h1) { display: none; }
+
+/* ── Device-shaped image placeholder (bleeds off the slide edge) ────── */
+.deck-cs-device {
+  position: absolute;
+  z-index: 1;                /* behind the text column (z 2), above the grid (z 0) */
+  pointer-events: none;
+  color: var(--text-dim);
+}
+.dcd-window, .dcd-phone { background: #16151c; overflow: hidden; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5); }
+.dcd-screen {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.dcd-screen .deck-photo-ph-icon svg { width: clamp(30px, 3vw, 46px); height: clamp(30px, 3vw, 46px); }
+.deck-cs-device .deck-photo-ph-label {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase;
+}
+/* Both mockups fade up from below, slightly after the slide lands. */
+.deck-cs-device {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: opacity 0.9s ease 0.45s, transform 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.45s;
+}
+.deck-slide--cs-title.is-active .deck-cs-device { opacity: 1; transform: none; }
+html.deck-reduce .deck-cs-device { opacity: 1; transform: none; transition: none; }
+
+/* Real hero art in place of the mock: same slot, same rise-in. */
+.deck-cs-cover-art {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+  top: 42%;
+  right: -4%;
+  width: 58%;
+  opacity: 0;
+  /* rises further than the device mock does — it reads as the art coming
+     up out of the bottom of the slide rather than just settling */
+  transform: translateY(calc(-50% + 140px));
+  transition: opacity 1s ease 0.35s, transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.35s;
+}
+.deck-slide--cs-title.is-active .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); }
+html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); transition: none; }
+.deck-cs-cover-art img,
+.deck-cs-cover-art video {
+  width: 100%;
+  height: auto;
+  max-height: 78vh;
+  object-fit: contain;
+  display: block;
+  border-radius: 12px;
+}
+
+/* MacBook template on a case-study cover: same slot as the desktop mock,
+   sized a little larger so the machine reads at cover scale. */
+/* Sized and bled off the viewport exactly like the Dual Creator Cam
+   process slides — fixed, so it reaches the screen edge rather than the
+   1400px slide box. */
+.deck-cs-device--laptop {
+  position: fixed;
+  top: 50%;
+  right: -16vw;
+  width: 78vw;
+  transform: translateY(calc(-50% + 60px));
+}
+.deck-slide--cs-title.is-active .deck-cs-device--laptop { transform: translateY(-50%); }
+
+/* Desktop: wide browser window, bleeds off the right edge */
+.deck-cs-device--desktop { top: 50%; right: -5%; width: 60%; }
+.deck-slide--cs-title.is-active .deck-cs-device--desktop { transform: translateY(-50%); }
+.deck-cs-device--desktop { transform: translateY(calc(-50% + 60px)); }
+.dcd-window { border: 1px solid var(--border); border-radius: 12px; }
+.dcd-bar {
+  height: 34px; display: flex; align-items: center; gap: 7px; padding: 0 14px;
+  background: #1f1d26; border-bottom: 1px solid var(--border);
+}
+.dcd-bar span { width: 10px; height: 10px; border-radius: 50%; background: #3a3844; }
+.dcd-window .dcd-screen { aspect-ratio: 16 / 10; }
+/* Phone: tall device, bottom bleeds off the slide. Sized so its top
+   reaches about the same height as the desktop mockup's. */
+.deck-cs-device--phone { right: 12%; bottom: -18%; width: clamp(280px, 29vw, 420px); }
+.dcd-phone { position: relative; aspect-ratio: 9 / 19.5; border: 2px solid #2a2833; border-radius: 34px; }
+.dcd-notch {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 38%; height: 18px; background: #000; border-radius: 10px; z-index: 1;
+}
+.dcd-phone .dcd-screen { width: 100%; height: 100%; }
+.deck-cs-paper {
+  /* Restate the case-study tokens so .cs-main rules resolve (they are
+     normally set on .cs-sheet). Dark values, to match the deck surface. */
+  --cs-bg: transparent;
+  --cs-text: var(--text);
+  --cs-muted: var(--text-muted);
+  --cs-border: var(--border);
+  --cs-accent: var(--primary);
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  background: transparent;
+  color: var(--cs-text);
+}
+/* styles.css hardcodes light-mode colours on these (it also serves the
+   site's white case-study overlay, so it can't be changed there). Re-point
+   them at the dark tokens — scoped to the deck only. */
+.deck-cs-paper .cs-main p,
+.deck-cs-paper .cs-main ul.bullets { color: var(--cs-text); }
+.deck-cs-paper .cs-metric .num { color: var(--cs-text); }
+.deck-cs-paper .cs-note,
+.deck-cs-paper .cs-table th { color: var(--cs-muted); }
+.deck-cs-paper .cs-table th { background: rgba(255, 255, 255, 0.04); }
+.deck-cs-paper .cs-table tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+.deck-cs-paper .cs-figure.cs-hero-video { background: transparent; border-color: var(--cs-border); }
+
+/* ── Overview slide: heading in a left column, bullets in a right one.
+      Every case study's Overview section is an <h2> + intro <p> + bullets,
+      and the slide carries data-label="Overview", so this is scoped to it
+      without touching the other section slides. ────────────────────── */
+.deck-slide--cs[data-label="Overview"] { justify-content: center; }
+.deck-slide--cs[data-label="Overview"] .deck-cs-paper { max-width: 1180px; }
+.deck-slide--cs[data-label="Overview"] .cs-main {
+  display: grid;
+  grid-template-columns: minmax(0, 0.72fr) minmax(0, 2fr);
+  column-gap: clamp(32px, 6vw, 96px);
+  align-items: center;
+}
+/* Heading spans every row so it stays centered beside the list. `1 / -1`
+   would only cover row 1 here — these rows are implicit, and -1 resolves to
+   the end of the *explicit* grid. Spanning a large count covers them all;
+   the surplus rows are zero-height and there is no row-gap. */
+.deck-slide--cs[data-label="Overview"] .cs-main > h2 {
+  grid-column: 1;
+  grid-row: 1 / span 99;
+  align-self: center;
+  margin: 0;
+  font-size: var(--t-title);
+}
+.deck-slide--cs[data-label="Overview"] .cs-main > * { grid-column: 2; }
+/* Bullets only — the intro prose lives in the case study, not on the slide. */
+.deck-slide--cs[data-label="Overview"] .cs-main > p { display: none; }
+/* airier list — the reference leads with the bullets, so give them room */
+.deck-slide--cs[data-label="Overview"] .cs-main ul.bullets {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: var(--t-list);
+  line-height: 1.5;
+}
+.deck-slide--cs[data-label="Overview"] .cs-main ul.bullets li { margin-bottom: clamp(12px, 1.8vh, 26px); }
+.deck-slide--cs[data-label="Overview"] .cs-main ul.bullets li:last-child { margin-bottom: 0; }
+.deck-slide--cs[data-label="Overview"] .cs-main ul.bullets li::marker { color: var(--cs-muted); }
+@media (max-width: 860px) {
+  .deck-slide--cs[data-label="Overview"] .cs-main { grid-template-columns: minmax(0, 1fr); row-gap: 18px; }
+  .deck-slide--cs[data-label="Overview"] .cs-main > h2 { grid-column: 1; grid-row: auto; }
+  .deck-slide--cs[data-label="Overview"] .cs-main > * { grid-column: 1; }
+}
+
+/* Tighten the section rhythm for a slide (vs. a long scrolling article). */
+.deck-cs-paper .cs-main > h2:first-child { margin-top: 0; }
+/* Case-study section headings are slide titles too — same step as
+   .deck-title so a heading is the same size whichever deck it's in. */
+.deck-cs-paper .cs-main h1 { font-size: var(--t-title); margin-bottom: 14px; }
+.deck-cs-paper .cs-main h2 { font-size: var(--t-title); margin-top: 0; }
+.deck-cs-paper .cs-main p,
+.deck-cs-paper .cs-main ul.bullets { max-width: none; }
+
+/* A little "N / M" section chip at the top-right of each case-study slide */
+.deck-slide--cs::before {
+  content: attr(data-label);
+  position: absolute;
+  top: clamp(14px, 2.4vw, 26px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 70vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  z-index: 2;
+  pointer-events: none;
+}
+/* The title slide already shows the name as an <h1> — no chip needed. */
+.deck-slide--cs-title::before { display: none; }
+
+/* Back button variant (bottom-left, while in a case study) */
+.deck-exit--back { color: var(--text); }
+.deck-exit--back svg { margin-right: -2px; }
+
+/* Case-study slides are dark now, so the chrome keeps the deck's default
+   light-on-dark treatment — no per-slide recoloring needed. */
+
+/* The deck opens from the keyboard (P) or ?present — there is no nav
+   trigger, so the old .nav-present styles are gone with it. */
+
+/* ── Small screens: stack + shrink chrome ──────────────────────────── */
+@media (max-width: 720px) {
+  .deck-slide { padding: 64px 24px 96px; }
+  .deck-lede, .deck-body { max-width: none; }
+  .deck-cols { grid-template-columns: 1fr; }
+  .deck-counter { display: none; }
+}
+
+/* ── Hint toast (first entry) ──────────────────────────────────────── */
+.deck-hint {
+  position: absolute;
+  top: clamp(16px, 2.4vw, 28px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.5s ease;
+}
+.deck-hint kbd {
+  font-family: var(--mono);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 0.75rem;
+  color: var(--text);
+}
+.deck-hint.is-hidden { opacity: 0; pointer-events: none; }
