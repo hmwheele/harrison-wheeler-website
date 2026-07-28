@@ -123,6 +123,16 @@ Painted once on `.deck::before` so the drift never resets between slides;
 visibility is toggled per-slide via the `deck--grid` class. Shown **only**
 on: title, both About slides, and case-study covers/outros.
 
+## Type rules
+
+**A slide title is a slide title.** Every `.deck-title` renders at
+`--t-title`, including the ones in a left rail beside a figure, a stat
+grid, or a diagram (`.deck-slide--titlefig` and everything built on it:
+`titleSideSlide`, `titleFigureSlide`, the role and results slides). Never
+step a title down to `--t-title-sm` to make a split layout fit — narrow the
+column or shorten the title instead. `--t-title-sm` is for headings *inside*
+a column that sit below a real slide title (e.g. `.deck-job`).
+
 ## Shared elements between slides
 
 An element marked `data-shared="<key>"` that appears on two consecutive

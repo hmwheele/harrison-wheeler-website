@@ -398,8 +398,17 @@
   /* The home page's photo card (tilted 4:5 portrait with the spinning
      Amplitude badge), cloned so it stays in sync with the site. Used on
      more than one slide, so ids are made unique per copy. */
+  /* The companies behind "a decade leading design". Deck-only, and they sit
+     outside the photo — the site's portrait carries no logos. */
+  var PORTRAIT_LOGOS = ['assets/logos/linkedin.jpg', 'assets/logos/zendesk.jpg'];
+  function portraitLogos() {
+    return el('span.deck-portrait-logos', { 'aria-hidden': 'true' },
+      [el('span.deck-portrait-logos-lbl', null, ['Previously'])].concat(
+        PORTRAIT_LOGOS.map(function (src) { return el('img', { src: src, alt: '' }); })));
+  }
+
   var portraitSeq = 0;
-  function portraitCard() {
+  function portraitCard(withLogos) {
     var photo = $('.timeline-photo');
     if (!photo) return null;
     var card = photo.cloneNode(true);
@@ -417,7 +426,11 @@
     // data-shared marks an element that persists across slides — the deck
     // cuts (no transition) between two slides that share a key, so this
     // stays put instead of cross-fading.
-    return el('div.deck-portrait', { 'aria-hidden': 'true', 'data-shared': 'portrait' }, [card]);
+    // The frame matches the card's box, so anything anchored to it (the
+    // logos) lines up with the photo rather than the whole column.
+    var frame = el('div.deck-portrait-frame', null,
+      withLogos ? [card, portraitLogos()] : [card]);
+    return el('div.deck-portrait', { 'aria-hidden': 'true', 'data-shared': 'portrait' }, [frame]);
   }
 
   // Empty framed placeholder for the right column — drop a real <img> in
@@ -482,7 +495,7 @@
       el('h2.deck-title', null, ['About']),
       el('p.deck-body', null, [big.textContent.trim()])
     ])];
-    var portrait = portraitCard();
+    var portrait = portraitCard(true);   // logos ride alongside on About
     if (portrait) kids.push(portrait);
     return el('section.deck-slide.deck-slide--belief.deck-slide--split', { 'data-label': 'About' }, kids);
   }
@@ -539,10 +552,16 @@
       var im = el('img.deck-media-img' + (i === 0 ? '.is-shown' : ''), { src: src, alt: '' });
       portrait.appendChild(im);
     });
+    var square = mediaPlaceholder('square', 'Photo · 1:1', IMG);
+    square.classList.add('deck-media-ph--filled');
+    square.appendChild(el('img.deck-media-img.is-shown', { src: 'assets/slide/about/cat.jpg', alt: '' }));
+    var landscape = mediaPlaceholder('landscape', 'Video · 16:9', PLAY);
+    landscape.classList.add('deck-media-ph--filled');
+    landscape.appendChild(el('img.deck-media-img.is-shown', { src: 'assets/slide/about/fujiclip.gif', alt: '' }));
     var media = el('div.deck-globe-media', { 'aria-hidden': 'true' }, [
-      mediaPlaceholder('landscape', 'Video · 16:9', PLAY),
+      landscape,
       portrait,
-      mediaPlaceholder('square', 'Photo · 1:1', IMG)
+      square
     ]);
     return el('div.deck-globe', { 'aria-hidden': 'true' }, [
       el('div.deck-globe-map', { 'data-globe': '' }),
@@ -813,10 +832,29 @@
       return SKIP.indexOf(c.getAttribute('data-cs') || '') < 0;
     });
     if (!cards.length) return null;
-    var items = cards.map(function (c, i) {
+    /* Deck-only studies have no card on the site, so they're appended here.
+       `{ deckOnly: key }` stands in for the card element. */
+    var entries = cards.concat([{ deckOnly: 'accelerate' }]);
+    var items = entries.map(function (c, i) {
+      var num = (i < 9 ? '0' : '') + (i + 1);
+      if (c.deckOnly) {
+        return el('li.deck-work-item', null, [
+          el('a.deck-work-link', {
+            href: '#present=cs.' + c.deckOnly + '.0',
+            'data-cs-key': c.deckOnly,
+            'aria-label': DECK_ONLY_STUDIES[c.deckOnly].title + ' — present as slides'
+          }, [
+            el('span.deck-work-num', { 'aria-hidden': 'true' }, [num]),
+            el('span.deck-work-title', null, [DECK_ONLY_STUDIES[c.deckOnly].title]),
+            el('span.deck-work-arrow', {
+              'aria-hidden': 'true',
+              html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+            })
+          ])
+        ]);
+      }
       var title = c.querySelector('h3');
       var label = title ? title.textContent.trim() : 'Case study';
-      var num = (i < 9 ? '0' : '') + (i + 1);
       // Carry the case-study key so a click opens it as its own deck.
       return el('li.deck-work-item', null, [
         el('a.deck-work-link', {
@@ -1400,7 +1438,7 @@
          parent's background. */
       el('div.deck-about-grid', null, LEAD_PRINCIPLES.map(function (c, i) {
         return el('div.deck-lead-cell', null, [
-          el('span.deck-lead-num', { 'aria-hidden': 'true' }, [String(i + 1)]),
+          el('span.deck-lead-num', { 'aria-hidden': 'true' }, [['I', 'II', 'III'][i]]),
           el('article.deck-about-card', null, [
             el('h3', null, [c.h]),
             el('p', null, [c.p])
@@ -1414,7 +1452,7 @@
      behind a centred serif statement. Each row's tiles are duplicated so
      the -50% translate loops seamlessly; rows differ in speed/offset so
      the wall never reads as one solid block sliding. */
-  var WALL_IMAGES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(function (n) {
+  var WALL_IMAGES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map(function (n) {
     return 'assets/slide/5_introduction/' + n + '.jpg';
   });
 
@@ -1783,11 +1821,15 @@
   function slideDgmVenn() { return diagramSlide('Overview', 'Marketing overview', diagramVenn()); }
 
   var HOME_BUILDERS = [
-    slideTitle, slideBelief, slidePlaces, slideAboutCards, slideHowILead, slidePhotoWall, slideTimeline, slideWork,
+    // the photo wall closes the About run rather than sitting after How I lead
+    // slideOrgTree also opens the Pods case study — the builder runs twice,
+    // so each deck gets its own copy of the diagram.
+    slideTitle, slideBelief, slidePlaces, slidePhotoWall, slideAboutCards, slideHowILead, slideOrgTree, slideWork,
     slidePodcast, slideCTA
   ];
   /* Cut from the main flow (the builders are still defined and can be
      dropped back into the list above at any point):
+       slideTimeline    'Career'       A decade leading design
        slideLeadcraft   'LeadCraft'    LeadCraft
        slideCommunity   'Community'    Community
        slideStatement   'Context'      statement slide
@@ -1847,6 +1889,39 @@
   /* A statement slide: the line alone, centred on both axes. The shapes and
      pills that used to sit under it are gone — INFLUENCES is kept in case
      they're wanted back. */
+  /* What the evidence that follows is evidence of: title in the left rail,
+     the four signals as a 2x2 beside it. */
+  var GROWTH_SIGNALS = [
+    'Compounding Debt',
+    'Experience',
+    'New User Acquisition'
+  ];
+
+  /* The three threads the evidence pulled together, framed before the
+     buy-in story. */
+  var MAKING_SENSE = ['Marketing lifecycle', 'User retention', 'Operational challenges'];
+
+  function slideMakingSense() {
+    return titleSideSlide('Making sense of it', 'Making Sense of It',
+      el('div.deck-quad.deck-quad--stack', null, MAKING_SENSE.map(function (t) {
+        return el('div.deck-quad-item', null, [el('p.deck-quad-title', null, [t])]);
+      })));
+  }
+
+  function slideSignals() {
+    return titleSideSlide('Understanding the signals', 'Understanding the Signals',
+      el('div.deck-quad.deck-quad--stack', null, GROWTH_SIGNALS.map(function (t) {
+        return el('div.deck-quad-item', null, [el('p.deck-quad-title', null, [t])]);
+      })));
+  }
+
+  /* The drop-off, stated plainly — it sets up the verbatims that follow. */
+  function slideNeverLaunched() {
+    return el('section.deck-slide.deck-slide--statement', { 'data-label': 'Never launched' }, [
+      el('p.deck-statement', null, ['8 out of 10 users never launched a campaign.'])
+    ]);
+  }
+
   function slideOutsideInfluences() {
     return el('section.deck-slide.deck-slide--influences', { 'data-label': 'Influences' }, [
       el('h2.deck-title', null, ['Outside competitive influences'])
@@ -1855,11 +1930,6 @@
 
   // Three problem columns — the prose in the Background section, split out.
   var DEBT_COLUMNS = [
-    { head: 'Product problem', items: [
-      '80% customer churn',
-      'Lowest NPS in product history',
-      'Top-50 user complaints traced back to self-serve gaps'
-    ] },
     { head: 'Business problem', items: [
       "Surfaces existed but didn't connect: boosting, notifications, recommendations, billing, measurement",
       'Campaign lifecycle is 90 days — UX treated each touchpoint as a one-off',
@@ -1949,8 +2019,13 @@
       el('h2.deck-title', null, ['Top 50 issues were put on the backlog for new revenue driving projects']),
       // The verbatims carry this slide on their own — no screenshot beside them.
       el('div.deck-top50-body', null, [
+        /* Feedback frame: avatar slot on the left, the verbatim beside it —
+           the layout from the source Figma frame. */
         el('ul.deck-quote-list', null, TOP50_QUOTES.map(function (q) {
-          return el('li.deck-quote-note', null, [q]);
+          return el('li.deck-quote-note', null, [
+            el('span.deck-quote-avatar', { 'aria-hidden': 'true' }, []),
+            el('p.deck-quote-text', null, [q])
+          ]);
         }))
       ]),
       el('p.deck-slide-note', null, ['A part of the presentation on product quality I gave at LMS all-hands'])
@@ -2051,9 +2126,9 @@
   ];
 
   function slideUnderstandingData() {
-    return el('section.deck-slide.deck-slide--pointsplit', { 'data-label': 'Understanding the data' }, [
+    return el('section.deck-slide.deck-slide--pointsplit', { 'data-label': 'User retention' }, [
       el('div.deck-split-head', null, [
-        el('h2.deck-title', null, ['Understanding the data']),
+        el('h2.deck-title', null, ['User retention']),
         el('p.deck-split-sub', null, ['Opportunity was left on the table'])
       ]),
       el('ul.deck-split-list', null, DATA_POINTS.map(function (d) {
@@ -2063,41 +2138,129 @@
   }
 
   // The 90-day marketing lifecycle, drawn as one continuous loop.
+  /* The 90-day marketing lifecycle: four phase panels under a day 1 → day 90
+     arrow, each holding its milestones as a labelled dot. `x`/`y` are
+     fractions of the panel, so a milestone sits where it does on the
+     original whiteboard rather than on a grid. Execution is the phase the
+     work focused on, so it carries the accent outline. */
+  var LIFECYCLE_PHASES = [
+    { name: 'Onboarding', dots: [
+      { t: 'Campaign Manager', x: 0.22, y: 0.46 },
+      { t: 'Install insight tag', x: 0.62, y: 0.72 }
+    ] },
+    { name: 'Plan', dots: [
+      { t: 'Creates campaign', x: 0.14, y: 0.42 },
+      { t: 'Build audience', x: 0.46, y: 0.62 },
+      { t: 'Launch campaign', x: 0.82, y: 0.36 }
+    ] },
+    { name: 'Execution', focus: true, dots: [
+      { t: 'Completes campaign', x: 0.42, y: 0.32 },
+      { t: 'Optimizations and recommendations', x: 0.14, y: 0.68 },
+      { t: 'Performance measurement', x: 0.76, y: 0.52 }
+    ] },
+    { name: 'Evaluation', dots: [
+      { t: 'Quarterly Performance Review', x: 0.58, y: 0.50 },
+      { t: 'Audience segmentation', x: 0.20, y: 0.74 }
+    ] }
+  ];
+
+  function diagramLifecycle() {
+    var W = 1200, H = 560, pad = 20;
+    var railY = 44, panelTop = 96, panelH = H - panelTop - 24;
+    var gap = 14, panelW = (W - pad * 2 - gap * 3) / 4;
+    var k = [];
+
+    // Day 1 → Day 90 rail: dot at the start, arrowhead at the end.
+    k.push(sEl('defs', null, [
+      sEl('marker', {
+        id: 'dgm-life-arrow', markerWidth: 10, markerHeight: 8,
+        refX: 9, refY: 4, orient: 'auto'
+      }, [sEl('path', { d: 'M0,0 L10,4 L0,8 Z', fill: 'var(--dgm-line)' })])
+    ]));
+    k.push(sEl('text', { x: pad, y: railY - 16, 'text-anchor': 'start', class: 'dgm-life-day', text: 'Day 1' }));
+    k.push(sEl('text', { x: W - pad, y: railY - 16, 'text-anchor': 'end', class: 'dgm-life-day', text: 'Day 90' }));
+    k.push(sEl('circle', { cx: pad + 3, cy: railY, r: 3.5, fill: 'var(--dgm-line)' }));
+    k.push(sEl('line', {
+      x1: pad + 8, y1: railY, x2: W - pad, y2: railY,
+      stroke: 'var(--dgm-line)', 'stroke-width': 1.5, 'marker-end': 'url(#dgm-life-arrow)'
+    }));
+
+    LIFECYCLE_PHASES.forEach(function (p, pi) {
+      var px = pad + pi * (panelW + gap);
+      k.push(sEl('rect', {
+        x: px, y: panelTop, width: panelW, height: panelH, rx: 10,
+        fill: 'var(--dgm-node)',
+        stroke: p.focus ? 'var(--dgm-node-bd)' : 'var(--dgm-line)',
+        'stroke-width': p.focus ? 2 : 1,
+        class: p.focus ? 'dgm-life-panel dgm-life-panel--focus' : 'dgm-life-panel'
+      }));
+      k.push(sEl('text', {
+        x: px + panelW / 2, y: panelTop + 34, 'text-anchor': 'middle',
+        class: 'dgm-lane-lbl', text: p.name
+      }));
+
+      p.dots.forEach(function (d) {
+        var cx = px + d.x * panelW, cy = panelTop + d.y * panelH;
+        // Label above the dot, wrapped to the panel so it never crosses out
+        // of its phase; the last line sits just clear of the dot.
+        var charW = 8.6;                       // 16px serif, roughly
+        var lines = wrapWords(d.t, Math.floor((panelW - 20) / charW));
+        var widest = lines.reduce(function (w, l) { return Math.max(w, l.length); }, 0);
+        // keep the centred label inside its own panel
+        var half = (widest * charW) / 2;
+        var lx = Math.max(px + half + 8, Math.min(cx, px + panelW - half - 8));
+        lines.forEach(function (ln, li) {
+          k.push(sEl('text', {
+            x: lx, y: cy - 26 - (lines.length - 1 - li) * 22,
+            'text-anchor': 'middle', class: 'dgm-life-lbl', text: ln
+          }));
+        });
+        k.push(sEl('circle', { cx: cx, cy: cy, r: 9, fill: 'var(--dgm-ink)', class: 'dgm-life-dot' }));
+      });
+    });
+
+    return svgRoot(W, H, k);
+  }
+
   function slideLifecycle() {
-    return el('section.deck-slide.deck-slide--figure', { 'data-label': 'User retention' }, [
-      el('div.deck-split-head', null, [
-        el('h2.deck-title', null, ['User retention']),
-        el('p.deck-split-sub', null, ['Illustrating the marketing lifecycle'])
-      ]),
-      figurePlaceholder('wide', 'Marketing lifecycle, day 1 to day 90 — Campaign Manager, install insight tag, create campaign, build audience, launch campaign, optimizations and recommendations, completes campaign, performance measurement, audience segmentation, quarterly performance review')
+    // labelled for its own title — "User retention" now belongs to the
+    // data slide before it
+    return el('section.deck-slide.deck-slide--diagram-full', { 'data-label': 'Marketing lifecycle' }, [
+      el('h2.deck-title', null, ['The marketing lifecycle']),
+      el('div.deck-diagram-stage', null, [diagramLifecycle()])
     ]);
   }
 
   // Six months of socialization, month by month.
+  /* By quarter rather than by month — thirteen monthly stops made the
+     callouts taller than the slide. The run spans six quarters, so the
+     labels come back around to Q3/Q4 at the end. */
   var BUY_IN_STEPS = [
-    { when: 'March',    what: 'Quality presentation at LMS all-hands' },
-    { when: 'March',    what: 'Work with PMs that owned growth numbers' },
-    { when: 'March',    what: 'Drafted initial strategy document' },
-    { when: 'April',    what: 'Co-authored strategy doc with xfn partners' },
-    { when: 'May',      what: 'Socialize with product owners across LMS' },
-    { when: 'June',     what: 'Identify top pain points where drive biggest upside for self-serve customers' },
-    { when: 'July',     what: 'All four product areas established “ideal state” narrative' },
-    { when: 'August',   what: 'Gained Sr. Director support and research funding' },
-    { when: 'October',  what: 'Add to Q2 planning' },
-    { when: 'November', what: 'Socialize with product owners across LMS' },
-    { when: 'December', what: 'Get support at VP-level' },
-    { when: 'Q1',       what: 'Build' },
-    { when: 'Q2',       what: 'Pilot' }
+    { when: 'Q3', what: 'Quality presentation at LMS all-hands' },
+    { when: 'Q3', what: 'Partnered with the PMs who owned growth' },
+    { when: 'Q3', what: 'Drafted the initial strategy document' },
+    { when: 'Q4', what: 'Co-authored the strategy doc with xfn partners' },
+    { when: 'Q4', what: 'Socialized it with product owners across LMS' },
+    { when: 'Q4', what: 'Named the pain points with the biggest self-serve upside' },
+    { when: 'Q1', what: 'All four product areas set an “ideal state” narrative' },
+    { when: 'Q1', what: 'Gained Sr. Director support and research funding' },
+    { when: 'Q2', what: 'Added to the planning cycle' },
+    { when: 'Q2', what: 'Second round of socializing across LMS' },
+    { when: 'Q2', what: 'Secured VP-level support' },
+    // same labels as the first two stops, so they group under their own key
+    { when: 'Q3', key: 'Q3-2', what: 'Build' },
+    { when: 'Q4', key: 'Q4-2', what: 'Pilot' }
   ];
 
   // One stop per month, in order; months with more than one thing that
   // happened stack as bullets under that month. Same chevron treatment as
   // the Roadmap slide, callouts alternating above and below the bar.
   var BUY_IN_MONTHS = (function () {
-    var out = [], byMonth = {};
+    var out = [], byKey = {};
     BUY_IN_STEPS.forEach(function (s) {
-      if (!byMonth[s.when]) { byMonth[s.when] = { when: s.when, items: [] }; out.push(byMonth[s.when]); }
-      byMonth[s.when].items.push(s.what);
+      var k = s.key || s.when;
+      if (!byKey[k]) { byKey[k] = { when: s.when, items: [] }; out.push(byKey[k]); }
+      byKey[k].items.push(s.what);
     });
     return out;
   })();
@@ -2117,10 +2280,41 @@
   function diagramBuyIn() {
     var months = BUY_IN_MONTHS;
     var n = months.length;
-    var W = 1600, H = 720, y = 450, h = 26, pad = 20, notch = 15, x0 = pad;
+    // Same canvas and bar metrics as the Result roadmap, so the two
+    // timelines read as one component across the decks.
+    var W = 1200, h = 24, pad = 20, notch = 14, x0 = pad;
     var segW = (W - pad * 2) / n;
-    var top = y - h / 2, bot = y + h / 2;
     var k = [];
+
+    /* Callout metrics copied from the Result roadmap (mono bullets at
+       15px). `maxChars` is capped so a block stays inside the two segments
+       between it and the next callout on its own side — they alternate
+       above/below the bar, so same-side neighbours sit 2 * segW apart. */
+    // charW is in user units: the bullets set at 15px mono, ~0.6em per glyph,
+    // so a character is a shade over 9 — undercount it and neighbouring
+    // callouts on the same side collide.
+    var lineH = 23, titleH = 36, padY = 14, gap = 48, charW = 9.4;
+    var maxChars = Math.max(14, Math.floor((2 * segW - 24) / charW));
+
+    // Measure every block first: the bar's y and the viewBox height both fall
+    // out of how tall the tallest stack above and below it turn out to be.
+    var blocks = months.map(function (m, mi) {
+      var lines = [];
+      m.items.forEach(function (t) {
+        wrapWords(t, maxChars).forEach(function (ln, i) {
+          lines.push({ text: (i === 0 ? '·  ' : '   ') + ln, indent: i > 0 });
+        });
+      });
+      return { m: m, mi: mi, below: mi % 2 === 1, lines: lines,
+               h: titleH + lines.length * lineH + padY };
+    });
+    var tallestAbove = blocks.reduce(function (t, b) { return b.below ? t : Math.max(t, b.h); }, 0);
+    var tallestBelow = blocks.reduce(function (t, b) { return b.below ? Math.max(t, b.h) : t; }, 0);
+
+    var y = 44 + tallestAbove + gap + h / 2;      // 44 leaves room for the header
+    var top = y - h / 2, bot = y + h / 2;
+    var H = Math.ceil(bot + gap + tallestBelow + 24);
+    var alignTop = top - gap - tallestAbove;
 
     // Segment fill ramps from the deck's darkest purple to the brightest,
     // same endpoints as the Roadmap chevron.
@@ -2147,23 +2341,6 @@
     k.push(sEl('g', { 'clip-path': 'url(#dgm-buyin-clip)' }, bars));
     k.push(sEl('text', { x: x0 + 2, y: top - 14, 'text-anchor': 'start', class: 'dgm-chev-lbl', text: 'Socialize the opportunity' }));
 
-    var lineH = 21, titleH = 54, gap = 44, maxChars = 26, charW = 8.6;
-
-    // Measure first: every callout above the bar starts at the same y, set by
-    // the tallest one, so the month headers line up on a single margin.
-    var blocks = months.map(function (m, mi) {
-      var lines = [];
-      // one bullet marker per item; wrapped continuation lines hang indented
-      m.items.forEach(function (t) {
-        wrapWords(t, maxChars).forEach(function (ln, i) {
-          lines.push({ text: (i === 0 ? '·  ' : '   ') + ln, indent: i > 0 });
-        });
-      });
-      return { m: m, mi: mi, below: mi % 2 === 1, lines: lines, h: titleH + lines.length * lineH };
-    });
-    var tallestAbove = blocks.reduce(function (t, b) { return b.below ? t : Math.max(t, b.h); }, 0);
-    var alignTop = top - gap - tallestAbove;
-
     blocks.forEach(function (b) {
       var m = b.m, below = b.below, lines = b.lines, boxH = b.h;
       var dotX = x0 + b.mi * segW + segW / 2;
@@ -2180,10 +2357,10 @@
         stroke: 'var(--dgm-line)', 'stroke-width': 1.5
       }));
       k.push(sEl('circle', { cx: dotX, cy: y, r: 4, fill: 'var(--dgm-ink)' }));
-      k.push(sEl('text', { x: bx + 2, y: boxTop + 34, 'text-anchor': 'start', class: 'dgm-callout-title', text: m.when }));
+      k.push(sEl('text', { x: bx + 2, y: boxTop + 14, 'text-anchor': 'start', class: 'dgm-callout-title', text: m.when }));
       lines.forEach(function (t, li) {
         k.push(sEl('text', {
-          x: bx + 4, y: boxTop + titleH + 4 + li * lineH,
+          x: bx + 4, y: boxTop + titleH + 8 + li * lineH,
           'text-anchor': 'start', class: 'dgm-callout-item', text: t.text
         }));
       });
@@ -2233,7 +2410,9 @@
   function slideOverviewModules() {
     return el('section.deck-slide.deck-slide--annotated', { 'data-label': 'Marketing Overview' }, [
       el('div.deck-annotated', null, [
-        figurePlaceholder('screen', 'Marketing Overview module layout'),
+        el('figure.deck-annotated-shot', null, [
+          el('img', { src: 'assets/slide/growth/layout.png', alt: '' })
+        ]),
         el('ol.deck-callouts', null, OVERVIEW_MODULES.map(function (m) {
           // lbl + desc share one grid cell, so the ::before counter keeps
           // its own column instead of pushing the description onto a new row
@@ -2470,7 +2649,7 @@
     ]);
   }
 
-  function specSlide(label, title, shape, phLabel, left, right, sub, shot) {
+  function specSlide(label, title, shape, phLabel, left, right, sub, shot, shotMode) {
     var head = [el('h2.deck-title', null, [title])];
     if (sub) head.push(el('p.deck-split-sub', null, [sub]));
     // with no right-hand column the screen takes that space instead of
@@ -2480,7 +2659,7 @@
     var art = shape === 'laptop'
       ? laptopFrame(phLabel, shot)
       : (shape === 'phone' && shot)
-        ? phoneFrame(phLabel, shot, true)
+        ? phoneFrame(phLabel, shot, shotMode || true)
         : figurePlaceholder(shape, phLabel);
     if (shape === 'laptop') art.classList.add('deck-laptop--spec');
     var cols = [el('div.deck-spec-col', null, left.map(specCard)), art];
@@ -2524,7 +2703,7 @@
     ], [
       { lbl: 'Promote associated products and services', desc: 'Promote associated products and services tied to event' },
       { lbl: 'Increase network engagement', desc: 'Enhance the existing event surface with an in-person tentpole context.' }
-    ]);
+    ], null, 'assets/slide/16_events_ad_experience/attendee.jpg', 'scroll');
   }
 
   function slideMarketingSales() {
@@ -2780,9 +2959,12 @@
   /* The MacBook template with its screen area exposed: the artwork is a
      transparent PNG of the laptop, and the screen well is positioned to
      the white rectangle inside it, so a screenshot drops straight in. */
+  /* `src` may instead be a ready-made media element (a <video> lifted from
+     the case study), which drops into the well as-is. */
   function laptopFrame(label, src) {
     var screen = el('div.deck-laptop-screen', null, [
-      src ? el('img', { src: src, alt: '' })
+      src && src.nodeType === 1 ? src
+      : src ? el('img', { src: src, alt: '' })
           : el('span.deck-laptop-lbl', null, [label])
     ]);
     return el('figure.deck-laptop', null, [
@@ -2791,30 +2973,58 @@
     ]);
   }
 
+  /* Several screenshots in one machine: click the screen to step through
+     them, wrapping at the end. Dots under the copy show where you are. */
+  function laptopGallery(srcs) {
+    var frame = laptopFrame('', srcs[0]);
+    frame.classList.add('deck-laptop--gallery');
+    var screen = frame.querySelector('.deck-laptop-screen');
+    screen.innerHTML = '';
+    var shots = srcs.map(function (src, i) {
+      return el('img' + (i === 0 ? '.is-on' : ''), { src: src, alt: '' });
+    });
+    shots.forEach(function (im) { screen.appendChild(im); });
+
+    var at = 0;
+    function show(next) {
+      shots[at].classList.remove('is-on');
+      at = (next + srcs.length) % srcs.length;
+      shots[at].classList.add('is-on');
+    }
+    frame.addEventListener('click', function () { show(at + 1); });
+    return frame;
+  }
+
   /* iPhone template, same idea as laptopFrame: the well is measured to the
      artwork's screen and sits under the transparent PNG, so the bezel and
      dynamic island paint over whatever is in it. */
   /* `fit` shows the whole screenshot rather than filling the well with it —
      for captures that aren't the template's exact aspect ratio and would
      otherwise lose an edge to the crop. */
+  /* `fit` may also be the string 'scroll': a long screenshot keeps its full
+     height and the screen well scrolls it under the bezel on hover. */
   function phoneFrame(label, src, fit) {
+    var scroll = fit === 'scroll';
     var screen = el('div.deck-phone-screen', null, [
       src ? el('img', { src: src, alt: '' })
           : el('span.deck-laptop-lbl', null, [label])
     ]);
-    return el('figure.deck-phone' + (fit ? '.deck-phone--fit' : ''), null, [
+    return el('figure.deck-phone' + (scroll ? '.deck-phone--scroll' : fit ? '.deck-phone--fit' : ''), null, [
       screen,
       el('img.deck-phone-art', { src: 'assets/templates/iphone1.png', alt: '' })
     ]);
   }
 
+  /* `shot` may be an array — the machine then holds a click-through
+     gallery of those screenshots instead of a single still. */
   function titleFigureSlide(label, title, figLabel, note, shot) {
     var copy = [el('h2.deck-title', null, [title])];
     if (note) copy.push(el('p.deck-body', null, [note]));
+    var art = Array.isArray(shot) ? laptopGallery(shot) : laptopFrame(figLabel, shot);
     return el('section.deck-slide.deck-slide--titlefig.deck-slide--laptop', { 'data-label': label }, [
       el('div.deck-titlefig', null, [
         el('div.deck-titlefig-copy', null, copy),
-        laptopFrame(figLabel, shot)
+        art
       ])
     ]);
   }
@@ -2981,18 +3191,19 @@
 
   var CS_EXTRA_SLIDES = {
     leadcraft: [
-      { after: 'Overview',   build: slideTrueAtOnce },
-      { after: 'Overview',   build: slideOutsideInfluences },
-      { after: 'Overview',   build: slideCompoundingDebt },
-      { after: 'Overview',   build: slidePushback },
+      { after: 'Overview',   build: slideNeverLaunched },
       { after: 'Overview',   build: slideLegacyModel },
+      { after: 'Overview',   build: slidePushback },
+      { after: 'Overview',   build: slideSignals },
+      { after: 'Overview',   build: slideCompoundingDebt },
       { after: 'Background', build: slideTop50 },
+      { after: 'Background', build: slideMakingSense },
       { after: 'Background', build: slideAcquisition },
       { after: 'Background', build: slideUnderstandingData },
       { after: 'Approach',   build: slideLifecycle },
+      { after: 'Approach',   build: slideSolutionPoints },
+      { after: 'Approach',   build: slideOverviewModules },
       { after: 'Approach',   build: slideBuyIn },
-      { after: 'Solution',   build: slideSolutionPoints },
-      { after: 'Solution',   build: slideOverviewModules },
       { after: 'Outcomes',   build: slideGrowthOutcomes }
     ],
     events: [
@@ -3069,19 +3280,38 @@
   /* Studies whose body hero art does NOT get its own slide after the cover:
      the cover already opens on that same image, so the slide just repeats
      it. Keyed by study. */
-  var CS_SKIP_COVER_MEDIA = ['events'];
+  var CS_SKIP_COVER_MEDIA = ['events', 'video-recorder'];
 
   /* Studies whose cover media slide plays later in the deck rather than
      straight after the cover. Value is the label it should follow. */
   var CS_COVER_MEDIA_AFTER = {
-    leadcraft: 'Solution insights'
+    leadcraft: 'Buy-in'
   };
 
   /* Sections whose screenshots present inside the MacBook template.
      Keyed by case study, listing the section labels. */
-  var CS_LAPTOP_MEDIA = {
+  /* The hero video plays in the template rather than bare on the slide —
+     keyed by the label its media group carries (the study title, for the
+     cover art moved later by CS_COVER_MEDIA_AFTER). */
+  var CS_LAPTOP_MEDIA = {};
+
+  /* Sections whose screenshot presents as a split slide instead: the
+     caption becomes the left-column copy and the MacBook runs oversized off
+     the right edge. Keyed by case study, listing the section labels. */
+  var CS_LAPTOP_SPLIT_MEDIA = {
+    leadcraft: ['Background'],
     pods: ['Outcomes']
   };
+
+  /* Slides that play somewhere other than where the section split puts
+     them. Each entry moves `label` to sit directly behind `after`. */
+  var CS_MOVE_AFTER = {
+    leadcraft: [{ label: 'Background — image', after: 'Never launched' }]
+  };
+
+  /* Studies that don't show the lifted "Role" slide. The bullet still comes
+     out of the Overview list either way, so it isn't listed twice. */
+  var CS_SKIP_ROLE = ['leadcraft'];
 
   /* Section slides a given deck drops. The extra slides still anchor to
      these labels — the filter runs after they've been spliced in. */
@@ -3092,7 +3322,302 @@
     /* The prose sections — the purpose-built slides above carry these
        beats, so the body copy would only repeat them. */
     'video-recorder': ['The Problem', 'Customer', 'Approach & Principles',
-                       'The Architecture Pivot', 'Craft & Personalization']
+                       'The Architecture Pivot', 'Craft & Personalization',
+                       'Tracking, Testing & Outcomes']
+  };
+
+  /* ── Accelerate: AI campaign creation ─────────────────────────────
+     A deck-only case study: it has no written case study behind it, so
+     every slide is built here rather than split out of CASE_STUDIES.
+     Fifteen slides, no agenda, no dividers, no outro past the last one. */
+
+  // Title + the bullets under it, for the plain point slides.
+  function pointsSlide(label, title, points) {
+    return el('section.deck-slide.deck-slide--pointsplit', { 'data-label': label }, [
+      el('div.deck-split-head', null, [el('h2.deck-title', null, [title])]),
+      el('ul.deck-split-list', null, points.map(function (t) { return el('li', null, [t]); }))
+    ]);
+  }
+
+  /* Screenshot slide: copy on the left rail, the MacBook oversized and
+     bleeding off the right edge — the same treatment the Dual Creator Cam
+     slides use. The screen well holds the label until a capture replaces it. */
+  function shotSlide(label, phLabel, caption, shot) {
+    return titleFigureSlide(label, label, phLabel, caption, shot);
+  }
+
+  // Campaign Manager Classic, four captures deep.
+  var ACC_CLASSIC_SHOTS = [1, 2, 3, 4].map(function (n) {
+    return 'assets/slide/accelerate/classic/' + n + '.jpg';
+  });
+
+  // The simplified flow, step by step — click through in order.
+  var ACC_SIMPLIFIED_SHOTS = [1, 2, 3, 4, 5, 6].map(function (n) {
+    return 'assets/slide/accelerate/simplified/' + n + '.jpg';
+  });
+
+  var ACC_STEPS = [
+    'User describes their business in a prompt',
+    'System reads LinkedIn data to infer audience and competitor set',
+    'Generates targeting facets',
+    'Generates ad formats'
+  ];
+
+  var ACC_PRINCIPLES = [
+    { w: 'Simple', p: 'Ask for the fewest decisions that still produce a campaign worth running.' },
+    { w: 'Intuitive', p: 'Every step should explain itself in the place where the choice is made.' },
+    { w: 'Trustworthy', p: 'Show what the system did on your behalf, and let you change it.' }
+  ];
+
+  /* Each decision carries the principle it serves, so the three words from
+     the Principles slide keep running through the design decisions. */
+  var ACC_DECISIONS = [
+    { p: 'Simple',
+      d: 'Summaries per section instead of every underlying control' },
+    { p: 'Intuitive',
+      d: 'Explain what a thing does without opening new questions' },
+    { p: 'Trustworthy',
+      d: 'Contextual help inside each box, at the point of the decision' },
+    { p: 'Simple',
+      d: 'Reduce the number of inputs the user has to make in the interface' }
+  ];
+
+  /* The pod hub on its own — same glyph (and noise) as the one at the
+     centre of the Themes diagram, just without the diagram around it. */
+  function podGlyphSvg() {
+    var k = [], defs = sEl('defs', null, [vizNoiseFilter()]);
+    podGlyph(k, defs, 100, 100, 68);
+    k.unshift(defs);
+    return svgRoot(200, 200, k);
+  }
+
+  /* How the design team was organized against the initiative. */
+  var ACC_TEAM = [
+    { key: 'P',  role: 'Principal Designer',
+      desc: 'Drove overall direction for the initiative.' },
+    { key: 'S',  role: 'Staff Designer',
+      desc: 'Drove cohesiveness in craft and quality across the whole project.' },
+    { key: 'Sr', role: 'Sr. Designer',
+      desc: 'Led the additional initiatives feeding into the work.' },
+    { key: 'IC', role: 'Individual Contributor',
+      desc: 'Supported those initiatives alongside the senior designers.' }
+  ];
+
+  /* Kept for reference — the Reflection slide it fed is cut from the deck. */
+  var ACC_REFLECTION = [
+    { h: 'The mandate was not the problem',
+      b: 'We were told to ship AI. The leadership work was finding the real user problem — an 80% drop-off in campaign creation — inside a directive that never named one.' },
+    { h: 'Infrastructure decides the ceiling',
+      b: 'Siloed performance data and rudimentary retrieval capped how much the interface could promise, and no amount of design covered that gap.' },
+    { h: 'The team was the deliverable',
+      b: 'Reorganizing around the surfaces, staffing the gaps, and giving the work a rhythm is what let a mandate-driven effort ship at all.' }
+  ];
+
+  /* The honest second look — what would change on a rerun. */
+  var ACC_DIFFERENT = [
+    'Pressure-test the data layer before committing to the experience: what the system could retrieve should have set the scope',
+    'Ship a narrower first release, with one generative moment done well instead of assistance spread across the flow',
+    'Put the completion-rate goal in front of leadership earlier, so the mandate was measured against the user problem rather than the launch date',
+    'Staff the adjacent surfaces from the start instead of covering them with a consulting posture'
+  ];
+
+  /* Results, consolidated to three figures. The third is the average of the
+     four growth numbers this deck used to list separately: brand awareness
+     97%, website conversions 55%, document ads 64%, video ads 57% → 68%. */
+  var ACC_RESULTS = [
+    { v: '$94M', l: 'annual run rate', dir: 'up' },
+    { v: '41%',  l: 'week-over-week revenue growth', dir: 'up' },
+    { v: '68%',  l: 'average growth across objectives and ad formats', dir: 'up' },
+    // a drop that is a win, so it keeps the green chip rather than --bad
+    // the adoption read, and the one figure that carries the grain wash
+    { v: '14%',  l: 'reduction in churn through campaign creation', dir: 'down', grain: true }
+  ];
+
+  // `dir` adds the same ▲ delta chip the other stat slides use.
+  function statFig(f) {
+    return el('div.deck-statfig' + (f.grain ? '.deck-grain' : ''), null, [
+      el('div.deck-statfig-num', null, [
+        el('span.deck-statfig-val', null, [f.v]),
+        f.dir ? el('span.deck-statfig-dir', { 'data-dir': f.dir, 'aria-hidden': 'true' },
+                   [f.dir === 'down' ? '▼' : '▲']) : null
+      ].filter(Boolean)),
+      el('div.deck-statfig-label', null, [f.l])
+    ]);
+  }
+
+  function buildAccelerateSlides() {
+    var s = [];
+
+    // 1. Title — MacBook template on the cover, same slot as the other
+    // desktop case studies.
+    var coverArt = laptopFrame('', 'assets/slide/accelerate/hero.jpg');
+    coverArt.classList.add('deck-cs-device', 'deck-cs-device--laptop');
+    coverArt.setAttribute('aria-hidden', 'true');
+    s.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-title.deck-slide--acc-title', { 'data-label': 'Accelerate' }, [
+      coverArt,
+      el('div.deck-cs-paper', null, [
+        el('div.cs-main', null, [el('h1', null, ['Accelerate'])])
+      ]),
+      el('div.deck-cs-cover-desc', null, [
+        el('p.cs-deck', null, ['AI-assisted campaign creation in LinkedIn Campaign Manager'])
+      ])
+    ]));
+
+    // 2. The mandate
+    s.push(pointsSlide('The mandate', 'The mandate', [
+      'Q2 2023: every product area in LinkedIn Business was directed to ship an AI product',
+      'Campaign creation was the most complex feature in our experience',
+      'Existing AI in the product was limited to recommendations, and it underperformed'
+    ]));
+
+    /* 3. My role — the "how the work was led" content moved up here, so the
+       team setup sits with the mandate rather than late in the deck. */
+    s.push(titleSideSlide('My role', 'My role',
+      el('div.deck-role-body', null, [
+        el('p.deck-role-title', null, ['Design lead on the initiative']),
+        el('ul.deck-role-list', null, [
+          'Setting the team up for success: staffing the surfaces, reorganizing around the work, and operationalizing how it ran',
+          'Functional direction and critique to the Senior Principal Designer paired with executive leadership',
+          'Direct partnership with the principal engineer on what the system could actually return',
+          'Consultant posture on adjacent surfaces where no dedicated designer was staffed'
+        ].map(function (t) { return el('li', null, [t]); }))
+      ]), '.deck-slide--role'));
+
+    /* The team beat moves up front: who was on it, then what they were
+       working against. (The Themes slide is cut.) */
+    s.push(slidePilotTeam());
+
+    // Campaign Manager Classic
+    s.push(shotSlide('Campaign Manager Classic', '',
+      'Robust by design, and built for the expert rather than the first-time advertiser',
+      ACC_CLASSIC_SHOTS));
+
+    /* Team setup — the pod glyph from the Themes slide on the left, the
+       role rows on the right. */
+    s.push(el('section.deck-slide.deck-slide--roles.deck-slide--teamsetup', { 'data-label': 'Team Setup' }, [
+      el('h2.deck-title', null, ['Team Setup']),
+      el('div.deck-teamsetup', null, [
+        el('div.deck-teamsetup-glyph', { 'aria-hidden': 'true' }, [podGlyphSvg()]),
+        el('ul.deck-roles', null, ACC_TEAM.map(function (r) {
+          return el('li.deck-role', null, [
+            el('span.deck-role-key', null, [r.key]),
+            el('span.deck-role-name', null, [r.role]),
+            el('span.deck-role-desc', null, [r.desc])
+          ]);
+        }))
+      ])
+    ]));
+
+    // 4. The concept
+    s.push(el('section.deck-slide.deck-slide--steps', { 'data-label': 'The concept' }, [
+      el('h2.deck-title', null, ['The concept']),
+      /* Each step is a box holding its own copy, with the numeral straddling
+         the bottom-left corner. */
+      el('ol.deck-steps', null, ACC_STEPS.map(function (t, i) {
+        return el('li.deck-step', null, [
+          el('div.deck-step-fig', null, [
+            el('p.deck-step-text', null, [t]),
+            el('span.deck-step-num', { 'aria-hidden': 'true' }, [String(i + 1)])
+          ])
+        ]);
+      }))
+    ]));
+
+    // 5. The goal
+    s.push(pointsSlide('The goal', 'The goal', [
+      'Increase campaign completion rate',
+      'Our data showed 80% churn in campaign creation',
+      'Focused on small and medium business new user acquisition'
+    ]));
+
+    // 6. Principles — the three words alone
+    s.push(el('section.deck-slide.deck-slide--words', { 'data-label': 'Principles' }, [
+      el('h2.deck-title', null, ['Principles']),
+      // the grain sits in each box, not behind the slide
+      el('div.deck-words', null, ACC_PRINCIPLES.map(function (p) {
+        return el('div.deck-word-block.deck-grain', null, [
+          el('p.deck-word', null, [p.w]),
+          el('p.deck-word-sub', null, [p.p])
+        ]);
+      }))
+    ]));
+
+    // 6. Design decisions
+    s.push(el('section.deck-slide.deck-slide--notes', { 'data-label': 'Design decisions' }, [
+      el('div.deck-notes-head', null, [el('h2.deck-title', null, ['Design decisions'])]),
+      // three across reads as a row; four falls back to the default 2x2
+      el('div.deck-notes' + (ACC_DECISIONS.length === 3 ? '.deck-notes--trio' : ''), null,
+         ACC_DECISIONS.map(function (d) {
+           return el('div.deck-note', null, [
+             el('p.deck-note-principle', null, [d.p]),
+             el('p.deck-note-head', null, [d.d])
+           ]);
+         }))
+    ]));
+
+    // 7. The simplified flow
+    s.push(shotSlide('The simplified flow', '',
+      'Same decisions, sequenced and summarized',
+      ACC_SIMPLIFIED_SHOTS));
+
+    // 8-10, 12-13, 15: point slides
+    // Title and points in the left column, the assistant itself on the right.
+    s.push(el('section.deck-slide.deck-slide--figtext', { 'data-label': 'The chat assistant' }, [
+      el('div.deck-figtext', null, [
+        el('div.deck-figtext-copy', null, [
+          el('h2.deck-title', null, ['The chat assistant']),
+          el('ul.deck-split-list', null, [
+            'A cross-company initiative: LinkedIn was implementing an assistant across the business',
+            'Our work defined the patterns and use cases for the advertising context',
+            'Presented to the broader design organization on where advertising diverges from flagship and jobs'
+          ].map(function (t) { return el('li', null, [t]); }))
+        ]),
+        el('div.deck-figtext-media', null, [
+          // the export carries its own chrome, so it stands on the slide
+          // as-is rather than going into a device template
+          el('figure.deck-figtext-shot.deck-figtext-shot--chat', null, [
+            el('img', { src: 'assets/slide/accelerate/chat/chat.png', alt: '' })
+          ])
+        ])
+      ])
+    ]));
+
+    s.push(pointsSlide('The constraint', 'The constraint that decided the outcome', [
+      'Performance data lived in silos across the product',
+      'Retrieval was rudimentary',
+      'Design could not compensate for what the backend could not return'
+    ]));
+
+
+    /* 11. Results — title on the left, the four figures as a 2x2 on the
+       right. --counts opts into the shared count-up. */
+    s.push(titleSideSlide('Results', 'Results',
+      el('div.deck-metric-quad', null, ACC_RESULTS.map(statFig)),
+      '.deck-slide--counts'));
+
+    // 12-13
+    s.push(pointsSlide('Where the work went next', 'Where the work went next', [
+      'Recommendations in the Campaign Manager overview',
+      'Post-campaign reporting: campaign health insights and forecasting',
+      'Experiments shipped to gather signal for longer-term investment'
+    ]));
+
+    // 14. What I carry forward
+    s.push(pointsSlide('What I carry forward', 'What I carry forward', [
+      'AI features fail at the data layer before they fail at the interface',
+      'Trust is a design requirement with an engineering dependency',
+      'A mandate is a starting condition, and the leadership work is finding the real problem inside it'
+    ]));
+
+    // 15. What I'd do differently
+    s.push(pointsSlide('What I would do differently', 'What I would do differently', ACC_DIFFERENT));
+
+    return s;
+  }
+
+  /* Studies built entirely in the deck, with no entry in CASE_STUDIES. */
+  var DECK_ONLY_STUDIES = {
+    accelerate: { title: 'Accelerate: AI Campaign Creation', build: buildAccelerateSlides }
   };
 
   /* ── Case-study slides: one slide per <h2> section ─────────────────
@@ -3101,6 +3626,63 @@
      slide (h1 + deck subtitle + hero media), and each <h2> section
      becomes its own slide. Content keeps its .cs-main styling on a
      light "paper" card. ─────────────────────────────────────────── */
+  /* First sentence of a passage, for the one-line summaries on Reflection.
+     Splits on terminal punctuation followed by a capital, skipping the
+     abbreviations that actually turn up in this copy ("Sr. Director",
+     "Q3.", initials) so a title doesn't get cut mid-phrase. */
+  /* Reflection points a deck leaves out, keyed by study and matched on the
+     point's lead-in. The case study itself still carries them — this only
+     trims what gets a slide. */
+  var CS_REFLECT_SKIP = {
+    'video-recorder': ["Figma isn't dead"]
+  };
+
+  var SENTENCE_SAFE = /(?:Mr|Mrs|Ms|Dr|Sr|Jr|St|vs|etc|e\.g|i\.e|No|Fig|Inc|Co)$/;
+  function firstSentence(str) {
+    var s = String(str || '').replace(/\s+/g, ' ').trim();
+    var re = /([.!?])["')\]]?\s+(?=[A-Z“"(])/g, m;
+    while ((m = re.exec(s))) {
+      var head = s.slice(0, m.index);
+      // a single capital before the stop is an initial, not a sentence end
+      if (SENTENCE_SAFE.test(head) || /(^|\s)[A-Z]$/.test(head)) continue;
+      return s.slice(0, m.index + 1);
+    }
+    return s;
+  }
+
+  /* Reflection reads as a run of paragraphs in the case study, each opening
+     with a bolded lead-in. On a slide those become columns: the lead-in is
+     the card's heading, the first sentence of the paragraph its summary.
+     Returns null if the section has no paragraphs to lay out. */
+  function reflectionSlideFrom(nodes, label, key) {
+    var skip = CS_REFLECT_SKIP[key] || [];
+    var cards = [];
+    nodes.forEach(function (n) {
+      if (n.nodeType !== 1 || n.tagName !== 'P') return;
+      var p = n.cloneNode(true);
+      var head = null;
+      var first = p.firstElementChild;
+      // Only a <strong> that opens the paragraph is a heading; a bolded
+      // phrase further in is emphasis and stays in the body.
+      if (first && first.tagName === 'STRONG' && !(p.firstChild.nodeType === 3 && p.firstChild.textContent.trim())) {
+        head = first.textContent.replace(/[.:]\s*$/, '').trim();
+        first.parentNode.removeChild(first);
+      }
+      if (head && skip.indexOf(head) >= 0) return;
+      var body = firstSentence(p.textContent);
+      if (!head && !body) return;
+      cards.push(el('article.deck-reflect-card', null, [
+        head ? el('h3.deck-reflect-head', null, [head]) : null,
+        body ? el('p.deck-reflect-body', null, [body]) : null
+      ].filter(Boolean)));
+    });
+    if (!cards.length) return null;
+    return el('section.deck-slide.deck-slide--cs.deck-slide--reflect', { 'data-label': label }, [
+      el('h2.deck-title', null, ['Reflection']),
+      el('div.deck-reflect-grid', null, cards)
+    ]);
+  }
+
   /* Every study's Overview lists a "Role:" bullet that reads as one long
      sentence. It carries more weight as its own slide, so we lift it out of
      the Overview list and split it into the role itself plus what it owned.
@@ -3139,6 +3721,10 @@
   }
 
   function buildCaseStudySlides(key) {
+    // Deck-only studies are hand-built, not split out of a written case study.
+    var only = DECK_ONLY_STUDIES[key];
+    if (only) return { title: only.title, slides: only.build() };
+
     var data = window.CASE_STUDIES && window.CASE_STUDIES[key];
     if (!data || !data.body) return null;
 
@@ -3221,21 +3807,47 @@
         // Lift the Role bullet out before the section slide is built, so it
         // isn't listed twice — it becomes its own slide immediately after.
         if (label === 'Overview') roleSlide = roleSlideFrom(textNodes, 'Role');
-        var mainT = el('div.cs-main');
-        textNodes.forEach(function (n) { mainT.appendChild(n); });
-        slides.push(el('section.deck-slide.deck-slide--cs', { 'data-label': label }, [el('div.deck-cs-paper', null, [mainT])]));
+        // Reflection lays out as columns rather than a wall of paragraphs.
+        var reflect = label === 'Reflection' ? reflectionSlideFrom(textNodes, label, key) : null;
+        if (reflect) {
+          slides.push(reflect);
+        } else {
+          var mainT = el('div.cs-main');
+          textNodes.forEach(function (n) { mainT.appendChild(n); });
+          slides.push(el('section.deck-slide.deck-slide--cs', { 'data-label': label }, [el('div.deck-cs-paper', null, [mainT])]));
+        }
       }
 
       // Sections whose screenshots present inside the MacBook template
       // rather than as bare images on the slide.
       var inLaptop = (CS_LAPTOP_MEDIA[key] || []).indexOf(label) >= 0;
+      var splitLaptop = (CS_LAPTOP_SPLIT_MEDIA[key] || []).indexOf(label) >= 0;
 
       // The cover's own hero art, when the cover already opens on it.
       if (i === 0 && CS_SKIP_COVER_MEDIA.indexOf(key) >= 0) mediaEls = [];
 
       mediaEls.forEach(function (group) {
         var body;
-        if (inLaptop && group.length === 1 && group[0].tagName === 'IMG') {
+        // Caption on the left, the machine bleeding off the right edge.
+        if (splitLaptop && group.length === 1 && group[0].tagName === 'IMG') {
+          var src = group[0].getAttribute('src');
+          // No written caption yet → the machine carries the slide alone,
+          // rather than announcing a placeholder in the left rail.
+          var cap = CS_CAPTIONS[String(src || '').split('/').pop()];
+          slides.push(el('section.deck-slide.deck-slide--titlefig.deck-slide--laptop.deck-slide--capfig',
+            { 'data-label': label + ' — image' }, [
+              el('div.deck-titlefig', null, [
+                el('div.deck-titlefig-copy', null,
+                   cap ? [el('p.deck-body', null, [cap])] : []),
+                laptopFrame('', src)
+              ])
+            ]));
+          return;
+        }
+        if (group.length === 1 && group[0].tagName === 'VIDEO') {
+          // No device frame: the recording is its own aspect, shown whole.
+          body = el('figure.deck-cs-video', null, [group[0].cloneNode(true)]);
+        } else if (inLaptop && group.length === 1 && group[0].tagName === 'IMG') {
           body = laptopFrame('', group[0].getAttribute('src'));
           body.classList.add('deck-laptop--media');
         } else {
@@ -3283,9 +3895,19 @@
       }
     }
 
+    (CS_MOVE_AFTER[key] || []).forEach(function (mv) {
+      var from = -1;
+      slides.forEach(function (s2, si) { if (from < 0 && s2.getAttribute('data-label') === mv.label) from = si; });
+      if (from < 0) return;
+      var moved = slides.splice(from, 1)[0];
+      var to = -1;
+      slides.forEach(function (s2, si) { if (s2.getAttribute('data-label') === mv.after) to = si; });
+      slides.splice(to >= 0 ? to + 1 : slides.length, 0, moved);
+    });
+
     /* The Role slide goes in after the extras, so it lands directly behind
        the Overview slide rather than behind that section's extra slides. */
-    if (roleSlide) {
+    if (roleSlide && CS_SKIP_ROLE.indexOf(key) < 0) {
       var ovAt = -1;
       slides.forEach(function (s, si) { if (ovAt < 0 && s.getAttribute('data-label') === 'Overview') ovAt = si; });
       slides.splice(ovAt >= 0 ? ovAt + 1 : 1, 0, roleSlide);
