@@ -2347,12 +2347,15 @@ html.deck-reduce .deck-slide--specs .deck-spec-col {
   border-radius: 4px;
   padding: 1px 5px;
 }
+/* Section headings are chrome, not slide type — mono caps, fixed at 12px
+   so they stay quiet above the cards. */
 .deck-ov-head {
   margin: clamp(26px, 4vh, 44px) 0 clamp(12px, 1.8vh, 20px);
-  font-family: var(--display);
-  font-synthesis: none;
-  font-weight: 800;
-  font-size: clamp(1.15rem, 1.9vw, 1.75rem);
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--primary);
 }
 .deck-ov-grid {
