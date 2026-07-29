@@ -340,7 +340,7 @@ window.CASE_STUDIES = {
 
   /* ---------------- Project 1, Dual Creator Cam ---------------- */
   'video-recorder': {
-    title: 'Dual Creator Cam: One Tap, Two Finished Videos',
+    title: 'Dual Creator Cam',
     body: [
       '<h1>Dual Creator Cam</h1>',
       '<p class="cs-deck">A 0→1 iOS app that turns one tap into two finished videos (a vertical file for Reels and TikTok, a horizontal file for YouTube) auto-saved to Photos, no reshoot, no cropping in post. Designed and built solo with Claude Code, Xcode, and Figma over a year of travel.</p>',

@@ -1824,7 +1824,7 @@
     // the photo wall closes the About run rather than sitting after How I lead
     // slideOrgTree also opens the Pods case study — the builder runs twice,
     // so each deck gets its own copy of the diagram.
-    slideTitle, slideBelief, slidePlaces, slidePhotoWall, slideAboutCards, slideHowILead, slideOrgTree, slideWork,
+    slideTitle, slideBelief, slidePlaces, slidePhotoWall, slideAboutCards, slideHowILead, slideOrgTreeHome, slideWork,
     slidePodcast, slideCTA
   ];
   /* Cut from the main flow (the builders are still defined and can be
@@ -2789,6 +2789,18 @@
   }
 
   function slideOrgTree() { return diagramSlide('Org', 'LinkedIn Marketing Solutions', diagramTree()); }
+  /* Home-deck copy: the title centres over the tree and sits a step down.
+     Scoped to this instance so the Pods deck's version is untouched. */
+  function slideOrgTreeHome() {
+    var s = slideOrgTree();
+    s.classList.add('deck-slide--orgcentered');
+    /* The tree's ink sits at y 18–231 of a 300-unit viewBox, so the box
+       carries ~23% dead space at the bottom. Trimming it to the drawing
+       means centring the slide centres what you actually see. */
+    var svg = s.querySelector('svg');
+    if (svg) svg.setAttribute('viewBox', '0 10 500 231');
+    return s;
+  }
   function slidePilotTeam() { return diagramSlide('Pilot team', 'Pilot team', diagramTree(0)); }
   function slideThemes() { return diagramSlide('Themes', 'Identify themes', diagramPods()); }
   // No slide title — each panel is already headed Projects / Designers.
@@ -3003,7 +3015,9 @@
      otherwise lose an edge to the crop. */
   /* `fit` may also be the string 'scroll': a long screenshot keeps its full
      height and the screen well scrolls it under the bezel on hover. */
-  function phoneFrame(label, src, fit) {
+  /* `art` picks the device artwork; both templates share the same 938x1916
+     canvas, so the screen-well insets hold either way. */
+  function phoneFrame(label, src, fit, art) {
     var scroll = fit === 'scroll';
     var screen = el('div.deck-phone-screen', null, [
       src ? el('img', { src: src, alt: '' })
@@ -3011,7 +3025,7 @@
     ]);
     return el('figure.deck-phone' + (scroll ? '.deck-phone--scroll' : fit ? '.deck-phone--fit' : ''), null, [
       screen,
-      el('img.deck-phone-art', { src: 'assets/templates/iphone1.png', alt: '' })
+      el('img.deck-phone-art', { src: art || 'assets/templates/iphone1.png', alt: '' })
     ]);
   }
 
@@ -3029,23 +3043,29 @@
     ]);
   }
 
+  /* The four process slides share a pink supporting line under the title. */
+  function dccNote(slide) {
+    slide.classList.add('deck-slide--dccnote');
+    return slide;
+  }
+
   function slideDccFigma() {
-    return titleFigureSlide('Core screens', 'Designing core screens in Figma',
+    return dccNote(titleFigureSlide('Core screens', 'Designing core screens in Figma',
       'Figma core screens',
       'The spec came first. Agents build far better against a defined target than a description.',
-      'assets/slide/dual_creator_cam/figma.png');
+      'assets/slide/dual_creator_cam/figma.png'));
   }
   function slideDccPlaygrounds() {
-    return titleFigureSlide('Playgrounds', 'Building playgrounds to test concepts',
+    return dccNote(titleFigureSlide('Playgrounds', 'Building playgrounds to test concepts',
       'Concept playground',
       'Throwaway builds to feel an interaction on device before it earned a place in the app.',
-      'assets/slide/dual_creator_cam/xcode.png');
+      'assets/slide/dual_creator_cam/xcode.png'));
   }
   function slideDccClaudeXcode() {
-    return titleFigureSlide('Claude to Xcode', 'From Claude to Xcode',
+    return dccNote(titleFigureSlide('Claude to Xcode', 'From Claude to Xcode',
       'Claude Code ↔ Xcode',
       'Figma via MCP into Claude Code, straight into the Swift build, then back on device.',
-      'assets/slide/dual_creator_cam/claude.png');
+      'assets/slide/dual_creator_cam/claude.png'));
   }
 
   /* The agents slide: the four standing roles I delegate to, arranged
@@ -3058,7 +3078,7 @@
   ];
 
   function slideDccAgents() {
-    return el('section.deck-slide.deck-slide--titlefig.deck-slide--agents', { 'data-label': 'Agents as a team' }, [
+    return el('section.deck-slide.deck-slide--titlefig.deck-slide--agents.deck-slide--dccnote', { 'data-label': 'Agents as a team' }, [
       el('div.deck-titlefig', null, [
         el('div.deck-titlefig-copy', null, [
           el('h2.deck-title', null, ['Running agents that are a product development team']),
@@ -3174,19 +3194,22 @@
   /* Expression: an offset collage of media placeholders — record-button
      finishes and themes, which is what the personalization work is. */
   var DCC_EXPRESSION = [
-    { cls: 'a', shape: 'screen' },
-    { cls: 'b', shape: 'wide' },
-    { cls: 'c', shape: 'wide' },
-    { cls: 'd', shape: 'wide' }
+    'assets/slide/dualcreatorcam/storeshelf.jpg',
+    'assets/slide/dualcreatorcam/charm.webp',
+    'assets/slide/dualcreatorcam/cloud.jpg'
   ];
 
+  /* One column of shots drifting upward on a loop. The list is laid down
+     twice, so -50% lands on an identical frame and the seam never shows. */
   function slideDccExpression() {
+    function tile(src) {
+      return el('figure.deck-vmarquee-tile', null, [el('img', { src: src, alt: '' })]);
+    }
+    var pass = DCC_EXPRESSION.map(tile).concat(DCC_EXPRESSION.map(tile));
     return titleSideSlide('Expression', 'Expression',
-      el('div.deck-collage', null, DCC_EXPRESSION.map(function (t) {
-        var f = figurePlaceholder(t.shape, 'Record button');
-        f.classList.add('deck-collage-item', 'deck-collage-item--' + t.cls);
-        return f;
-      })));
+      el('div.deck-vmarquee', { 'aria-hidden': 'true' }, [
+        el('div.deck-vmarquee-track', null, pass)
+      ]));
   }
 
   var CS_EXTRA_SLIDES = {
@@ -3281,6 +3304,19 @@
      the cover already opens on that same image, so the slide just repeats
      it. Keyed by study. */
   var CS_SKIP_COVER_MEDIA = ['events', 'video-recorder'];
+
+  /* Sections whose carousel plays inside the phone template: the frames
+     stack in the screen and cross-fade instead of sitting side by side. */
+  var phoneCycleSeq = 0;
+  var CS_PHONE_CAROUSEL = {
+    'video-recorder': ['Craft & Personalization']
+  };
+
+  /* Individual media the deck drops, by filename. The asset stays in the
+     written case study; it just doesn't get a slide. */
+  var CS_SKIP_MEDIA = {
+    'video-recorder': ['rotatingcustomization.webm']
+  };
 
   /* Studies whose cover media slide plays later in the deck rather than
      straight after the cover. Value is the label it should follow. */
@@ -3826,8 +3862,58 @@
       // The cover's own hero art, when the cover already opens on it.
       if (i === 0 && CS_SKIP_COVER_MEDIA.indexOf(key) >= 0) mediaEls = [];
 
+      var dropped = CS_SKIP_MEDIA[key] || [];
+      if (dropped.length) {
+        mediaEls = mediaEls.filter(function (group) {
+          return !group.every(function (m) {
+            var src = m.getAttribute('src') ||
+              ((m.querySelector('source') || {}).getAttribute
+                ? m.querySelector('source').getAttribute('src') : '');
+            return dropped.indexOf(String(src || '').split('/').pop()) >= 0;
+          });
+        });
+      }
+
+      var phoneCycle = (CS_PHONE_CAROUSEL[key] || []).indexOf(label) >= 0;
+
       mediaEls.forEach(function (group) {
         var body;
+        /* A run of screens in one phone, cross-fading. Each frame runs the
+           same loop offset by its turn, so the cycle needs no timer. */
+        if (phoneCycle && group.length > 1) {
+          var n = group.length, hold = 3.2, total = n * hold;
+          var frame = phoneFrame('', group[0].getAttribute('src'), false,
+            'assets/templates/iphonepromax.png');
+          frame.classList.add('deck-phone--cycle');
+          var well = frame.querySelector('.deck-phone-screen');
+          well.innerHTML = '';
+          /* Each frame fades in over the one before it and only cuts out
+             once its successor is fully opaque on top — so the well never
+             shows through between screens. Percentages depend on how many
+             frames there are, so the keyframes are written per instance. */
+          var slot = 100 / n, fade = Math.min(6, slot / 4);
+          var anim = 'deck-phone-cycle-' + (++phoneCycleSeq);
+          var css = '@keyframes ' + anim + '{' +
+            '0%{opacity:0}' +
+            fade.toFixed(3) + '%{opacity:1}' +
+            (slot + fade).toFixed(3) + '%{opacity:1}' +
+            (slot + fade + 0.01).toFixed(3) + '%{opacity:0}' +
+            '100%{opacity:0}}';
+          var styleEl = document.createElement('style');
+          styleEl.textContent = css;
+          frame.appendChild(styleEl);
+          group.forEach(function (m, gi) {
+            var im = el('img', { src: m.getAttribute('src'), alt: '' });
+            im.style.animationName = anim;
+            im.style.animationDuration = total + 's';
+            im.style.animationDelay = (gi * hold - total) + 's';
+            well.appendChild(im);
+          });
+          // --glow opts the slide into the intro slides' lit grid backdrop
+          slides.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-media.deck-slide--glow',
+            { 'data-label': label + ' — image' }, [frame]));
+          return;
+        }
         // Caption on the left, the machine bleeding off the right edge.
         if (splitLaptop && group.length === 1 && group[0].tagName === 'IMG') {
           var src = group[0].getAttribute('src');
@@ -4098,7 +4184,8 @@
 
     // The moving grid shows only on the title, about, and case-study cover
     // slides (it keeps animating underneath, so the drift never resets).
-    var GRID_ON = ['deck-slide--title', 'deck-slide--belief', 'deck-slide--places', 'deck-slide--cs-title'];
+    var GRID_ON = ['deck-slide--title', 'deck-slide--belief', 'deck-slide--places',
+                   'deck-slide--cs-title', 'deck-slide--glow'];
     deck.classList.toggle('deck--grid', !!(activeSlide && GRID_ON.some(function (c) {
       return activeSlide.classList.contains(c);
     })));
