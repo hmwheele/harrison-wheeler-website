@@ -1702,7 +1702,10 @@ body.cs-lock::before { opacity: 1; }
 }
 
 /* ── Newsletter popover (bottom-right, home) ─────────────────────── */
-.subpop { position: fixed; right: 24px; bottom: 24px; z-index: 60; }
+/* The wrapper stays click-through so the closed popover's box can't swallow
+   clicks on whatever sits under it (it overlaps the footer socials). The panel
+   re-enables pointer events for itself once open. */
+.subpop { position: fixed; right: 24px; bottom: 24px; z-index: 60; pointer-events: none; }
 .subpop-panel {
   position: relative;
   width: 320px; max-width: calc(100vw - 48px);
