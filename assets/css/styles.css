@@ -766,12 +766,15 @@ main > .phead-wrap > .phead-body { background: transparent; }
 .footer { border-top: 1px solid var(--border-soft); padding-block: 36px; }
 .footer-inner { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
 .footer small { font-family: var(--mono); color: var(--text-dim); font-size: .85rem; }
-.footer-nav { display: flex; gap: 24px; }
+.footer-nav { display: flex; gap: 20px; flex-wrap: wrap; }
 .footer-nav a { font-family: var(--mono); font-size: .85rem; color: var(--text-muted); }
 .footer-nav a:hover { color: var(--text); }
 /* Icon-ready: drop a brand-icon <svg> or <img> inside each footer link (it'll size
    to 20px and inherit the link color); the aria-label keeps it accessible. */
-.footer-nav a:has(svg), .footer-nav a:has(img) { display: inline-flex; align-items: center; }
+.footer-nav a:has(svg), .footer-nav a:has(img) { display: inline-flex; align-items: center; gap: 7px; }
+/* Follower counts sit beside the icon; the link's aria-label carries them for SR users. */
+.footer-count { font-family: var(--mono); font-size: .78rem; color: var(--text-dim); font-variant-numeric: tabular-nums; line-height: 1; }
+.footer-nav a:hover .footer-count { color: var(--text); }
 .footer-nav a svg, .footer-nav a img { width: 20px; height: 20px; display: block; fill: currentColor; }
 
 /* ── Generic page header (About / listing pages) ────────────────── */
