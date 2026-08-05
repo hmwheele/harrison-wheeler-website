@@ -43,7 +43,7 @@
       if (ticking) return;
       ticking = true;
       requestAnimationFrame(function () {
-        var h1 = sheet.querySelector('.cs-main h1');
+        var h1 = sheet.querySelector('.cs-hero-title, .cs-main h1');
         var show = h1 ? h1.getBoundingClientRect().bottom < 0 : overlay.scrollTop > 300;
         topbar.classList.toggle('visible', show);
         var max = overlay.scrollHeight - overlay.clientHeight;
@@ -80,6 +80,13 @@
         '<nav class="cs-toc" aria-label="Sections"><ul></ul></nav>' +
         '<div class="cs-main">' + data.body + '</div>' +
       '</div>';
+
+    // Cover section: lift the <h1> and the standfirst out of the body and
+    // rebuild them as a dark, grid-backed title band, so the top of an
+    // overlay reads like the cover slide of the same case study in
+    // presentation mode.
+    sheet.classList.remove('has-cs-hero');
+    buildHero(sheet, key);
 
     // Build the table of contents from the section headings.
     var ul = sheet.querySelector('.cs-toc ul');
@@ -125,6 +132,138 @@
       heads.forEach(function (h) { spy.observe(h); });
     }
     return true;
+  }
+
+  // Move the case study's <h1> (and its .cs-deck standfirst, when it's the
+  // element right after it) into a full-bleed cover band above the reading
+  // layout. Mirrors .deck-slide--cs-title in deck.css: dark surface, drifting
+  // grid, Neudron title in the pink gradient, description bottom-right.
+  /* ── Cover art, mirrored from the deck's title slides ─────────────
+     Same source images and same fallbacks deck.js uses for a cover: a
+     study's deck-only art (in the MacBook template where the deck frames
+     it that way), otherwise the empty device placeholder — the MacBook for
+     desktop studies, the phone mock for the phone ones. Keep these three
+     in step with CS_COVER_ART / CS_COVER_IN_LAPTOP / PHONE_CASE_STUDIES
+     in deck.js. */
+  var CS_COVER_ART = {
+    'video-recorder': 'assets/slide/dual_creator_cam/title.png',
+    'leadcraft': 'assets/slide/growth/hero.jpg',
+    'events': 'assets/slide/events_hero/hero.png',
+    'pods': 'assets/slide/pods/hero.jpg'
+  };
+  var CS_COVER_IN_LAPTOP = ['leadcraft', 'pods'];
+  var PHONE_CASE_STUDIES = ['video-recorder', 'events'];
+  var IMG_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/>' +
+    '<circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>';
+
+  function heroArt(key) {
+    var src = CS_COVER_ART[key];
+    var phone = PHONE_CASE_STUDIES.indexOf(key) >= 0;
+    var wrap = document.createElement('div');
+    wrap.className = 'cs-hero-art';
+    wrap.setAttribute('aria-hidden', 'true');
+
+    if (src && CS_COVER_IN_LAPTOP.indexOf(key) >= 0) {
+      wrap.classList.add('cs-hero-art--laptop');
+      wrap.innerHTML =
+        '<figure class="deck-laptop">' +
+          '<div class="deck-laptop-screen"><img src="' + src + '" alt=""></div>' +
+          '<img class="deck-laptop-art" src="assets/templates/macbookpro.png" alt="">' +
+        '</figure>';
+    } else if (src) {
+      wrap.classList.add(phone ? 'cs-hero-art--phone' : 'cs-hero-art--free');
+      wrap.innerHTML = '<img src="' + src + '" alt="">';
+    } else if (phone) {
+      // Empty phone placeholder, same drawn device the deck falls back to.
+      wrap.classList.add('cs-hero-art--phone');
+      wrap.innerHTML =
+        '<div class="deck-cs-device deck-cs-device--phone"><div class="dcd-phone">' +
+          '<div class="dcd-notch"></div>' +
+          '<div class="dcd-screen"><span class="deck-photo-ph-icon">' + IMG_ICON +
+          '</span><span class="deck-photo-ph-label">Phone</span></div>' +
+        '</div></div>';
+    } else {
+      // Desktop studies open on the MacBook template with a "Screenshot" well.
+      wrap.classList.add('cs-hero-art--laptop');
+      wrap.innerHTML =
+        '<figure class="deck-laptop">' +
+          '<div class="deck-laptop-screen"><span class="deck-laptop-lbl">Screenshot</span></div>' +
+          '<img class="deck-laptop-art" src="assets/templates/macbookpro.png" alt="">' +
+        '</figure>';
+    }
+    return wrap;
+  }
+
+  function buildHero(scope, key) {
+    var main = scope.querySelector('.cs-main');
+    var layout = scope.querySelector('.cs-layout');
+    var h1 = main && main.querySelector('h1');
+    if (!h1 || !layout) return;
+
+    var deck = h1.nextElementSibling;
+    if (!deck || !deck.classList.contains('cs-deck')) deck = null;
+
+    var hero = document.createElement('header');
+    hero.className = 'cs-hero';
+    hero.appendChild(heroArt(key));
+
+    var inner = document.createElement('div');
+    inner.className = 'cs-hero-inner';
+    hero.appendChild(inner);
+
+    var title = document.createElement('h1');
+    title.className = 'cs-hero-title';
+    title.textContent = h1.textContent;
+    inner.appendChild(title);
+
+    if (deck) {
+      var d = document.createElement('p');
+      d.className = 'cs-hero-desc';
+      d.innerHTML = deck.innerHTML;
+      inner.appendChild(d);
+      deck.remove();
+    }
+
+    h1.remove();
+    scope.insertBefore(hero, layout);
+    scope.classList.add('has-cs-hero');
+    fitHeroTitle();
+  }
+
+  // Grow the cover title until it fills the band's height, the way a title
+  // slide does. Line count varies with the title's length, so the size can't
+  // be expressed in CSS alone — the CSS clamp is the starting point and this
+  // binary-searches the largest size whose stretched block still fits.
+  function fitHeroTitle() {
+    if (!sheet) return;
+    var hero = sheet.querySelector('.cs-hero');
+    var title = hero && hero.querySelector('.cs-hero-title');
+    if (!title) return;
+
+    // Below 861px the band grows with its content, so leave CSS in charge.
+    if (!window.matchMedia('(min-width: 861px)').matches) {
+      title.style.fontSize = '';
+      return;
+    }
+
+    var cs = window.getComputedStyle(hero);
+    var avail = hero.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    if (!(avail > 0)) return;
+    // The title is scaleY(1.5)'d, so its painted height is 1.5× its layout
+    // height; leave a hair of slack so a rounding error can't clip the caps.
+    var budget = (avail / 1.5) * 0.98;
+
+    var lo = 28, hi = 220, best = lo;
+    for (var i = 0; i < 12; i++) {
+      var mid = (lo + hi) / 2;
+      title.style.fontSize = mid + 'px';
+      // offsetHeight, not getBoundingClientRect: the latter reports the
+      // already-stretched box, which would double-count the 1.5.
+      if (title.offsetHeight <= budget) { best = mid; lo = mid; }
+      else hi = mid;
+    }
+    title.style.fontSize = best.toFixed(2) + 'px';
   }
 
   // Initialize every [data-carousel] inside a scope (arrow-controlled,
@@ -283,6 +422,17 @@
     requestAnimationFrame(restoreScroll);
     setTimeout(restoreScroll, 0);
     setTimeout(function () { if (!overlay.classList.contains('open')) sheet.innerHTML = ''; }, 450);
+  }
+
+  // The fit depends on the viewport and on Neudron's metrics, so redo it when
+  // either changes.
+  var refitTimer;
+  window.addEventListener('resize', function () {
+    clearTimeout(refitTimer);
+    refitTimer = setTimeout(fitHeroTitle, 120);
+  }, { passive: true });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () { fitHeroTitle(); });
   }
 
   triggers.forEach(function (el) {

@@ -942,6 +942,197 @@ main > .phead-wrap > .phead-body { background: transparent; }
 .cs-main { min-width: 0; }
 .cs-main h1 { font-family: var(--display); font-synthesis: none; font-size: 5rem; text-transform: uppercase; font-weight: 800; letter-spacing: -.01em; line-height: 1.05; margin-bottom: 18px; }
 .cs-deck { font-family: var(--serif); font-weight: var(--serif-light); font-size: 1.15rem; line-height: 1.6; color: var(--cs-muted); max-width: 36em; margin-bottom: 36px; }
+/* ── Case-study cover band ──────────────────────────────────────────
+   The top of every overlay mirrors the case study's cover slide in
+   presentation mode (.deck-slide--cs-title in deck.css): the dark deck
+   surface with its drifting grid, the title in Neudron filled with the
+   light-pink gradient and stretched vertically, and the standfirst
+   bottom-right. overlay.js moves the <h1> / .cs-deck up into it. */
+.cs-sheet.has-cs-hero { padding-top: 0; }
+.cs-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--bg);
+  border-radius: 22px 22px 0 0;
+  padding: clamp(76px, 12vh, 132px) clamp(28px, 6vw, 88px) clamp(36px, 6vh, 64px);
+  /* Full-height cover, like a slide: on mobile the sheet starts 9vh down,
+     on desktop it floats inside a 16px inset. */
+  min-height: calc(100dvh - 9vh);
+  display: flex;
+  align-items: flex-end;
+}
+@media (min-width: 861px) {
+  .cs-hero {
+    /* An explicit height (not just min-height) is what gives the size
+       container a definite block size for height queries to resolve
+       against — with `min-height` alone Chrome reports 0 and the cqh
+       rules below never match. */
+    height: calc(100dvh - 32px);
+    /* Size container, so the cover type scales off the band's own height
+       (cqh below) rather than only its width — a short laptop viewport gets
+       a proportionally smaller title, exactly like a slide. Desktop only:
+       size containment fixes the height, and on phones the stacked title +
+       standfirst need to be free to grow past one screen. */
+    container-type: size;
+    container-name: csHero;
+  }
+}
+/* Same drifting grid as the deck's cover slides. */
+.cs-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(208, 188, 255, .07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(208, 188, 255, .07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse 100% 88% at 50% 42%, #000 22%, transparent 82%);
+          mask-image: radial-gradient(ellipse 100% 88% at 50% 42%, #000 22%, transparent 82%);
+  animation: cs-hero-grid-drift 40s linear infinite;
+}
+@keyframes cs-hero-grid-drift {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 48px 0, 48px 0; }
+}
+/* Cover art / device placeholder, bleeding off the right edge behind the
+   copy — the same slot it takes on a title slide. Positioned here rather
+   than by deck.css, whose cover rules are fixed to the slide stage. */
+.cs-hero-art {
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.cs-hero-art--laptop { right: -14%; width: 74%; }
+.cs-hero-art--free   { right: -4%;  width: 56%; }
+.cs-hero-art--phone  { right: 8%;   width: clamp(240px, 26%, 400px); }
+.cs-hero-art img { width: 100%; height: auto; }
+.cs-hero-art .deck-cs-device { position: static; opacity: 1; transform: none; transition: none; }
+/* The empty-well label: deck.css sizes it from --t-nano, which is scoped to
+   .deck, so give it its own size out here. */
+.cs-hero-art .deck-laptop-screen { align-items: center; }
+/* Fit the whole screenshot inside the display. deck.css crops to fill
+   (`cover`) because a slide is the same shape as the machine; here the band
+   is a different aspect and cropping was cutting the sides off the growth
+   cover, so the art is contained and the well's dark ground letterboxes it. */
+.cs-hero-art .deck-laptop-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.cs-hero-art .deck-laptop-lbl { font-size: .7rem; align-self: center; }
+/* Scrim: the art emerges from the dark and the copy stays readable on it. */
+.cs-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to top,
+    rgba(13, 12, 17, .96) 0%,
+    rgba(13, 12, 17, .78) 22%,
+    rgba(13, 12, 17, .32) 42%,
+    transparent 60%);
+}
+/* Title left, description right — the deck's two even columns. */
+.cs-hero-inner {
+  position: relative;
+  z-index: 2;   /* above the scrim (1) and the art (0) */
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(28px, 4.5vw, 84px);
+}
+.cs-hero-title {
+  margin: 0;
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-wrap: balance;
+  /* width-based fallback; the @container rule below takes over on desktop */
+  font-size: clamp(2.4rem, 5.4vw, 4.6rem);
+  /* tight leading — the scaleY below multiplies it back to about normal */
+  line-height: .76;
+  letter-spacing: -.01em;
+  /* pad the paint box so background-clip:text doesn't shave the glyphs */
+  padding-block: .14em;
+  /* stretch the glyphs taller without widening them, as on the cover slide */
+  transform: scaleY(1.5);
+  transform-origin: bottom left;
+  color: var(--light-pink);   /* fallback if background-clip:text is unsupported */
+  background: linear-gradient(to top, #fff4f8 0%, #ffe7f0 20%, #ffd8e4 48%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.cs-hero-desc {
+  margin: 0;
+  text-align: right;
+  color: var(--light-pink);
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+/* Type keyed to the cover band's height: 1cqh = 1% of the band, so the
+   title and standfirst hold their proportions on a short laptop screen the
+   same way a slide does. Width still caps it so a wide, short window can't
+   run the title off the column. */
+@container csHero (min-height: 1px) {
+  /* Cover scale, as on the deck's title slides: the title is sized to run
+     down a real share of the band's height (each line is .76em × the 1.5
+     stretch ≈ 1.14em tall), with the inline cap keeping a long title inside
+     its column. */
+  .cs-hero-title { font-size: clamp(2.4rem, min(17cqh, 10.5cqi), 8.5rem); }
+  .cs-hero-desc  { font-size: clamp(.95rem, min(2.6cqh, 1.5cqi), 1.3rem); }
+  /* Height cap for the art: each slot's width is also expressed as a share
+     of the band's height (width ÷ height of that artwork), so a short
+     window scales the machine down instead of clipping it. */
+  .cs-hero-art--laptop { width: min(74%, 117cqh); }
+  .cs-hero-art--free   { width: min(56%, 100cqh); }
+  .cs-hero-art--phone  { width: min(clamp(240px, 26%, 400px), 43cqh); }
+}
+/* The ✕ sits on the dark band, so it flips to the deck's dark treatment. */
+.cs-sheet.has-cs-hero .cs-close {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(255, 255, 255, .18);
+  color: #fff;
+}
+.cs-sheet.has-cs-hero .cs-close:hover { background: rgba(255, 255, 255, .16); }
+/* The reading layout starts below the band, not under a 64px pad. */
+.cs-sheet.has-cs-hero .cs-layout { padding-top: clamp(40px, 6vh, 72px); }
+@media (prefers-reduced-motion: reduce) {
+  .cs-hero::before { animation: none; }
+}
+@media (max-width: 860px) {
+  .cs-hero {
+    border-radius: 18px 18px 0 0;
+    padding: 84px 22px 40px;
+  }
+  .cs-hero-inner { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .cs-hero-desc { text-align: left; font-size: .98rem; }
+  /* One column, so the art sits above the copy rather than behind it, and
+     the scrim comes up higher to keep the stacked text clear of it. */
+  .cs-hero-art { top: 26%; }
+  .cs-hero-art--laptop { right: -18%; width: 96%; }
+  .cs-hero-art--free { right: -6%; width: 78%; }
+  .cs-hero-art--phone { right: 6%; width: 46%; }
+  .cs-hero::after {
+    background: linear-gradient(to top,
+      rgba(13, 12, 17, .97) 0%,
+      rgba(13, 12, 17, .93) 44%,
+      rgba(13, 12, 17, .55) 62%,
+      transparent 82%);
+  }
+}
+
 /* ── Hero carousel ──────────────────────────────────────────────── */
 .cs-carousel { position: relative; margin: 0 0 56px; outline: none; }
 /* Bleed right into the empty third column; off-slides are clipped */
