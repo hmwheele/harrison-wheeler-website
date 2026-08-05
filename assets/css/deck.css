@@ -1628,24 +1628,29 @@ html.deck-reduce .deck-guest-row { animation: none; }
   align-items: stretch;
 }
 /* Each problem sits in its own box, so the two columns read as a pair
-   rather than as one run of bullets. */
+   rather than as one run of bullets. The head runs as a banded header
+   across the top of the box, ruled off from the body. */
 .deck-debt-col {
-  padding: clamp(18px, 2vw, 32px);
+  padding: 0;
   border: 1px solid var(--border);
-  border-radius: clamp(12px, 1.2vw, 18px);
+  border-radius: 6px;
   background: var(--surface-2);
+  overflow: hidden;
 }
 .deck-debt-head {
-  margin: 0 0 clamp(14px, 2.4vh, 28px);
+  margin: 0;
+  padding: clamp(14px, 1.8vh, 22px) clamp(18px, 2vw, 28px);
+  border-bottom: 1px solid var(--border);
   font-family: var(--mono);
-  font-size: var(--t-micro);
+  font-size: var(--t-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: #ffd8e4;
 }
 .deck-debt-list {
   margin: 0;
-  padding-left: 1.15em;
+  padding: clamp(18px, 2.4vh, 30px) clamp(18px, 2vw, 28px);
+  padding-left: calc(clamp(18px, 2vw, 28px) + 1.05em);
   list-style: disc;
   font-family: var(--serif);
   font-weight: var(--serif-light);
@@ -1718,6 +1723,11 @@ html.deck-reduce .deck-guest-row { animation: none; }
   justify-content: center;
   align-items: center;
   padding: clamp(28px, 4vh, 52px) clamp(24px, 6vw, 96px);
+}
+/* A titled enum keeps the list centred; the title hangs from the left. */
+.deck-slide--enum .deck-title {
+  align-self: flex-start;
+  margin: 0 0 clamp(24px, 4vh, 48px);
 }
 .deck-enum {
   counter-reset: deck-enum;
@@ -1961,6 +1971,166 @@ html.deck-reduce .deck-guest-row { animation: none; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(22px, 3.4vw, 56px) clamp(22px, 3vw, 52px);
+}
+/* Screenshot slot above a note's heading. Full width of the note's
+   column; 16:9 with a height cap so a 2x2 of notes still fits the
+   stage — the capture crops a little top and bottom, never the sides. */
+.deck-note-ph {
+  margin: 0 0 clamp(10px, 1.6vh, 16px);
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 20vh;
+  border: 1px dashed var(--border);
+  border-radius: clamp(8px, 0.8vw, 12px);
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+}
+/* Audit collage: the Session Replay docs page centred (a capture —
+   amplitude.com refuses framing), four captures overlapping its
+   corners. Proportions follow the source mock. */
+.deck-slide--auditcollage {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.deck-audit-web {
+  position: absolute;
+  /* 15% up from the 80%-wide / 87%-tall version: 92% wide, nudged
+     40px down off the top edge and still bleeding off the bottom */
+  left: 4%;
+  right: 4%;
+  top: 40px;
+  bottom: 0;
+  background: #d9d9d9;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  /* the page capture is as dark as the stage, so a hairline keeps its
+     edge legible */
+  border: 1px solid var(--border);
+  border-bottom: 0;
+}
+/* Shows only while the capture loads, or if it goes missing. */
+.deck-audit-web-lbl {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+}
+.deck-audit-web img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  display: block;
+}
+/* The live page, when the local proxy serves it. */
+.deck-audit-web-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #d9d9d9;
+}
+/* Capture and caption travel as one card: the shot on top, a light
+   caption band beneath it, one frame around both. */
+.deck-audit-shot {
+  position: absolute;
+  /* above the page's dark film (z-index 1), never under it */
+  z-index: 2;
+  width: 27%;
+  margin: 0;
+  border: 1px solid var(--border);
+  background: #fff;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+}
+.deck-audit-shot img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.deck-audit-shot figcaption {
+  padding: clamp(10px, 1.6vh, 16px) clamp(12px, 1.2vw, 18px);
+  background: #fff;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  color: #1d1c22;
+}
+/* Each capture pokes 48px out past the browser frame's edge (the frame
+   sits at 4% from either side). Both columns share the same vertical
+   anchors, so the top/bottom gap matches left and right. */
+.deck-audit-shot--tl { left: calc(4% - 48px); top: 7%; }
+.deck-audit-shot--tr { right: calc(4% - 48px); top: 7%; }
+.deck-audit-shot--bl { left: calc(4% - 48px); bottom: 7%; }
+.deck-audit-shot--br { right: calc(4% - 48px); bottom: 7%; }
+/* An empty corner keeps the capture's 4:3 footprint as a dashed slot. */
+.deck-audit-shot--ph {
+  aspect-ratio: 4 / 3;
+  border: 1px dashed var(--border);
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  color: var(--text-dim);
+}
+
+/* ── Collage entrance, replayed on every activation ────────────────
+   The page rises from the bottom first; the captures then land one by
+   one while a dark film settles over the page so the layers never run
+   into each other. */
+.deck-slide--auditcollage .deck-audit-web {
+  opacity: 0;
+  transform: translateY(7%);
+  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 0.9, 0.3, 1);
+}
+.deck-slide--auditcollage.is-active .deck-audit-web { opacity: 1; transform: none; }
+/* The film sits above the live page (pointer-events off, so the page
+   stays scrollable) and fades in as the first capture arrives. */
+.deck-audit-web::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgba(8, 6, 14, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease 0.55s;
+}
+.deck-slide--auditcollage.is-active .deck-audit-web::after { opacity: 1; }
+.deck-slide--auditcollage .deck-audit-shot {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 0.45s ease, transform 0.5s ease;
+}
+.deck-slide--auditcollage.is-active .deck-audit-shot { opacity: 1; transform: none; }
+.deck-slide--auditcollage.is-active .deck-audit-shot--tl { transition-delay: 0.55s; }
+.deck-slide--auditcollage.is-active .deck-audit-shot--tr { transition-delay: 0.75s; }
+.deck-slide--auditcollage.is-active .deck-audit-shot--bl { transition-delay: 0.95s; }
+.deck-slide--auditcollage.is-active .deck-audit-shot--br { transition-delay: 1.15s; }
+html.deck-reduce .deck-slide--auditcollage .deck-audit-web,
+html.deck-reduce .deck-slide--auditcollage .deck-audit-shot {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+html.deck-reduce .deck-audit-web::after { opacity: 1; transition: none; }
+/* The slot with a real capture in it: solid hairline, image at its own
+   proportions. */
+.deck-note-ph--img { border-style: solid; overflow: hidden; }
+.deck-note-ph--img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 .deck-note-head {
   margin: 0 0 clamp(8px, 1.2vh, 14px);
@@ -2207,6 +2377,370 @@ html.deck-reduce .deck-slide--specs .deck-spec-col {
   text-transform: uppercase;
   color: var(--text-muted);
 }
+/* ── Diagnosis: all three themes on one slide ───────────────────────
+   A column per theme — compact display header, then the human and
+   agent cost boxes stacked, set smaller than the standard debt boxes
+   so the full diagnosis fits one stage. */
+.deck-slide--diag {
+  justify-content: center;
+  align-items: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(40px, 6vh, 80px);
+}
+.deck-diag {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 2.6vw, 44px);
+  align-items: start;
+}
+.deck-diag-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.6vh, 16px);
+  min-width: 0;
+}
+.deck-diag-title {
+  margin: 0 0 clamp(2px, 0.6vh, 8px);
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: clamp(1.3rem, 1.9vw, 1.9rem);
+  line-height: 1;
+  color: var(--text);
+}
+.deck-diag .deck-debt-head {
+  padding: clamp(10px, 1.4vh, 14px) clamp(14px, 1.4vw, 20px);
+  font-size: var(--t-micro);
+}
+.deck-diag .deck-debt-list {
+  padding: clamp(12px, 1.8vh, 20px) clamp(14px, 1.4vw, 20px);
+  padding-left: calc(clamp(14px, 1.4vw, 20px) + 1.05em);
+  font-size: var(--t-label);
+}
+.deck-diag .deck-debt-list li { margin-bottom: clamp(6px, 1vh, 12px); }
+@media (max-width: 860px) {
+  .deck-diag { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── Solution flow: three areas flowing down into their jobs ────────
+   Centred title, then a 3x3 grid filled column-by-column: a faint
+   area panel, an arrow, and a banded job card. Cards share the third
+   row, so they stay equal-height. */
+.deck-slide--solution {
+  justify-content: center;
+  align-items: center;
+  padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(56px, 9vh, 104px);
+}
+.deck-slide--solution .deck-title { margin: 0; text-align: center; }
+.deck-flow {
+  width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: minmax(clamp(80px, 16vh, 160px), auto) auto minmax(0, auto);
+  grid-auto-flow: column;
+  gap: clamp(12px, 1.8vh, 22px) clamp(24px, 3vw, 56px);
+  margin-top: clamp(16px, 2.6vh, 32px);
+}
+/* The area the job answers: a faint panel with the label resting at
+   its foot, so the column reads top-down into the arrow. */
+.deck-flow-from {
+  border-radius: 6px;
+  /* dissolves upward into the stage — no top edge, brightest at the
+     foot where the label sits */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.02) 45%, rgba(255, 255, 255, 0.06) 100%);
+  display: grid;
+  place-items: end center;
+  padding-bottom: clamp(14px, 2.2vh, 26px);
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.deck-flow-arrow { display: grid; place-items: center; color: var(--text); }
+.deck-flow-arrow svg { width: 20px; height: clamp(28px, 4.4vh, 40px); display: block; }
+.deck-flow-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.deck-flow-card-head {
+  margin: 0;
+  padding: clamp(14px, 1.8vh, 22px);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  font-family: var(--mono);
+  font-size: var(--t-label);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffd8e4;
+}
+.deck-flow-card-body {
+  margin: 0;
+  padding: clamp(18px, 2.4vh, 30px) clamp(18px, 2vw, 28px);
+  text-align: center;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-list);
+  line-height: 1.5;
+  color: var(--text);
+}
+/* The Amplitude walkthrough presents standalone — no route back to the
+   site's home deck, so the left control disappears entirely. */
+.deck--amp .deck-exit { display: none; }
+
+/* ── The brief as a sheet of paper ──────────────────────────────────
+   A light document rising up from the bottom edge on activation; it
+   keeps running off the bottom, so it reads as a page still being
+   drawn up out of the stage. */
+.deck-slide--brief {
+  position: relative;
+  overflow: hidden;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+.deck-brief-sheet {
+  position: absolute;
+  left: 50%;
+  top: 14vh;
+  bottom: 0;
+  width: min(88vw, 720px);
+  padding: clamp(36px, 6vh, 64px) clamp(32px, 3.4vw, 60px);
+  background: #f6f5f1;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -18px 60px rgba(0, 0, 0, 0.45);
+  /* the full document overruns the page — it scrolls in place */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  opacity: 0;
+  transform: translateX(-50%) translateY(70px);
+  transition: opacity 0.7s ease 0.15s, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s;
+}
+.deck-brief-sheet::-webkit-scrollbar { width: 8px; }
+.deck-brief-sheet::-webkit-scrollbar-thumb { background: #d8d5cc; border-radius: 4px; }
+.deck-brief-sheet::-webkit-scrollbar-track { background: transparent; }
+.deck-slide--brief.is-active .deck-brief-sheet { opacity: 1; transform: translateX(-50%); }
+html.deck-reduce .deck-brief-sheet { opacity: 1; transform: translateX(-50%); transition: none; }
+.deck-brief-eyebrow {
+  margin: 0 0 clamp(10px, 1.6vh, 18px);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a8794;
+}
+.deck-brief-title {
+  margin: 0 0 clamp(16px, 2.6vh, 28px);
+  font-family: var(--display);
+  font-synthesis: none;
+  font-weight: 800;
+  font-size: clamp(2rem, 3.4vw, 3rem);
+  line-height: 1;
+  color: #1d1c22;
+}
+/* The document itself — set small, like a real brief. */
+.deck-brief-doc {
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #2a2930;
+}
+.deck-brief-doc h3 {
+  margin: clamp(20px, 3vh, 32px) 0 10px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8a8794;
+}
+/* Callout aside — set apart from the running text, not a principle. */
+.deck-brief-doc aside {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  background: #efede7;
+  border-left: 3px solid #d8d5cc;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.deck-brief-doc h3:first-child { margin-top: 0; }
+.deck-brief-doc h4 {
+  margin: 16px 0 6px;
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1d1c22;
+}
+.deck-brief-doc p { margin: 0 0 10px; }
+.deck-brief-doc strong { font-weight: 700; color: #1d1c22; }
+.deck-brief-doc ul { margin: 0 0 12px; padding-left: 1.15em; }
+.deck-brief-doc li { margin-bottom: 6px; }
+.deck-brief-doc table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 12px;
+  font-size: 0.78rem;
+}
+.deck-brief-doc th,
+.deck-brief-doc td {
+  padding: 6px 9px;
+  border: 1px solid #e3e1da;
+  text-align: left;
+  vertical-align: top;
+}
+.deck-brief-doc th {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a8794;
+  background: #efede7;
+}
+
+/* A laptop on its own, centred on the stage — no title rail. Oversized
+   the way the offset laptops are: the screen stays fully in frame and
+   the body runs off the bottom edge. */
+.deck-slide--laptopcenter {
+  position: relative;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 clamp(24px, 5vw, 80px);
+}
+/* Taller than the stage on purpose: centred, it sheds a sliver of
+   bezel top and bottom while the screen stays fully in frame. */
+.deck-slide--laptopcenter .deck-laptop { flex: none; width: min(88vw, 140vh); }
+/* Colour-in entrance: the screen arrives grayscale and resolves into
+   colour once the slide settles — replayed on every activation. */
+.deck-slide--colorin .deck-laptop-screen img {
+  filter: grayscale(1);
+  opacity: 0.85;
+  transition: filter 1.4s ease 0.45s, opacity 1.4s ease 0.45s;
+}
+.deck-slide--colorin.is-active .deck-laptop-screen img {
+  filter: grayscale(0);
+  opacity: 1;
+}
+html.deck-reduce .deck-slide--colorin .deck-laptop-screen img {
+  filter: none;
+  opacity: 1;
+  transition: none;
+}
+/* Popover callouts, offset over the machine's left and right edges.
+   They land one by one after the slide settles. */
+.deck-pop {
+  position: absolute;
+  z-index: 2;
+  width: clamp(200px, 19vw, 280px);
+  padding: clamp(12px, 1.6vh, 18px) clamp(14px, 1.4vw, 20px);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.4s ease, transform 0.45s ease;
+}
+.deck-slide--laptopcenter.is-active .deck-pop { opacity: 1; transform: none; }
+.deck-slide--laptopcenter.is-active .deck-pop--a,
+.deck-slide--laptopcenter.is-active .deck-pop--c { transition-delay: 0.4s; }
+.deck-slide--laptopcenter.is-active .deck-pop--b,
+.deck-slide--laptopcenter.is-active .deck-pop--d { transition-delay: 0.6s; }
+.deck-slide--laptopcenter.is-active .deck-pop--e { transition-delay: 0.8s; }
+html.deck-reduce .deck-pop { opacity: 1; transform: none; transition: none; }
+.deck-pop-head {
+  margin: 0 0 clamp(4px, 0.8vh, 8px);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ffd8e4;
+}
+.deck-pop-body {
+  margin: 0;
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-label);
+  line-height: 1.45;
+  color: var(--text);
+}
+/* The spots: a/b carry the two on the first laptop, c/d/e the three
+   on the second — alternating sides, staggered heights. */
+.deck-pop--a { left: 5%; top: 32%; }
+.deck-pop--b { right: 5%; top: 52%; }
+.deck-pop--c { left: 5%; top: 24%; }
+.deck-pop--d { right: 5%; top: 42%; }
+.deck-pop--e { left: 5%; top: 62%; }
+
+/* Green job cards — a ramp of the deck's light green, lightest to
+   deepest across the row, with ink text. Shared by the Solution and
+   KPI slides. */
+.deck-flow-card--green { border-color: rgba(13, 42, 25, 0.3); }
+.deck-flow-card--green .deck-flow-card-head {
+  color: #14351f;
+  border-color: rgba(13, 42, 25, 0.3);
+}
+.deck-flow-card--green .deck-flow-card-body { color: #1c2b22; }
+.deck-flow-card--g1 { background: #cff7da; }
+.deck-flow-card--g2 { background: #b9f2c8; }
+.deck-flow-card--g3 { background: #a3e8b6; }
+/* KPI band: a second ruled header inside the card; the move copy above
+   it flexes, so the bands line up across the row. */
+.deck-flow-card { display: flex; flex-direction: column; }
+.deck-flow-card-body--grow { flex: 1 1 auto; }
+.deck-flow-card-head--kpi { border-top: 1px solid var(--border); }
+@media (max-width: 860px) {
+  /* Stacked: each area/arrow/card run follows the previous one. */
+  .deck-flow { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
+  .deck-flow-from { min-height: 72px; }
+}
+
+/* Boxed variant (the category slide): each column sits in its own
+   bounding box, the same treatment as the debt columns. */
+.deck-rituals--boxed .deck-ritual-col {
+  padding: clamp(18px, 2vw, 32px);
+  border: 1px solid var(--border);
+  border-radius: clamp(12px, 1.2vw, 18px);
+  background: var(--surface-2);
+}
+/* Company chip inside a pill: the logo drops into the circle from
+   assets/slide/amplitude/logos/<name>.png; until then it reads as an
+   empty slot. */
+.deck-ritual-pill--chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 0.9vw, 14px);
+}
+.deck-ritual-chip {
+  flex: none;
+  width: clamp(22px, 2vw, 30px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.deck-ritual-chip img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+/* One explanatory line under a ritual column's head, before the pills. */
+.deck-ritual-sub {
+  margin: calc(-1 * clamp(6px, 1vh, 14px)) 0 clamp(12px, 2vh, 24px);
+  text-align: center;
+  font-size: var(--t-label);
+  line-height: 1.4;
+  color: var(--text-muted);
+}
 .deck-rituals ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 16px); }
 .deck-ritual-pill {
   padding: clamp(11px, 1.6vh, 20px) clamp(16px, 2vw, 28px);
@@ -2220,7 +2754,9 @@ html.deck-reduce .deck-slide--specs .deck-spec-col {
 @media (max-width: 860px) {
   .deck-role { grid-template-columns: auto minmax(0, 1fr); }
   .deck-role-desc { grid-column: 2; }
-  .deck-rituals { grid-template-columns: minmax(0, 1fr); }
+  /* Stacked columns can outgrow the stage; flowing from the top keeps
+     them below the title instead of overflowing up over it. */
+  .deck-rituals { grid-template-columns: minmax(0, 1fr); align-content: start; }
 }
 
 /* Annotated screen: placeholder left, numbered callouts right. */
@@ -2618,6 +3154,15 @@ html.deck-reduce .deck-slide--laptop.deck-slide--capfig .deck-laptop {
 .deck-job { position: relative; z-index: 1; }
 .deck-job .deck-eyebrow { margin-bottom: clamp(14px, 2.2vh, 26px); }
 .deck-job .deck-title { font-size: var(--t-title-sm); margin: 0; }
+/* Three relationships (Amplitude): a third column sits inside the lens,
+   so the grid splits lobe / lens / lobe. The overlap is wider than the
+   jobs slide's so the centre column has room to breathe. */
+.deck-jobs--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 90px);
+}
+.deck-jobs--three .deck-job--center { text-align: center; }
+.deck-jobs--three .deck-job--right { text-align: right; }
 
 /* Expression collage: overlapping placeholders on a 4×4 grid, so the
    frames step across each other instead of sitting in a tidy row. */
@@ -3461,6 +4006,37 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
 }
 .deck-reflect-card:first-child { padding-top: 0; }
 .deck-reflect-card:last-child { padding-bottom: 0; border-bottom: 0; }
+/* Check variant (What good looks like): a mint check circle sits left
+   of each row — the qualities read as boxes ticked. */
+.deck-reflect-grid--check .deck-reflect-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(14px, 1.6vw, 26px);
+  align-items: start;
+}
+.deck-reflect-copy {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(6px, 0.9vh, 12px);
+  min-width: 0;
+}
+.deck-reflect-check {
+  width: clamp(36px, 3.2vw, 48px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(185, 242, 200, 0.14);
+  border: 1px solid rgba(185, 242, 200, 0.35);
+  display: grid;
+  place-items: center;
+}
+.deck-reflect-check::after {
+  content: '';
+  width: 36%;
+  height: 18%;
+  border-left: 3px solid #b9f2c8;
+  border-bottom: 3px solid #b9f2c8;
+  transform: rotate(-45deg) translateY(-30%);
+}
 .deck-reflect-head {
   margin: 0;
   font-family: var(--display);

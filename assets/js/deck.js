@@ -3651,9 +3651,551 @@
     return s;
   }
 
+  /* ── Amplitude: docs as onboarding infrastructure ─────────────────
+     A deck-only walkthrough: the Session Replay docs strategy, built
+     from the presentation outline. Deep-link only — it isn't listed on
+     the Work slide, so it stays off the public deck and opens at
+     #present=cs.amplitude.0. Screenshot and diagram slots hold
+     placeholders until the real captures are dropped in. */
+
+  /* The three reader/actor relationships. Ordered for the venn: human
+     lobe, the human+agent lens in the middle, agent lobe. */
+  var AMP_RELATIONSHIPS = [
+    { name: 'Human → human', actors: 'Developer reads, developer acts' },
+    { name: 'Human → agent', actors: 'Developer configures, their agent acts', center: true },
+    { name: 'Agent → agent', actors: 'Agent retrieves, agent acts', right: true }
+  ];
+
+  /* The relationships venn — the jobs venn's lobes, pulled closer so the
+     lens is wide enough to hold the human+agent column. Each lobe's
+     grain is masked away where the other circle overlaps, so the fins
+     carry the noise and the lens stays clean. */
+  function ampVenn() {
+    var R = 940, CY = 450, CXS = [70, 1530];
+    var defs = sEl('defs', null, [vizNoiseFilter()]);
+    var kids = [defs];
+    CXS.forEach(function (cx, i) {
+      kids.push(sEl('circle', { cx: cx, cy: CY, r: R, fill: 'none', class: 'deck-jobs-ring' }));
+      var nz = vizNoise({ tag: 'circle', cx: cx, cy: CY, r: R }, { opacity: '0.12', fadeFrom: '55%' });
+      nz.defs.forEach(function (d) {
+        // black out the other lobe inside this one's mask — the lens is
+        // where both circles land, so the grain never reaches it
+        if (d.tagName === 'mask') {
+          d.appendChild(sEl('circle', { cx: CXS[1 - i], cy: CY, r: R, fill: '#000' }));
+        }
+        defs.appendChild(d);
+      });
+      kids.push(nz.layer);
+    });
+    var svg = svgRoot(1600, 900, kids);
+    svg.setAttribute('class', 'viz-svg deck-jobs-venn');
+    svg.setAttribute('preserveAspectRatio', 'none');
+    svg.setAttribute('aria-hidden', 'true');
+    return svg;
+  }
+
+  /* The audit collage: the Session Replay docs page in the middle,
+     captures overlapping its corners. amplitude.com refuses framing
+     (X-Frame-Options: DENY), so the centre holds a capture of the live
+     page rather than an iframe — retake it with:
+       chrome --headless --window-size=1220,930 \
+         --screenshot=sessionreplay-page.png \
+         https://amplitude.com/docs/session-replay */
+  var AMP_AUDIT_WEB = 'assets/slide/amplitude/audit/sessionreplay-page.png';
+
+  /* The collage corners, laid out as in the source mock, each with its
+     caption beneath the capture. */
+  var AMP_AUDIT_CORNERS = {
+    tl: { src: 'assets/slide/amplitude/audit/brokenlinks.jpg',
+          cap: 'Broken links go to 404 pages that are present on .md files as well' },
+    tr: { src: 'assets/slide/amplitude/audit/markdown.jpg',
+          cap: '.md carries the same broken links, and repetitive content' },
+    bl: { src: 'assets/slide/amplitude/audit/education.jpg',
+          cap: 'Learning content isn\'t connected, behind a password' },
+    br: { src: 'assets/slide/amplitude/audit/chatwithnocontext.jpg',
+          cap: 'Opening the chat creates a cold open that isn\'t contextual to the page' }
+  };
+
+  /* The audit findings, kept as the talk track for the two collage
+     slides — the collage carries the evidence, this carries the words. */
+  var AMP_AUDIT_PAGES = [
+    { head: 'Path fragmentation',
+      body: 'The Instrument page is a pure router: nine-plus options with no recommendation and no default — and "More in this section" repeats what\'s already above' },
+    { head: 'Value deferred',
+      body: 'Capability-first pages with no early example of what a working replay is worth' },
+    { head: 'Orphaned integration content',
+      body: 'MCP and the Agent Prompt Library reach these pages only in the global footer, beside Careers — present as boilerplate, retrieved as marketing chrome' },
+    { head: 'Legacy DX and inconsistency',
+      body: 'Uneven containers, unclear anchoring, inconsistent titling and heading levels, repeated text' }
+  ];
+  var AMP_AUDIT_EXPERIENCE = [
+    { head: 'Markdown that defeats itself',
+      body: '.md renderings carry the full site chrome — nav, footer, competitor links; instruction is a fraction of the payload, and broken links carry over intact' },
+    { head: 'No verification step',
+      body: 'Docs end at "you have written code," not "a replay appeared" — Session Replay fails quietly, and the May 2026 debug modal lives in release notes, not the docs. Across all the documentation there is no reference to where in the product to confirm a task completed, or what the working experience looks like once it has' },
+    { head: 'Context-blind in-product help',
+      body: 'The assistant doesn\'t know the page or what you\'ve already done, so it asks for context it could infer' },
+    { head: 'No continuity',
+      body: 'Content referenced but not reachable — Academy links to Funnel Analysis and Journeys are broken, right at the cross-sell seam' }
+  ];
+
+  var AMP_LANDSCAPE = [
+    { head: 'Session replay competitors',
+      sub: 'Same check for each: .md endpoints, llms.txt, a docs MCP — answers parity in the category',
+      items: ['PostHog', 'Mixpanel', 'Heap', 'FullStory', 'LogRocket'] },
+    { head: 'Best-in-class documentation',
+      sub: 'The bar sits outside the category — what good looks like now, whoever ships it',
+      items: ['Stripe', 'Vercel', 'Supabase'] }
+  ];
+
+  /* One row per reader, reflection-style: head plus a single line. */
+  var AMP_GOOD = [
+    { head: 'Shared',
+      body: 'Solutions-first and self-contained: explicit prerequisites, versioned and platform-disambiguated, under one heading contract.' },
+    { head: 'For humans',
+      body: 'Orientation — where am I, what\'s next — and progressive depth: quick start first, edge cases later.' },
+    { head: 'For agents',
+      body: 'Chunk-independence, no visual references, unambiguous parameters — any section stands alone.' }
+  ];
+
+  /* Falsifiable, one per category of work. */
+  var AMP_CRITERIA = [
+    'A developer lands cold on a Session Replay page and reaches a working replay without leaving it.',
+    'An agent retrieves any single section and has what it needs to act — or knows what it\'s missing.',
+    'A developer configures their agent once, and it instruments correctly on the first attempt.'
+  ];
+
+  var AMP_CATEGORIES = [
+    { w: 'Content', p: 'Pages that lead with value. Owned by the content team.' },
+    { w: 'Delivery', p: 'A rendering agents can consume. Owned by docs platform and engineering.' },
+    { w: 'On-ramps', p: 'Routes into the agentic surface. Owned by content and DX together.' }
+  ];
+
+  var AMP_PAGE = [
+    { head: 'Before', items: [
+      'Organized by surface, value deferred',
+      'Headings drift across levels and names',
+      'Platform lives in the tab label only',
+      'Ends at "you have written code" — nothing confirms a replay appeared',
+      'No reference to where in the product completion shows up, or what the working experience looks like',
+      'Dead ends — no next step at the bottom'
+    ] },
+    { head: 'After', items: [
+      'Per-platform SDK code, task-first',
+      'The heading contract applied throughout',
+      'Platform named in each snippet\'s own text',
+      'Verify it worked — before anything else is offered',
+      'Points to the exact place in the product where the replay appears',
+      'Next steps close the page for both readers'
+    ] }
+  ];
+
+  var AMP_PAGE_DECISIONS = [
+    { head: 'Tabs vs. separate pages',
+      body: 'Decide per platform count — the real question is what survives the markdown rendering' },
+    { head: 'Platform in the text',
+      body: 'Each snippet names its platform in prose, not just the tab label, so the flattened markdown keeps the meaning' },
+    { head: 'Verification, twice over',
+      body: 'A human form (where to look in the app) and a machine form (what an agent can query) — the same step, two renderings; the thesis in one instance' },
+    { head: 'Next steps, twice over',
+      body: 'Progressive onboarding for humans; a stated exit condition for agents' }
+  ];
+
+  /* Routing: the other half of the machine layer. */
+  var AMP_ROUTING = [
+    'A stripped page tells an agent what\'s on the page — routing tells it where to go next: which install path applies, where prerequisites live, where verification happens',
+    'Replace nine undifferentiated options with a decision path an agent can traverse — "already on Browser SDK 2? go here"',
+    'Solution-shaped routing serves both readers: a human gets a recommendation instead of a menu, an agent gets a resolvable branch instead of a list'
+  ];
+
+  /* The docs MCP's first-party consumer — the framing to lead with. */
+  var AMP_CONSUMER = [
+    'Amplitude\'s own help widget needs exactly what external agents need — page context plus clean retrievable chunks',
+    'Ship the retrieval layer and the in-product assistant improves as a side effect, not a separate project',
+    'Lead with this: infrastructure Amplitude uses immediately, not a bet on how developers will work in two years'
+  ];
+
+  /* Scoped as an implication, not an ask — range without scope creep. */
+  var AMP_UNLOCKS = [
+    'Identity is already unified — Amplitude, Community, and Academy share SSO on an activated account; shared auth, unshared context',
+    'The platform knows what\'s instrumented, Academy knows what\'s completed, the help widget knows the page — none of them tell each other anything',
+    'Clean chunks plus existing shared identity makes the in-product assistant and Academy integration achievable, not a new initiative',
+    'Concretely: don\'t recommend the Session Replay course to someone whose account shows they finished it last month'
+  ];
+
+  /* The four layers of the machine-readable surface. */
+  var AMP_LAYERS = [
+    { key: 'txt', name: 'llms.txt',
+      desc: 'Routing map of what matters. Often auto-generated.' },
+    { key: 'md',  name: 'Markdown endpoints',
+      desc: 'Every page, minus the chrome. Platform work.' },
+    { key: 'mcp', name: 'Docs MCP server',
+      desc: 'Pages become callable tools. Platform work.' },
+    { key: 'api', name: 'Contracts and skills',
+      desc: 'OpenAPI specs and agent skills. Investment.' }
+  ];
+
+  var AMP_MEASUREMENT = [
+    { head: 'Doc-level', items: [
+      'Time to first replay',
+      'Task completion rate',
+      'Search dead-ends'
+    ] },
+    { head: 'Platform', items: [
+      'MCP calls',
+      'Installs through CLI and API',
+      'Session Replay retention',
+      'Subsequent feature adoption'
+    ] },
+    { head: 'Eval harness', items: [
+      '~20 representative agent tasks run against the docs',
+      'Scored on completion and hallucinated parameters',
+      'Docs with a test suite — the product argument made literal'
+    ] }
+  ];
+
+  var AMP_VALIDATION = [
+    'The bet is directional: agent-mediated integration is real but unmeasured — validate before scaling the investment',
+    'Twenty minutes instrumenting Session Replay in Cursor or Claude Code — one observed failure beats any statistic',
+    'Append .md to competitor doc URLs and check /llms.txt — fifteen minutes settles parity and what good looks like',
+    'Audit what else is stranded beyond MCP — project setup, API keys, SDK prerequisites; more than one means a pattern',
+    'Check what the help widget actually is — docs search, support routing, or an LLM over the doc set; the context-blind finding lands differently for each'
+  ];
+
+  /* The centre of the collage. amplitude.com refuses framing, so the
+     live page can only load when the local dev server proxies it
+     same-origin (/amplitude-docs in dev-server.py) — presenting off
+     localhost gets the real page, the deployed static site gets the
+     capture. */
+  function ampAuditWeb() {
+    var kids = [el('span.deck-audit-web-lbl', null, ['amplitude.com/docs/session-replay'])];
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      kids.push(el('iframe.deck-audit-web-frame', {
+        src: '/amplitude-docs', title: 'Amplitude Session Replay docs', tabindex: '-1'
+      }));
+    } else {
+      kids.push(el('img', { src: AMP_AUDIT_WEB, alt: '' }));
+    }
+    return el('div.deck-audit-web', null, kids);
+  }
+
+  /* One audit collage slide: the docs page centred, a capture (or a
+     dashed placeholder) overlapping each of its corners. */
+  function ampAuditCollage(label, corners) {
+    function corner(pos, spec) {
+      var cls = '.deck-audit-shot.deck-audit-shot--' + pos;
+      if (!spec) {
+        return el('figure' + cls + '.deck-audit-shot--ph', { 'aria-hidden': 'true' }, [
+          el('span.deck-fig-ph-icon', { html: IMG_ICON })
+        ]);
+      }
+      return el('figure' + cls, null, [
+        el('img', { src: spec.src, alt: '' }),
+        spec.cap ? el('figcaption', null, [spec.cap]) : null
+      ].filter(Boolean));
+    }
+    return el('section.deck-slide.deck-slide--auditcollage', { 'data-label': label }, [
+      ampAuditWeb(),
+      corner('tl', corners.tl), corner('tr', corners.tr),
+      corner('bl', corners.bl), corner('br', corners.br)
+    ]);
+  }
+
+  /* The walkthrough spine, said twice — as the problem, then as the
+     fix: Reliability, Structure, Access. */
+  var AMP_SPINE = [
+    { w: 'Reliability', p: 'Can both readers trust what they find?' },
+    { w: 'Structure', p: 'Can both readers follow a sequence to done?' },
+    { w: 'Access', p: 'Can both readers connect and act?' }
+  ];
+
+  /* Diagnosis: each theme held against the current docs — one human
+     cost, one agent cost, side by side. */
+  var AMP_DIAGNOSIS = [
+    { label: 'Diagnosis: reliability', title: 'Reliability',
+      human: [
+        'Broken links — two on the intro page alone',
+        'Each dead end costs a search, and a little trust'
+      ],
+      agent: [
+        'The .md rendering is faithful to the web — including the breaks',
+        'A dead end has no resolution: the task stalls or fabricates'
+      ] },
+    { label: 'Diagnosis: structure', title: 'Structure',
+      human: [
+        'Text repeated across and within pages',
+        'No clear sequence — and no way to confirm you\'re on the right screen in the app'
+      ],
+      agent: [
+        'Burns tokens parsing what comes next',
+        'Repetition returns near-duplicates to retrieval'
+      ] },
+    { label: 'Diagnosis: access', title: 'Access',
+      human: [
+        'Amplitude University sits behind a login',
+        'Support chat isn\'t aware of the page you\'re on',
+        'No product shots to verify you\'ve landed in the right place'
+      ],
+      agent: [
+        'No CLI or agent connection — competitors and best-in-class ship this',
+        'Readable but not executable: nothing to call'
+      ] }
+  ];
+
+  /* The spine's second pass — each area flows down into its job, and
+     each job carries the one KPI it's measured by. */
+  var AMP_JOBS = [
+    { area: 'Reliability', head: 'Trustworthy',
+      body: 'Fix the links, remove the repetition, lead every page to a desired outcome.',
+      kpi: 'Task completion' },
+    { area: 'Structure', head: 'Coherence',
+      body: 'Content-as-product: everything links, media is referenced rather than siloed, and the IA shows next steps with a pulse-check — am I on the right screen?',
+      kpi: 'Time to first success' },
+    { area: 'Access', head: 'Connectivity',
+      body: 'A clear command per feature, handing off cleanly to Claude, ChatGPT, or the user\'s own agent. Tear down the walled garden.',
+      kpi: 'Agent connections — MCP and API' }
+  ];
+
+  var FLOW_ARROW = '<svg viewBox="0 0 24 44" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v36M4 32l8 8 8-8"/></svg>';
+
+  /* The brief, addressed to the documentation team — the full document,
+     rendered on the paper sheet. */
+  var AMP_BRIEF_DOC = [
+    '<h3>Summary</h3>',
+    "<p>Amplitude's documentation now has two readers: the developer implementing analytics, and the coding agent doing it on their behalf. Today's docs are authored, structured, and measured for the first reader only, which means agents retrieve partial context and produce instrumentation that looks plausible and breaks in production. This initiative restructures documentation into a machine-legible, consistently formatted source of truth so that both readers get a correct answer on the first pass.</p>",
+    '<h3>Background</h3>',
+    '<p><strong>Why now.</strong> Documentation is moving from human-only to human + agent. Developers are no longer starting in a search bar — they are starting in Cursor, Claude Code, or an internal agent, and asking it to "add Amplitude tracking to this checkout flow." The agent reads whatever it can retrieve and writes the SDK call. If the retrieved context is stale, ambiguous, or scattered across an HTML page with tabbed code samples, the agent guesses. A wrong guess doesn’t produce an error message — it produces silently malformed events, a broken taxonomy, and a customer who concludes the product is unreliable. Meeting people and their agents where they are is now a growth and defensibility question, not a content-ops question. The competitor whose docs an agent can parse cleanly becomes the default instrumentation choice, and that choice is sticky.</p>',
+    '<p><strong>Current state.</strong> Documentation lives across several surfaces with different authoring models: the docs site, the help center, the API reference, SDK READMEs in GitHub, changelogs, and community threads. The same concept is explained differently depending on where a reader lands, and SDK guides diverge in structure from one language to the next. Content is rendered as HTML with interactive affordances — tabs, accordions, expandable code blocks — that serve a human scanning a page and hide content from anything parsing it. There is no llms.txt, no plain-markdown endpoint per page, and no MCP surface. Measurement covers human sessions: pageviews, search terms, thumbs-up. Nothing tells us whether an agent retrieved the right page, or whether the code it wrote afterward worked.</p>',
+    '<h3>Approach</h3>',
+    '<p>The organizing idea is trust, and trust here has a narrow operational meaning: one canonical answer per question, retrievable in whatever form the reader arrives in. Not more documentation. Not prettier documentation. Fewer contradictions, predictable structure, and content that survives being stripped of its chrome. Everything in this brief is a means to that end, and anything that doesn’t move it gets cut.</p>',
+    '<p><strong>Target readers.</strong> Two, weighted differently by stage.</p>',
+    '<table><tr><th>Reader</th><th>Job to be done</th><th>What they need from us</th></tr>',
+    '<tr><td>Developers (human)</td><td>Implement, debug, and extend Amplitude in their own codebase</td><td>Orientation, decision guidance, worked examples, a fast path back to the product</td></tr>',
+    '<tr><td>Agents</td><td>Retrieve accurate context and emit working code</td><td>Flat structure, stable URLs, plain markdown, unambiguous naming, machine-readable schemas</td></tr></table>',
+    "<p>These are not competing audiences. Content structured well enough for an agent to parse reliably is also content a human can scan. The failure mode is optimizing for the human's page and forgetting the agent's payload.</p>",
+    '<p><strong>Principles.</strong></p>',
+    '<ul>',
+    '<li><strong>Trustworthy</strong> — One canonical answer per question, retrievable in whatever form the reader arrives in. Fewer contradictions, predictable structure, and content that survives being stripped of its chrome.</li>',
+    '<li><strong>Coherence</strong> — One concept, one canonical page, one vocabulary. Every SDK guide follows the same section order so that reader and retriever both know where to look. Terminology is governed; "event property" means the same thing in every surface.</li>',
+    '<li><strong>Connectivity</strong> — Documentation connects outward rather than sitting in a walled site. Plain-markdown endpoints, llms.txt, an OpenAPI spec that matches reality, an MCP server, and links that run in both directions between docs and product.</li>',
+    '</ul>',
+    '<aside><strong>Content as product</strong> — Docs get an owner, a roadmap, a quality bar enforced in CI, and a deprecation process. Content ships and gets maintained on the same terms as the SDK it documents.</aside>',
+    '<p><strong>Opportunities.</strong> Markdown consistency is the highest-leverage lever and the least glamorous one. Standardized frontmatter, a fixed heading hierarchy, and code samples that are tested rather than hand-written give us structure that both a static site and a retriever can rely on. Beyond that, packaging conventions as skills deserves a hard look: rather than hoping an agent assembles the right pattern from a dozen pages, we publish an Amplitude instrumentation skill that carries our event-naming conventions, taxonomy guidance, and SDK setup as a single loadable unit. That turns documentation from something an agent has to find into something it can be handed. Adjacent to this: an MCP server for live schema and taxonomy lookups, and content linting in CI so drift is caught at PR time.</p>',
+    "<p><strong>Prioritization.</strong> Trustworthy first. Sequence the work as: (1) audit and consolidate to remove contradictions, (2) normalize markdown and enforce it in CI, (3) expose agent-readable surfaces, (4) instrument and measure, (5) package skills and MCP. Breadth and visual polish wait. A smaller set of documentation we can vouch for beats a larger set we can't.</p>",
+    '<h3>Design</h3>',
+    '<p>Design deliverables that articulate the experience for both readers:</p>',
+    '<ul>',
+    '<li><strong>IA map (current → proposed).</strong> Every existing surface plotted, with duplicates and orphans marked, and the consolidation path to a single canonical tree.</li>',
+    '<li><strong>Page template anatomy.</strong> Annotated spec for the standard doc page: frontmatter contract, heading hierarchy, code-sample block, prerequisites, related-concepts footer. Shown twice — as rendered HTML and as the raw markdown an agent receives — to make the parity requirement legible.</li>',
+    '<li><strong>Agent retrieval flow.</strong> A journey diagram tracing one task ("add Amplitude to this checkout flow") from prompt through retrieval to emitted code, with failure points annotated against the current state.</li>',
+    "<li><strong>Agent-facing surface design.</strong> What llms.txt, /page.md, and the MCP tool descriptions look like as designed artifacts. Naming and description text here is UX copy, and it's read by a model that will act on it.</li>",
+    '<li><strong>In-product entry points.</strong> Where documentation surfaces inside Amplitude — empty states, taxonomy setup, debugger errors — and where the product surfaces inside documentation.</li>',
+    '<li><strong>Docs quality dashboard.</strong> The internal view an author uses: lint status, staleness, retrieval success, task-level correctness by SDK.</li>',
+    '</ul>',
+    '<h3>Requirements</h3>',
+    '<h4>Audit and consolidation</h4>',
+    '<ul>',
+    '<li>Inventory of every documentation surface, with owner, format, update cadence, and traffic.</li>',
+    '<li>Duplicate-concept report; each conflict resolved to one canonical page with redirects from the rest.</li>',
+    '<li>Governed terminology list, applied across all surfaces.</li>',
+    '</ul>',
+    '<h4>Structure</h4>',
+    '<ul>',
+    '<li>As a doc author, I need a frontmatter schema (title, description, product area, SDK, version, last-verified) so every page carries consistent metadata.</li>',
+    '<li>As a doc author, I need a lint check in CI that fails a PR on missing frontmatter, broken heading hierarchy, or untested code samples.</li>',
+    '<li>As a developer, I need every SDK guide to follow the same section order so I can move between languages without relearning the layout.</li>',
+    '<li>As an agent, I need all content present in the markdown source — no meaning carried only by tabs, accordions, or rendered chrome.</li>',
+    '</ul>',
+    '<h4>Connectivity</h4>',
+    '<ul>',
+    '<li>As an agent, I need a plain-markdown version of every page at a predictable URL.</li>',
+    '<li>As an agent, I need an llms.txt index that describes the documentation set and points to canonical entry paths.</li>',
+    '<li>As an agent, I need an OpenAPI spec that matches shipped API behavior and is generated from source rather than maintained by hand.</li>',
+    "<li>As an agent, I need an MCP server exposing schema, taxonomy, and event-definition lookups against the user's own workspace.</li>",
+    '<li>As a developer, I need code samples that are executed in CI so a copied snippet compiles.</li>',
+    '</ul>',
+    '<h4>Skills</h4>',
+    '<ul>',
+    '<li>As an agent, I need an Amplitude instrumentation skill that packages naming conventions, taxonomy design, and SDK setup so correct patterns arrive as a unit rather than being reassembled from scattered pages.</li>',
+    '<li>As a doc author, I need skill content generated from the same source as the docs so the two cannot drift.</li>',
+    '</ul>',
+    '<h4>Measurement</h4>',
+    '<ul>',
+    '<li>As a docs owner, I need retrieval telemetry: which pages agents fetch, via which surface, and whether the fetch succeeded.</li>',
+    '<li>As a docs owner, I need an evaluation set of common instrumentation tasks, run against major agents on a schedule, scored on whether the emitted code works.</li>',
+    '<li>As a docs owner, I need docs instrumented in Amplitude with a defined event taxonomy — dogfooding the product on its own documentation.</li>',
+    '</ul>'
+  ].join('');
+
+  function buildAmplitudeSlides() {
+    var s = [];
+
+    /* ── The walkthrough: open → diagnosis → solution → brief ─────── */
+
+    // 1. Cover — same MacBook slot as the other desktop covers, with
+    // the session replay hero in the screen.
+    var coverArt = laptopFrame('', 'assets/slide/amplitude/concepts/session_replay_hero.jpg');
+    coverArt.classList.add('deck-cs-device', 'deck-cs-device--laptop');
+    coverArt.setAttribute('aria-hidden', 'true');
+    s.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-title', { 'data-label': 'Amplitude' }, [
+      coverArt,
+      el('div.deck-cs-paper', null, [
+        el('div.cs-main', null, [el('h1', null, ['Session Replay Docs Redesign'])])
+      ]),
+      el('div.deck-cs-cover-desc', null, [
+        el('p.cs-deck', null, ['Amplitude — a state of the union across reliability, structure, and access, and where the redesign takes them'])
+      ])
+    ]));
+
+    // 3. The two users as a venn — human and agent lobes, the
+    // human+agent relationship in the lens between them.
+    s.push(el('section.deck-slide.deck-slide--jobs', { 'data-label': 'Three relationships' }, [
+      ampVenn(),
+      el('div.deck-jobs.deck-jobs--three', null, AMP_RELATIONSHIPS.map(function (r) {
+        var mod = r.center ? '.deck-job--center' : r.right ? '.deck-job--right' : '';
+        return el('div.deck-job' + mod, null, [
+          el('p.deck-eyebrow', null, [r.name]),
+          el('h2.deck-title', null, [r.actors])
+        ]);
+      }))
+    ]));
+
+    // 5. The spine, first pass — the three areas, untitled, in the same
+    // banded-box style as the job cards: head band, rule, body.
+    s.push(el('section.deck-slide.deck-slide--debt', { 'data-label': 'Three areas' }, [
+      el('div.deck-debt-grid', null, AMP_SPINE.map(function (p) {
+        return el('div.deck-flow-card', null, [
+          el('p.deck-flow-card-head', null, [p.w]),
+          el('p.deck-flow-card-body', null, [p.p])
+        ]);
+      }))
+    ]));
+
+    // 6. The current docs, in evidence — the live page with the
+    // captures overlapping its corners.
+    s.push(ampAuditCollage('Audit: the experience', AMP_AUDIT_CORNERS));
+
+    // 5. Diagnosis — all three themes on one slide: a compact header
+    // per theme, the human and agent costs stacked beneath it.
+    s.push(el('section.deck-slide.deck-slide--diag', { 'data-label': 'Diagnosis' }, [
+      el('div.deck-diag', null, AMP_DIAGNOSIS.map(function (d) {
+        function box(head, items) {
+          return el('div.deck-debt-col', null, [
+            el('p.deck-debt-head', null, [head]),
+            el('ul.deck-debt-list', null, items.map(function (t) { return el('li', null, [t]); }))
+          ]);
+        }
+        return el('div.deck-diag-col', null, [
+          el('h3.deck-diag-title', null, [d.title]),
+          box('For the human', d.human),
+          box('For the agent', d.agent)
+        ]);
+      }))
+    ]));
+
+    // 11. The strategic layer, named once
+    var stakes = el('p.deck-statement.deck-statement--center', null, []);
+    stakes.innerHTML = 'In a product-led world, broken or unclear docs <strong>erode trust</strong> — ' +
+      'and cost <strong>acquisition and retention</strong>.';
+    s.push(el('section.deck-slide.deck-slide--statement.deck-slide--statement-center', { 'data-label': 'The stakes' }, [stakes]));
+
+    // 11. Solution — each area flows down an arrow into its job card:
+    // faint area panel, arrow, then a banded mint card with the move.
+    var flowKids = [];
+    AMP_JOBS.forEach(function (j, i) {
+      flowKids.push(el('div.deck-flow-from', null, [j.area]));
+      flowKids.push(el('div.deck-flow-arrow', { 'aria-hidden': 'true', html: FLOW_ARROW }));
+      flowKids.push(el('div.deck-flow-card.deck-flow-card--green.deck-flow-card--g' + (i + 1), null, [
+        el('p.deck-flow-card-head', null, [j.head]),
+        el('p.deck-flow-card-body', null, [j.body])
+      ]));
+    });
+    s.push(el('section.deck-slide.deck-slide--solution', { 'data-label': 'Three jobs' }, [
+      el('h2.deck-title', null, ['Solution']),
+      el('div.deck-flow', null, flowKids)
+    ]));
+
+    // 13. One metric per job — the same mint cards, each extended with
+    // a ruled KPI band naming the metric it's measured by. Untitled:
+    // the cards sit centred on the stage.
+    s.push(el('section.deck-slide.deck-slide--debt', { 'data-label': 'One metric per job' }, [
+      el('div.deck-debt-grid', null, AMP_JOBS.map(function (j, i) {
+        return el('div.deck-flow-card.deck-flow-card--green.deck-flow-card--g' + (i + 1), null, [
+          el('p.deck-flow-card-head', null, [j.head]),
+          el('p.deck-flow-card-body.deck-flow-card-body--grow', null, [j.body]),
+          el('p.deck-flow-card-head.deck-flow-card-head--kpi', null, ['KPI']),
+          el('p.deck-flow-card-body', null, [j.kpi])
+        ]);
+      }))
+    ]));
+
+    // 14-15. The session replay concepts — each laptop alone, centred
+    // on the stage, with popover callouts offset over its left and
+    // right edges. Each callout leads with the job it serves.
+    function ampPop(spot, head, body) {
+      return el('aside.deck-pop.deck-pop--' + spot, null, [
+        el('p.deck-pop-head', null, [head || 'Annotation']),
+        el('p.deck-pop-body', null, [body || 'Placeholder — callout copy to come'])
+      ]);
+    }
+    s.push(el('section.deck-slide.deck-slide--laptopcenter', { 'data-label': 'Laptop 1' }, [
+      laptopFrame('', 'assets/slide/amplitude/concepts/session_replay1.jpg'),
+      ampPop('c', 'Trustworthy',
+        'Have a guided approach to steps to implement session replay and configuring other features.'),
+      ampPop('e', 'Trustworthy',
+        'Images to help a human user visually confirm where changes are happening in the software.'),
+      ampPop('d', 'Connectivity',
+        'A clear way to connect to whatever AI assistant you choose, or a CLI command.')
+    ]));
+    s.push(el('section.deck-slide.deck-slide--laptopcenter', { 'data-label': 'Laptop 2' }, [
+      laptopFrame('', 'assets/slide/amplitude/concepts/session_replay2.jpg'),
+      ampPop('c', 'Trustworthy',
+        'Clear guidance to help people succeed by clearly connecting documentation progressively.'),
+      ampPop('e', 'Coherent',
+        'Video that can be consumed within context, regardless of where it sits on the platform.'),
+      ampPop('d', 'Connectivity',
+        'Context-aware chat, so the user isn\'t beginning from a cold start.')
+    ]));
+
+    // 16. The hero, full size — the redesigned overview on its own.
+    // --colorin fades the screen from grayscale into colour, so the
+    // wireframe world resolves into the real product.
+    s.push(el('section.deck-slide.deck-slide--laptopcenter.deck-slide--colorin', { 'data-label': 'Laptop 3' }, [
+      laptopFrame('', 'assets/slide/amplitude/concepts/session_replay_hero.jpg')
+    ]));
+
+    // 12. The brief — to the documentation team
+    // A sheet of paper rising from the bottom of the stage. The full
+    // document overruns the sheet, so it scrolls in place.
+    s.push(el('section.deck-slide.deck-slide--brief', { 'data-label': 'The brief' }, [
+      el('div.deck-brief-sheet', null, [
+        el('h2.deck-brief-title', null, ['The brief']),
+        el('div.deck-brief-doc', { html: AMP_BRIEF_DOC })
+      ])
+    ]));
+
+    // 16. Close on the outcome
+    var closeOut = el('p.deck-statement.deck-statement--center', null, []);
+    closeOut.innerHTML = 'The outcome: <strong>adoption</strong> — and <strong>defensibility</strong> ' +
+      'in a space that\'s heating up.';
+    s.push(el('section.deck-slide.deck-slide--statement.deck-slide--statement-center', { 'data-label': 'The outcome' }, [closeOut]));
+
+    // 16. Questions
+    s.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-title.deck-slide--cs-outro', { 'data-label': 'Questions' }, [
+      el('div.deck-cs-paper', null, [el('div.cs-main', null, [el('h1', null, ['Questions?'])])])
+    ]));
+
+    /* The appendix slides were cut from the deck; their content lives
+       on in the AMP_* arrays above if they're ever restored. */
+
+    return s;
+  }
+
   /* Studies built entirely in the deck, with no entry in CASE_STUDIES. */
   var DECK_ONLY_STUDIES = {
-    accelerate: { title: 'Accelerate: AI Campaign Creation', build: buildAccelerateSlides }
+    accelerate: { title: 'Accelerate: AI Campaign Creation', build: buildAccelerateSlides },
+    /* Deep-link only (not listed on the Work slide): #present=cs.amplitude.0 */
+    amplitude:  { title: 'Amplitude: Docs as Onboarding Infrastructure', build: buildAmplitudeSlides }
   };
 
   /* ── Case-study slides: one slide per <h2> section ─────────────────
@@ -4427,6 +4969,7 @@
     var hs = homeSlides();
     if (!hs.length) return;
     currentCsKey = null;
+    deck.classList.remove('deck--amp');
     reveal();
     mount(hs, { mode: 'home', startAt: startAt || 0 });
     if (window.track) window.track('present_open', {});
@@ -4438,6 +4981,9 @@
     var cs = buildCaseStudySlides(key);
     if (!cs) return;
     currentCsKey = key;
+    // The Amplitude walkthrough presents standalone — no site chrome,
+    // so the "Back to deck" control stays hidden there.
+    deck.classList.toggle('deck--amp', key === 'amplitude');
     reveal();
     mount(cs.slides, { mode: 'cs', startAt: startAt || 0 });
     fitCoverTitle(cs.slides[0]);

@@ -61,6 +61,17 @@ source the normal site overlay uses, so content stays in sync.
 
 Clicking a row on **Select work** opens that study as its own deck.
 
+### Deck-only studies
+
+`DECK_ONLY_STUDIES` in `deck.js` holds studies built entirely in the deck,
+with no written case study behind them:
+
+- `accelerate` — listed on **Select work** (appended in `slideWork`)
+- `amplitude` — the Session Replay docs-strategy walkthrough. **Deep-link
+  only**: it isn't on the Work slide or the overview, and opens at
+  `#present=cs.amplitude.0`. Placeholders still to fill: cover laptop
+  screen, audit screenshots, the IA diagram, and the machine-layer mock.
+
 ### Cover device mockups
 
 `PHONE_CASE_STUDIES` (array of keys) decides phone vs. desktop frame.
