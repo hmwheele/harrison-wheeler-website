@@ -2018,19 +2018,18 @@
 
   function slideTop50() {
     return el('section.deck-slide.deck-slide--top50', { 'data-label': 'Top 50 issues' }, [
-      el('h2.deck-title', null, ['Top 50 issues were put on the backlog for new revenue driving projects']),
-      // The verbatims carry this slide on their own — no screenshot beside them.
+      // The verbatims carry this slide on their own — no title, no caption,
+      // no screenshot beside them.
       el('div.deck-top50-body', null, [
-        /* Feedback frame: avatar slot on the left, the verbatim beside it —
-           the layout from the source Figma frame. */
+        /* Quote card: an oversized GT America quote mark stacked over the
+           verbatim, which is set in mono. */
         el('ul.deck-quote-list', null, TOP50_QUOTES.map(function (q) {
           return el('li.deck-quote-note', null, [
-            el('span.deck-quote-avatar', { 'aria-hidden': 'true' }, []),
+            el('span.deck-quote-mark', { 'aria-hidden': 'true' }, ['“']),
             el('p.deck-quote-text', null, [q])
           ]);
         }))
-      ]),
-      el('p.deck-slide-note', null, ['A part of the presentation on product quality I gave at LMS all-hands'])
+      ])
     ]);
   }
 

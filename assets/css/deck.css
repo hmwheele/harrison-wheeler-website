@@ -26,9 +26,10 @@ html.deck-mode main {
   z-index: 1000;
   background: var(--bg);
   color: var(--text);
-  /* The deck uses no GT America: display is Neudron, running copy is
-     Merriweather, everything else (chrome, labels, diagram text) is mono.
-     The root falls back to mono so nothing inherits the site sans. */
+  /* Display is Neudron, running copy is Merriweather, everything else
+     (chrome, labels, diagram text) is mono. The root falls back to mono so
+     nothing inherits the site sans; GT America appears only as the quote
+     mark on the verbatim cards. */
   font-family: var(--mono);
   /* faint lavender wash so slides don't read as flat black */
   background-image:
@@ -1773,12 +1774,11 @@ html.deck-reduce .deck-guest-row { animation: none; }
   justify-content: flex-start;
   align-items: flex-start;
   text-align: left;
-  /* extra bottom padding so the footnote clears the deck controls */
+  /* extra bottom padding so the cards clear the deck controls */
   padding: clamp(28px, 4vh, 52px) clamp(24px, 5vw, 80px) clamp(64px, 10vh, 116px);
 }
-.deck-slide--top50 .deck-title { margin: 0 0 clamp(20px, 3vh, 40px); }
-/* Single column now that the screenshot is gone — the verbatims run down
-   the slide on their own. */
+/* Single column now that the screenshot is gone — the verbatim cards are
+   the whole slide. */
 .deck-top50-body {
   flex: 1 1 auto;
   min-height: 0;
@@ -1788,45 +1788,54 @@ html.deck-reduce .deck-guest-row { animation: none; }
   gap: clamp(20px, 3vw, 48px);
   align-items: stretch;
 }
-/* The verbatims run down the left rail, under the title. Capped at 640px —
-   a feedback frame is a quote card, not a full-width band. */
+/* The three verbatims sit side by side — one row, equal columns, cards
+   stretched to a common height. */
 .deck-quote-list {
   list-style: none;
   margin: 0;
   padding: 0;
-  width: min(100%, 640px);
-  display: flex;
-  flex-direction: column;
-  gap: clamp(12px, 1.8vh, 22px);
-  justify-content: center;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 24px);
+  align-content: center;
+  align-items: stretch;
   text-align: left;
 }
-/* Feedback frame: avatar left, verbatim beside it, generous corner radius —
-   the layout from the source Figma frame. */
+/* Quote card: dark surface, an oversized quote mark set in GT America
+   stacked over the verbatim, which stays in mono. The one place the deck
+   reaches for the site sans — the mark is a glyph, not running copy. */
 .deck-quote-note {
   display: flex;
-  align-items: center;
-  gap: clamp(12px, 1.4vw, 18px);
-  padding: clamp(14px, 1.5vw, 20px);
-  border-radius: clamp(12px, 1.5vw, 18px);
-  /* white card, no border — it should read as a post, not a deck callout */
-  background: #fff;
+  flex-direction: column;
+  gap: clamp(14px, 1.5vw, 24px);
+  /* the mark's line box is cropped, so the top step is set generously —
+     it's what actually reads as the card's top padding */
+  padding: clamp(32px, 3.4vw, 52px) clamp(22px, 2.4vw, 34px) clamp(28px, 2.8vw, 40px);
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
-.deck-quote-avatar {
-  flex: none;
-  width: clamp(44px, 4.4vw, 64px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: #d9d9d9;
+.deck-quote-mark {
+  font-family: var(--font);
+  font-weight: 700;
+  /* The glyph only fills the top of its em box, so the line box is cropped
+     hard — otherwise the mark floats a long way above the copy. */
+  font-size: clamp(4.4rem, 6.6vw, 7.2rem);
+  line-height: 0.5;
+  color: var(--primary);
+  /* trims the left side bearing so the mark aligns with the copy below */
+  margin-left: -0.06em;
 }
 .deck-quote-text {
   margin: 0;
   min-width: 0;
-  font-family: var(--serif);
-  font-weight: var(--serif-light);
-  font-size: var(--t-micro);
-  line-height: 1.45;
-  color: #16151a;
+  font-family: var(--mono);
+  font-weight: 400;
+  /* a step under --t-copy: enough to keep the cards squarish rather than
+     tall columns of wrapped mono */
+  font-size: clamp(0.95rem, 1.35vw, 1.3rem);
+  line-height: 1.55;
+  color: var(--text);
 }
 
 /* Title over a full-bleed figure. */
@@ -2846,6 +2855,7 @@ html.deck-reduce .deck-pop { opacity: 1; transform: none; transition: none; }
 }
 @media (max-width: 860px) {
   .deck-top50-body,
+  .deck-quote-list,
   .deck-annotated { grid-template-columns: minmax(0, 1fr); }
   .deck-slide--pointsplit { grid-template-columns: minmax(0, 1fr); gap: clamp(20px, 4vh, 40px); }
 }
