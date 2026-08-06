@@ -149,9 +149,10 @@
     'video-recorder': 'assets/slide/dual_creator_cam/title.png',
     'leadcraft': 'assets/slide/growth/hero.jpg',
     'events': 'assets/slide/events_hero/hero.png',
-    'pods': 'assets/slide/pods/hero.jpg'
+    'pods': 'assets/slide/pods/hero.jpg',
+    'base': 'assets/case_studies/base_crm/base_crm_with_design_system.jpg'
   };
-  var CS_COVER_IN_LAPTOP = ['leadcraft', 'pods'];
+  var CS_COVER_IN_LAPTOP = ['leadcraft', 'pods', 'base'];
   var PHONE_CASE_STUDIES = ['video-recorder', 'events'];
   var IMG_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
     'stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/>' +
@@ -241,11 +242,30 @@
     var title = hero && hero.querySelector('.cs-hero-title');
     if (!title) return;
 
-    // Below 861px the band grows with its content, so leave CSS in charge.
+    // Below 861px the band grows with its content, so there is no band
+    // height to fit against — grow until the longest word spans the column
+    // (desktop-like scale, not the small CSS clamp), but stop before the
+    // stretched block claims more than ~45% of the viewport, so the cover
+    // art above the title stays visible on long titles.
     if (!window.matchMedia('(min-width: 861px)').matches) {
-      title.style.fontSize = '';
+      var wBudget = (window.innerHeight * 0.38) / 1.5;   // layout px; painted is 1.5×
+      var wlo = 28, whi = 160, wbest = wlo;
+      for (var w = 0; w < 12; w++) {
+        var wmid = (wlo + whi) / 2;
+        title.style.fontSize = wmid + 'px';
+        // scrollWidth only exceeds clientWidth once a word can no longer
+        // fit on one line — the largest size passing both caps is the fit.
+        if (title.scrollWidth <= title.clientWidth + 1 && title.offsetHeight <= wBudget) { wbest = wmid; wlo = wmid; }
+        else whi = wmid;
+      }
+      title.style.fontSize = wbest.toFixed(2) + 'px';
+      // The scaleY(1.5) paints upward past the layout box (origin is the
+      // bottom); the desktop height budget absorbs that, here reserve the
+      // overshoot as margin so the caps clear the ✕ instead of underlapping.
+      title.style.marginTop = Math.round(title.offsetHeight * 0.5) + 'px';
       return;
     }
+    title.style.marginTop = '';
 
     var cs = window.getComputedStyle(hero);
     var avail = hero.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
@@ -431,6 +451,10 @@
     clearTimeout(refitTimer);
     refitTimer = setTimeout(fitHeroTitle, 120);
   }, { passive: true });
+  // The width- vs height-fit branch hangs off this query, so refit the
+  // moment it flips (a debounced resize can land before the flip registers).
+  var fitMQ = window.matchMedia('(min-width: 861px)');
+  if (fitMQ.addEventListener) fitMQ.addEventListener('change', function () { fitHeroTitle(); });
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(function () { fitHeroTitle(); });
   }

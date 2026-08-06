@@ -1045,7 +1045,7 @@
       k.push(dgmBox(b.x - BOT_W / 2, 282, BOT_W, 30, b.t));
     });
     var hubDefs = sEl('defs', null, [vizNoiseFilter()]);
-    podGlyph(k, hubDefs, cx, hubY, hubR);
+    podGlobe(k, hubDefs, cx, hubY, hubR);
     k.push(sEl('text', { x: cx + hubR + 10, y: hubY + 5, 'text-anchor': 'start', class: 'dgm-node-lbl', text: 'Pods' }));
     k.unshift(hubDefs);
     return svgRoot(W, H, k);
@@ -1080,9 +1080,11 @@
 
   function diagramStack(opts) {
     opts = opts || {};
-    return svgRoot(760, 540, stackPlates({
-      count: opts.count || 12, cx: 380, TW: 300, BW: 560, depth: 92, step: 30, yTop: 56
-    }));
+    var defs = sEl('defs', null, [vizNoiseFilter()]);
+    return svgRoot(760, 540, [
+      defs,
+      isoTower(defs, { cx: 380, yTop: 30, w: 200, count: opts.count || 12, slabH: 24 })
+    ]);
   }
 
   function slideStack() {
@@ -2731,9 +2733,112 @@
     });
   }
 
+  /* The pod as a 3D globe: a radially lit sphere in the pod green —
+     light falling from the upper left, a soft specular glint, a ground
+     shadow beneath — with the four member dots riding the surface. */
+  function podGlobe(k, defs, cx, cy, r) {
+    var id = 'pod-globe-' + (++noiseSeq);
+    defs.appendChild(sEl('radialGradient', {
+      id: id, cx: '33%', cy: '28%', r: '78%'
+    }, [
+      sEl('stop', { offset: '0%', 'stop-color': '#e2fae9' }),
+      sEl('stop', { offset: '45%', 'stop-color': '#b9f2c8' }),
+      sEl('stop', { offset: '80%', 'stop-color': '#84c29c' }),
+      sEl('stop', { offset: '100%', 'stop-color': '#5d9377' })
+    ]));
+    // the rim runs light on the lit side down to the deep green in the
+    // shade, following the same light as the sphere fill
+    defs.appendChild(sEl('linearGradient', {
+      id: id + '-rim', x1: '0', y1: '0', x2: '1', y2: '1'
+    }, [
+      sEl('stop', { offset: '0%', 'stop-color': '#b9f2c8' }),
+      sEl('stop', { offset: '100%', 'stop-color': '#4f8465' })
+    ]));
+    // ground shadow first, so the sphere floats over it
+    k.push(sEl('ellipse', {
+      cx: cx, cy: cy + r * 1.16, rx: r * 0.68, ry: r * 0.13,
+      fill: 'rgba(0, 0, 0, 0.4)'
+    }));
+    k.push(sEl('circle', {
+      cx: cx, cy: cy, r: r, fill: 'url(#' + id + ')',
+      stroke: 'url(#' + id + '-rim)', 'stroke-width': 1
+    }));
+    // the shared grain, fading toward the rim like the other surfaces
+    var nz = vizNoise({ tag: 'circle', cx: cx, cy: cy, r: r }, { opacity: '0.55', fadeFrom: '38%' });
+    nz.defs.forEach(function (d) { defs.appendChild(d); });
+    k.push(nz.layer);
+    // specular glint on the lit side
+    k.push(sEl('ellipse', {
+      cx: cx - r * 0.34, cy: cy - r * 0.44, rx: r * 0.26, ry: r * 0.14,
+      fill: 'rgba(255, 255, 255, 0.3)',
+      transform: 'rotate(-28 ' + (cx - r * 0.34) + ' ' + (cy - r * 0.44) + ')'
+    }));
+    var d = r * 0.32, dr = r * 0.18;
+    [[-d, -d], [d, -d], [-d, d], [d, d]].forEach(function (o) {
+      k.push(sEl('circle', { cx: cx + o[0], cy: cy + o[1], r: dr, fill: 'rgba(235, 253, 241, 0.8)' }));
+    });
+  }
+
   // Left: the quarterly request pile. Right: the designers absorbing it.
   // Each half sits in its own panel so the shapes read as two compared
   // quantities rather than art floating on the slide.
+  /* An isometric tower of identical 3D blocks. Every slab is a full
+     box — top face and both side faces — so the pile reads as stacked
+     volumes rather than a striped facade. Drawn bottom-up, each slab
+     occluding the top face of the one beneath; the .v-plate animation
+     stacks them in the same order. */
+  function isoTower(defs, o) {
+    var w = o.w, iso = 0.5, count = o.count, slabH = o.slabH;
+    var cx = o.cx, yTop = o.yTop, d = w * iso;
+    function poly(pts, fill) {
+      return sEl('polygon', {
+        points: pts.map(function (pt) { return pt[0].toFixed(1) + ',' + pt[1].toFixed(1); }).join(' '),
+        fill: fill, stroke: 'rgba(91, 75, 176, 0.45)', 'stroke-width': 1, 'stroke-linejoin': 'round'
+      });
+    }
+    // one slab: top rhombus at y, faces dropping slabH beneath it
+    function slab(y) {
+      var N = [cx, y], E = [cx + w, y + d], S = [cx, y + 2 * d], W2 = [cx - w, y + d];
+      return sEl('g', {}, [
+        poly([[W2[0], W2[1]], [S[0], S[1]], [S[0], S[1] + slabH], [W2[0], W2[1] + slabH]], '#8a7ae0'),
+        poly([[S[0], S[1]], [E[0], E[1]], [E[0], E[1] + slabH], [S[0], S[1] + slabH]], '#a091f0'),
+        poly([N, E, S, W2], '#d9ccfb')
+      ]);
+    }
+    var slabs = [];
+    // bottom slab first, so each later one stacks over the one beneath
+    for (var k = count - 1; k >= 0; k--) {
+      var g = slab(yTop + k * slabH);
+      g.setAttribute('class', 'v-plate');
+      g.setAttribute('style', 'transition-delay:' + ((count - 1 - k) * 0.06).toFixed(2) + 's');
+      slabs.push(g);
+    }
+    // grain wash over the finished tower — masked to the silhouette,
+    // fading top to bottom, landing just after the roof does
+    var totH = count * slabH;
+    var hex = [
+      [cx, yTop], [cx + w, yTop + d], [cx + w, yTop + d + totH],
+      [cx, yTop + 2 * d + totH], [cx - w, yTop + d + totH], [cx - w, yTop + d]
+    ].map(function (pt) { return pt[0].toFixed(1) + ',' + pt[1].toFixed(1); }).join(' ');
+    var nid = 'tower-noise-' + (++noiseSeq);
+    defs.appendChild(sEl('linearGradient', {
+      id: nid + '-g', gradientUnits: 'userSpaceOnUse',
+      x1: cx, y1: yTop, x2: cx, y2: yTop + 2 * d + totH
+    }, [
+      sEl('stop', { offset: '0%', 'stop-color': '#fff' }),
+      sEl('stop', { offset: '100%', 'stop-color': '#333' })
+    ]));
+    defs.appendChild(sEl('mask', { id: nid }, [
+      sEl('polygon', { points: hex, fill: 'url(#' + nid + '-g)' })
+    ]));
+    var wash = sEl('g', { class: 'v-plate', mask: 'url(#' + nid + ')' }, [
+      sEl('polygon', { points: hex, filter: 'url(#v-noise-filter)', opacity: '0.32' })
+    ]);
+    wash.setAttribute('style', 'transition-delay:' + (count * 0.06 + 0.1).toFixed(2) + 's');
+    slabs.push(wash);
+    return sEl('g', {}, slabs);
+  }
+
   function diagramLoad() {
     var W = 1200, H = 600, k = [], defs = sEl('defs', null, [vizNoiseFilter()]);
     k.push(defs);
@@ -2748,11 +2853,12 @@
     k.push(sEl('text', { x: 34, y: 80, 'text-anchor': 'start', class: 'dgm-lane-lbl', text: 'Projects' }));
     k.push(sEl('text', { x: 644, y: 80, 'text-anchor': 'start', class: 'dgm-lane-lbl', text: 'Designers' }));
     k.push(sEl('text', { x: 295, y: 162, 'text-anchor': 'middle', class: 'dgm-stat-lbl', text: '99+' }));
-    stackPlates({ count: 12, cx: 295, TW: 210, BW: 400, depth: 62, step: 22, yTop: 194 }).forEach(function (n) { k.push(n); });
+    k.push(isoTower(defs, { cx: 295, yTop: 178, w: 112, count: 13, slabH: 18 }));
     k.push(sEl('text', { x: 295, y: 546, 'text-anchor': 'middle', class: 'dgm-cap', text: 'Quarterly requests' }));
-    // four pods in a diamond, matching the source slide's cluster
-    [[905, 176], [769, 320], [1041, 320], [905, 464]].forEach(function (c) {
-      podGlyph(k, defs, c[0], c[1], 66);
+    // four pods in a diamond, matching the source slide's cluster —
+    // globes at one flat size, pulled in tight around the centre.
+    [[905, 215], [800, 320], [1010, 320], [905, 425]].forEach(function (c) {
+      podGlobe(k, defs, c[0], c[1], 66);
     });
     var svg = svgRoot(W, H, k);
     svg.setAttribute('class', 'viz-svg viz-svg--wide');
@@ -2780,8 +2886,14 @@
           x: cx, y: 68 + li * 30, 'text-anchor': 'middle', class: 'dgm-pod-lbl', text: line
         }));
       });
-      podGlyph(k, defs, cx, 225, 80);
-      stackPlates({ count: 8, cx: cx, TW: 140, BW: 264, depth: 46, step: 16, yTop: 386 }).forEach(function (pl) { k.push(pl); });
+      podGlobe(k, defs, cx, 225, 80);
+      // each pod carries a different load — wider towers, varied
+      // heights, every base landing on the same ground line
+      var slabCount = [10, 7, 12, 8][i], towerW = 80, towerSlabH = 12, baseY = 582;
+      k.push(isoTower(defs, {
+        cx: cx, yTop: baseY - towerW - slabCount * towerSlabH,
+        w: towerW, count: slabCount, slabH: towerSlabH
+      }));
     }
     var svg = svgRoot(W, H, k);
     svg.setAttribute('class', 'viz-svg viz-svg--wide');
@@ -3283,12 +3395,13 @@
     'video-recorder': 'assets/slide/dual_creator_cam/title.png',
     'leadcraft': 'assets/slide/growth/hero.jpg',
     'events': 'assets/slide/events_hero/hero.png',
-    'pods': 'assets/slide/pods/hero.jpg'
+    'pods': 'assets/slide/pods/hero.jpg',
+    'base': 'assets/case_studies/base_crm/base_crm_with_design_system.jpg'
   };
 
   /* Cover art that presents inside the MacBook template rather than
      free-floating. */
-  var CS_COVER_IN_LAPTOP = ['leadcraft', 'pods'];
+  var CS_COVER_IN_LAPTOP = ['leadcraft', 'pods', 'base'];
 
   /* Real captions for body media, keyed by the image's file name. Anything
      not listed here still falls back to the placeholder. */
@@ -3422,7 +3535,7 @@
      centre of the Themes diagram, just without the diagram around it. */
   function podGlyphSvg() {
     var k = [], defs = sEl('defs', null, [vizNoiseFilter()]);
-    podGlyph(k, defs, 100, 100, 68);
+    podGlobe(k, defs, 100, 100, 68);
     k.unshift(defs);
     return svgRoot(200, 200, k);
   }

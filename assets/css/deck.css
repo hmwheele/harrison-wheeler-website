@@ -434,8 +434,8 @@ html.deck-reduce .deck-charts-grid {
   padding-block: 0.06em;   /* headroom so background-clip doesn't shave caps */
   pointer-events: none;
   /* mint at the baseline fading up to white, as on the closing slide */
-  color: #b9f2c8;          /* fallback if background-clip:text is unsupported */
-  background: linear-gradient(to top, #b9f2c8 0%, #d9f8e3 42%, #ffffff 100%);
+  color: var(--mint);      /* fallback if background-clip:text is unsupported */
+  background: var(--grad-mint-white);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -666,8 +666,8 @@ html.deck-reduce .deck-media-ph { transition: none; }
   /* the stretch grows upward, so reserve headroom above it */
   margin-top: clamp(44px, 12vh, 132px);
   margin-bottom: clamp(26px, 4vh, 48px);
-  color: #b9f2c8; /* fallback if background-clip:text is unsupported */
-  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  color: var(--mint); /* fallback if background-clip:text is unsupported */
+  background: var(--grad-mint);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -731,10 +731,10 @@ html.deck-reduce .deck-media-ph { transition: none; }
    read as a single hue. When series share a chart (line/donut), keep
    adjacent slots far apart in lightness for legibility. */
 .deck-slide--charts {
-  --viz-surface: #16151c;   /* chart card surface (validated against) */
-  --viz-grid:    #2f2d39;   /* hairline gridlines / axes */
-  --viz-ink:     #ece9f1;   /* values, primary text */
-  --viz-ink-muted: #a39fb0; /* axis labels, secondary text */
+  --viz-surface: var(--surface);      /* chart card surface (validated against) */
+  --viz-grid:    #2f2d39;             /* hairline gridlines / axes */
+  --viz-ink:     var(--text);         /* values, primary text */
+  --viz-ink-muted: var(--text-muted); /* axis labels, secondary text */
   --viz-s1: #d7ccff;  /* purple — lightest */
   --viz-s2: #bcacf7;  /* purple */
   --viz-s3: #a08cec;  /* purple — site lavender */
@@ -900,11 +900,11 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
   --v-p4: #7a6ad6;
   --v-p5: #5b4bb0;
   /* — Accents, for contrast against the purples — */
-  --v-green: #b9f2c8;
-  --v-pink:  #ffd8e4;
+  --v-green: var(--mint);
+  --v-pink:  var(--light-pink);
   /* — Ink & lines — */
   --v-ink:       #ffffff;
-  --v-ink-muted: #a39fb0;
+  --v-ink-muted: var(--text-muted);
   /* solid, not translucent — alpha compounds where connectors merge/cross
      and those joints read brighter than the rest of the line */
   --v-line:      #545260;
@@ -941,9 +941,9 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
 
 /* ── Framework diagrams — one per full-page slide ──────────────────── */
 .deck-slide--diagram-full {
-  --viz-ink: #ece9f1;
-  --viz-ink-muted: #a39fb0;
-  --dgm-line: #545260;   /* solid — see --v-line */
+  --viz-ink: var(--text);
+  --viz-ink-muted: var(--text-muted);
+  --dgm-line: var(--v-line);   /* solid — see --v-line */
   --dgm-node: rgba(208, 188, 255, 0.12);
   --dgm-node-bd: rgba(208, 188, 255, 0.34);
   --dgm-ink: var(--viz-ink);
@@ -1417,9 +1417,9 @@ html.deck-reduce .deck-guest-row { animation: none; }
   transform-origin: center;
   /* the stretch grows both ways, so reserve room above and below */
   margin-block: clamp(18px, 4vh, 52px);
-  color: #b9f2c8;   /* fallback if background-clip:text is unsupported */
+  color: var(--mint);   /* fallback if background-clip:text is unsupported */
   /* light green at the baseline, fading up to white */
-  background: linear-gradient(to top, #b9f2c8 0%, #d9f8e3 42%, #ffffff 100%);
+  background: var(--grad-mint-white);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1645,7 +1645,7 @@ html.deck-reduce .deck-guest-row { animation: none; }
   font-size: var(--t-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #ffd8e4;
+  color: var(--light-pink);
 }
 .deck-debt-list {
   margin: 0;
@@ -1757,7 +1757,7 @@ html.deck-reduce .deck-guest-row { animation: none; }
   font-size: clamp(2.2rem, 4vw, 3.6rem);
   line-height: 0.9;
   letter-spacing: -0.01em;
-  color: #b9f2c8;
+  color: var(--mint);
 }
 .deck-enum-text {
   margin: 0;
@@ -2476,7 +2476,7 @@ html.deck-reduce .deck-slide--specs .deck-spec-col {
   font-size: var(--t-label);
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #ffd8e4;
+  color: var(--light-pink);
 }
 .deck-flow-card-body {
   margin: 0;
@@ -2658,7 +2658,7 @@ html.deck-reduce .deck-pop { opacity: 1; transform: none; transition: none; }
   font-size: var(--t-micro);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #ffd8e4;
+  color: var(--light-pink);
 }
 .deck-pop-body {
   margin: 0;
@@ -2686,7 +2686,7 @@ html.deck-reduce .deck-pop { opacity: 1; transform: none; transition: none; }
 }
 .deck-flow-card--green .deck-flow-card-body { color: #1c2b22; }
 .deck-flow-card--g1 { background: #cff7da; }
-.deck-flow-card--g2 { background: #b9f2c8; }
+.deck-flow-card--g2 { background: var(--mint); }
 .deck-flow-card--g3 { background: #a3e8b6; }
 /* KPI band: a second ruled header inside the card; the move copy above
    it flexes, so the bands line up across the row. */
@@ -2694,8 +2694,22 @@ html.deck-reduce .deck-pop { opacity: 1; transform: none; transition: none; }
 .deck-flow-card-body--grow { flex: 1 1 auto; }
 .deck-flow-card-head--kpi { border-top: 1px solid var(--border); }
 @media (max-width: 860px) {
-  /* Stacked: each area/arrow/card run follows the previous one. */
-  .deck-flow { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
+  /* Stacked: each area/arrow/card run follows the previous one. The
+     towers are decoration the narrow stage can't afford — without them
+     the runs fit without crushing the cards. */
+  .deck-flow {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    /* max-content rows can't be squeezed by the fixed-height scroll
+       container — the cards keep their natural height and the flow
+       scrolls instead */
+    grid-auto-rows: max-content;
+    align-content: start;
+    grid-auto-flow: row;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
   .deck-flow-from { min-height: 72px; }
 }
 
@@ -3691,7 +3705,7 @@ html.deck-reduce .deck-wall-track { animation: none; }
   line-height: 1;
   transform: translateY(-1.05em);
   flex: none;
-  color: #b9f2c8;              /* matches --v-green, which is scoped to the viz slides */
+  color: var(--mint);          /* --v-green is scoped to the viz slides; use the global token */
 
   opacity: 0;
   transition: opacity 0.45s ease;
@@ -3810,8 +3824,8 @@ html.deck-reduce .deck-statfig-dir {
   transform-origin: bottom left;
   /* the stretch grows upward, so reserve headroom above it */
   margin: clamp(26px, 7vh, 78px) 0 0;
-  color: #ffd8e4; /* fallback if background-clip:text is unsupported */
-  background: linear-gradient(to top, #fff4f8 0%, #ffe7f0 20%, #ffd8e4 48%);
+  color: var(--light-pink); /* fallback if background-clip:text is unsupported */
+  background: var(--grad-pink);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -4033,8 +4047,8 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
   content: '';
   width: 36%;
   height: 18%;
-  border-left: 3px solid #b9f2c8;
-  border-bottom: 3px solid #b9f2c8;
+  border-left: 3px solid var(--mint);
+  border-bottom: 3px solid var(--mint);
   transform: rotate(-45deg) translateY(-30%);
 }
 .deck-reflect-head {
@@ -4186,7 +4200,7 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
   font-weight: 800;
   font-size: clamp(2rem, 3.6vw, 3.4rem);
   line-height: 1;
-  color: #b9f2c8;
+  color: var(--mint);
 }
 .deck-step-text {
   margin: 0;

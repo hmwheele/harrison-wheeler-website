@@ -162,14 +162,6 @@ window.CASE_STUDIES = {
     body: [
       '<h1>B2B Events: Reviving a Venture Bet Through Storytelling</h1>',
       '<p class="cs-deck">How a low-trust events bet got reframed as a B2B marketplace sitting at the intersection of consumer, marketing, and sales, and how a single story unlocked executive funding and a pilot that attributed $100M+ in customer upside.</p>',
-      '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
-  '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
-  '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
-    '<div class="cs-slide"><img src="assets/case_studies/events/events_hero.webp" alt="B2B Events, LinkedIn Live Events experience" loading="lazy"></div>' +
-  '</div></div>' +
-  '<button class="cs-car-btn next" type="button" aria-label="Next image">›</button>' +
-'</div>',
-
       '<h2 id="overview">Overview</h2>',
       '<p>When LinkedIn\'s CPO moved to Marketing Solutions in 2023, the events business was underperforming and organizational confidence in it was low. There was no clear revenue story, and the consumer team had shipped a placeholder experience that mostly routed users out to third-party platforms. I led the narrative and design direction for a vision that reframed events as a <strong>B2B marketplace</strong> sitting where no other team could, at the intersection of consumer, marketing, and sales. The work wasn\'t to defend events; it was to make the future concrete enough that leaders would commit dollars to it.</p>',
       '<ul class="bullets">',
@@ -241,7 +233,6 @@ window.CASE_STUDIES = {
       '<div class="cs-carousel" data-carousel tabindex="0" aria-roledescription="carousel" aria-label="Project images">' +
   '<button class="cs-car-btn prev" type="button" aria-label="Previous image">‹</button>' +
   '<div class="cs-carousel-viewport"><div class="cs-carousel-track">' +
-    '<div class="cs-slide" style="background:#fff"><img src="assets/case_studies/base_crm/base_crm_with_design_system.jpg" alt="The Base CRM desktop app, leads pipeline built on the design system" loading="lazy"></div>' +
     '<div class="cs-slide" style="background:#fff"><img src="assets/case_studies/base_crm/iOS-Mobile.png" alt="The Base CRM iOS app, deals list, contact detail, and overview" loading="lazy"></div>' +
     '<div class="cs-slide" style="background:#fff"><img src="assets/case_studies/base_crm/design-sytem.webp" alt="Base design system components" loading="lazy"></div>' +
   '</div></div>' +

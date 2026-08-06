@@ -59,6 +59,13 @@
   --primary-hover: #e3d6ff;
   --on-primary:    #381e72;
   --light-pink:    #ffd8e4;
+  --mint:          #b9f2c8;
+
+  /* Signature text gradients (pair with a solid --mint / --light-pink color
+     line as the fallback for browsers without background-clip: text) */
+  --grad-mint:       linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, var(--mint) 48%);
+  --grad-pink:       linear-gradient(to top, #fff4f8 0%, #ffe7f0 20%, var(--light-pink) 48%);
+  --grad-mint-white: linear-gradient(to top, var(--mint) 0%, #d9f8e3 42%, #ffffff 100%);
 
   /* Type — sitewide fallback rule: sans-serif stacks fall back to Helvetica,
      serif stacks fall back to Georgia (never to another webfont). */
@@ -160,7 +167,7 @@ html.hero-intro-lock .nav { opacity: 0; pointer-events: none; }
   position: fixed; top: 0; left: 0; z-index: 9999;
   width: 100%; height: 3px; pointer-events: none;
   transform: scaleX(0); transform-origin: left center;
-  background: linear-gradient(90deg, #ffe9f0, #ffd8e4, #ff9ec4);
+  background: linear-gradient(90deg, #ffe9f0, var(--light-pink), #ff9ec4);
   opacity: 0;   /* only appears while the intro runs (see below) */
 }
 /* Sweep only during the initial hero/logo intro. The intro's inline head script
@@ -245,6 +252,23 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .podcast-overlay { position: relative; z-index: 2; max-width: 40em; margin: 0 auto; padding-inline: 24px; }
 .podcast-overlay .head-sub { margin: 16px auto 0; }
 .podcast-cta { margin-top: 28px; }
+/* Laurel credibility line under the Podcast title */
+.podcast-overlay .section-head { margin-bottom: 10px; }
+.podcast-laurel {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  margin: 0 auto;
+  font-family: var(--mono); font-size: .82rem; font-weight: 400;
+  letter-spacing: .01em; color: #eceae4; white-space: nowrap;
+}
+.podcast-laurel .laurel-branch { flex: 0 0 auto; width: 16px; height: 35px; opacity: .75; }
+.podcast-laurel .laurel-branch--r { transform: scaleX(-1); }
+@media (max-width: 560px) {
+  /* nowrap would set the badge's min-content wider than the phone screen,
+     and the overlay (a grid item) stretches to min-content — let it wrap. */
+  .podcast-laurel { gap: 8px; font-size: .7rem; white-space: normal; max-width: 100%; }
+  .podcast-laurel span { min-width: 0; max-width: 26ch; text-wrap: balance; }
+  .podcast-laurel .laurel-branch { width: 13px; height: 28px; }
+}
 @media (max-width: 860px) {
   .podcast { min-height: 420px; }
   .podcast-guests { gap: 12px; }
@@ -387,8 +411,8 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   /* stretch the glyphs taller without widening them */
   transform: scaleY(1.5); transform-origin: bottom center;
   /* white at the baseline fading up into the mint green */
-  color: #b9f2c8;   /* fallback for browsers without background-clip: text */
-  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  color: var(--mint);   /* fallback for browsers without background-clip: text */
+  background: var(--grad-mint);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -408,6 +432,11 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   /* two stacked lines on phones — pull them closer together */
   .hero--stage .hero-bigname { font-size: 38cqw; line-height: .82; }
   .hero--stage .hero-stage-content .lede { font-size: 18px; margin-bottom: 20px; }
+  /* Center the intro logo on the *physical* screen: the layout viewport
+     (100svh) stops above Safari's bottom URL bar, so 50% of the hero reads
+     high on load. 50lvh spans the full screen and, unlike dvh, is static —
+     no jump when the toolbar collapses on scroll. */
+  .hero--stage .hero-logo-bg { top: 50lvh; }
   /* Slightly smaller, vertically centered portrait on phones */
   .hero--stage .hero-bigimg { height: 88%; bottom: 6%; }
   .hero-contour { height: 88%; bottom: 6%; }
@@ -497,7 +526,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 /* ── Curved marquee headline ────────────────────────────────────── */
 .arc { padding-block: 40px 80px; overflow: hidden; }
 .arc svg { width: 100%; height: auto; display: block; }
-.arc text { fill: #FFD8E4; font-family: 'Reckless', Georgia, serif; font-weight: 400; letter-spacing: .01em; }
+.arc text { fill: var(--light-pink); font-family: 'Reckless', Georgia, serif; font-weight: 400; letter-spacing: .01em; }
 
 /* ── Belief statement ───────────────────────────────────────────── */
 .belief p.big {
@@ -595,7 +624,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
 .card-media { aspect-ratio: 16/10; background: linear-gradient(135deg, #2a2833, #3a3747); position: relative; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,.12); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
 .card-media img { width: 100%; height: 100%; object-fit: cover; }
 .card-media--placeholder { display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #3a2a3f, #2a3347 55%, #1f2a3a); }
-.card-media-tag { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: #ffd8e4; border: 1px solid rgba(255,216,228,.35); border-radius: 999px; padding: 7px 16px; }
+.card-media-tag { font-family: var(--mono); font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--light-pink); border: 1px solid rgba(255,216,228,.35); border-radius: 999px; padding: 7px 16px; }
 .card-body { padding: 16px 0 8px; text-align: left; }
 .card .eyebrow { display: none; }
 .card h3 {
@@ -605,8 +634,8 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   /* Pink→white gradient text; on hover it fills to all light pink. A double-height
      gradient (pink top half, white bottom half) is slid via background-position,
      which — unlike the gradient itself — is animatable. */
-  color: #ffd8e4;   /* fallback for no background-clip: text */
-  background: linear-gradient(to bottom, #ffd8e4 0%, #ffd8e4 50%, #ffffff 62%, #ffffff 100%);
+  color: var(--light-pink);   /* fallback for no background-clip: text */
+  background: linear-gradient(to bottom, var(--light-pink) 0%, var(--light-pink) 50%, #ffffff 62%, #ffffff 100%);
   background-size: 100% 200%; background-position: 0% 100%;   /* default: pink→white */
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -652,7 +681,7 @@ body.home:not(.show-brand) .nav-logo-name { opacity: 0; visibility: hidden; }
   text-transform: uppercase; font-weight: 800; line-height: .92;
   transform: scaleY(1.5); transform-origin: bottom center;
   color: var(--light-pink);
-  background: linear-gradient(to top, #ffe9f0 0%, #ffdfea 20%, #ffd8e4 48%);
+  background: var(--grad-pink);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -800,13 +829,17 @@ main > .phead-wrap > .phead-body { background: transparent; }
 }
 .cs-overlay.open { visibility: visible; }
 
-.cs-sheet {
+/* Light case-study theme tokens. Declared on the overlay as well as the sheet
+   because the fixed topbar (and its progress bar) is appended to .cs-overlay,
+   outside .cs-sheet. */
+.cs-overlay, .cs-sheet {
   --cs-bg: #ffffff;
   --cs-text: #17151b;
   --cs-muted: #5c5866;
   --cs-border: #e7e5ea;
   --cs-accent: #5b3df5;
-
+}
+.cs-sheet {
   position: relative;
   width: 100%;                 /* full-width, edge to edge */
   max-width: none;
@@ -905,7 +938,7 @@ main > .phead-wrap > .phead-body { background: transparent; }
 }
 .cs-progress span {
   display: block; height: 100%; width: 0;
-  background: #5b3df5;
+  background: var(--cs-accent);
 }
 
 .cs-close {
@@ -955,7 +988,9 @@ main > .phead-wrap > .phead-body { background: transparent; }
   overflow: hidden;
   background: var(--bg);
   border-radius: 22px 22px 0 0;
+  /* Left pad matches .cs-close / .cs-toc (28px from the sheet edge). */
   padding: clamp(76px, 12vh, 132px) clamp(28px, 6vw, 88px) clamp(36px, 6vh, 64px);
+  padding-left: 28px;
   /* Full-height cover, like a slide: on mobile the sheet starts 9vh down,
      on desktop it floats inside a 16px inset. */
   min-height: calc(100dvh - 9vh);
@@ -1007,23 +1042,24 @@ main > .phead-wrap > .phead-body { background: transparent; }
   top: 50%;
   transform: translateY(-50%);
 }
-.cs-hero-art--laptop { right: -14%; width: 74%; }
+.cs-hero-art--laptop { right: -14%; width: 89%; }
 .cs-hero-art--free   { right: -4%;  width: 56%; }
-.cs-hero-art--phone  { right: 8%;   width: clamp(240px, 26%, 400px); }
+.cs-hero-art--phone  { right: 8%;   width: clamp(288px, 31%, 480px); }
 .cs-hero-art img { width: 100%; height: auto; }
 .cs-hero-art .deck-cs-device { position: static; opacity: 1; transform: none; transition: none; }
 /* The empty-well label: deck.css sizes it from --t-nano, which is scoped to
    .deck, so give it its own size out here. */
 .cs-hero-art .deck-laptop-screen { align-items: center; }
-/* Fit the whole screenshot inside the display. deck.css crops to fill
-   (`cover`) because a slide is the same shape as the machine; here the band
-   is a different aspect and cropping was cutting the sides off the growth
-   cover, so the art is contained and the well's dark ground letterboxes it. */
+/* Fill the display edge to edge, as deck.css does on slides — `contain`
+   was letterboxing screenshots whose aspect differs from the machine's,
+   leaving dark bands beside the art. Anchor the crop top-left so the
+   screenshot reads like an app on screen (nav bars, page chrome) rather
+   than a centered slice. */
 .cs-hero-art .deck-laptop-screen img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: center;
+  object-fit: cover;
+  object-position: left top;
 }
 .cs-hero-art .deck-laptop-lbl { font-size: .7rem; align-self: center; }
 /* Scrim: the art emerges from the dark and the copy stays readable on it. */
@@ -1067,7 +1103,7 @@ main > .phead-wrap > .phead-body { background: transparent; }
   transform: scaleY(1.5);
   transform-origin: bottom left;
   color: var(--light-pink);   /* fallback if background-clip:text is unsupported */
-  background: linear-gradient(to top, #fff4f8 0%, #ffe7f0 20%, #ffd8e4 48%);
+  background: var(--grad-pink);
   -webkit-background-clip: text;
           background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1081,6 +1117,13 @@ main > .phead-wrap > .phead-body { background: transparent; }
   font-size: 1.05rem;
   line-height: 1.55;
 }
+/* The title's paint-box padding (.14em, ×1.5 vertical stretch) ends its
+   glyphs ~.21 of its font-size above the shared bottom edge; lift the
+   standfirst by the same amount so the two columns end level. Desktop
+   only — on phones the columns stack. */
+@media (min-width: 861px) {
+  .cs-hero-desc { margin-bottom: calc(clamp(2.4rem, 5.4vw, 4.6rem) * .21); }
+}
 /* Type keyed to the cover band's height: 1cqh = 1% of the band, so the
    title and standfirst hold their proportions on a short laptop screen the
    same way a slide does. Width still caps it so a wide, short window can't
@@ -1092,12 +1135,15 @@ main > .phead-wrap > .phead-body { background: transparent; }
      its column. */
   .cs-hero-title { font-size: clamp(2.4rem, min(17cqh, 10.5cqi), 8.5rem); }
   .cs-hero-desc  { font-size: clamp(.95rem, min(2.6cqh, 1.5cqi), 1.3rem); }
+  /* Same .21×title-size lift as the width-based rule, keyed to the same
+     container-scaled title font so the columns stay level at every size. */
+  .cs-hero-desc  { margin-bottom: calc(clamp(2.4rem, min(17cqh, 10.5cqi), 8.5rem) * .21); }
   /* Height cap for the art: each slot's width is also expressed as a share
      of the band's height (width ÷ height of that artwork), so a short
      window scales the machine down instead of clipping it. */
-  .cs-hero-art--laptop { width: min(74%, 117cqh); }
+  .cs-hero-art--laptop { width: min(89%, 140cqh); }
   .cs-hero-art--free   { width: min(56%, 100cqh); }
-  .cs-hero-art--phone  { width: min(clamp(240px, 26%, 400px), 43cqh); }
+  .cs-hero-art--phone  { width: min(clamp(288px, 31%, 480px), 52cqh); }
 }
 /* The ✕ sits on the dark band, so it flips to the deck's dark treatment. */
 .cs-sheet.has-cs-hero .cs-close {
@@ -1119,8 +1165,11 @@ main > .phead-wrap > .phead-body { background: transparent; }
   .cs-hero-inner { grid-template-columns: minmax(0, 1fr); gap: 26px; }
   .cs-hero-desc { text-align: left; font-size: .98rem; }
   /* One column, so the art sits above the copy rather than behind it, and
-     the scrim comes up higher to keep the stacked text clear of it. */
-  .cs-hero-art { top: 26%; }
+     the scrim comes up higher to keep the stacked text clear of it. Anchor
+     the device's TOP edge (not its center, which let a tall laptop poke
+     above the band and get clipped) just below the ✕, so the whole machine
+     always starts inside the display. */
+  .cs-hero-art { top: 84px; transform: none; }
   .cs-hero-art--laptop { right: -18%; width: 96%; }
   .cs-hero-art--free { right: -6%; width: 78%; }
   .cs-hero-art--phone { right: 6%; width: 46%; }
@@ -1335,6 +1384,11 @@ body.cs-lock::before { opacity: 1; }
   .cs-car-btn { width: 40px; height: 40px; }
   /* Close button sits ABOVE the text on mobile (in normal flow, not floated) */
   .cs-close { position: static; margin: 0 0 18px 22px; }
+  /* …except on cover-band sheets, where a static button pushes the dark
+     hero down and bares the sheet's white ground — keep it floating on
+     the band, which starts flush at the sheet top. */
+  .cs-sheet.has-cs-hero .cs-close { position: absolute; top: 20px; left: 22px; margin: 0; }
+  .cs-sheet.has-cs-hero { padding-top: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1375,8 +1429,8 @@ body.cs-lock::before { opacity: 1; }
   font-size: clamp(3.6rem, 18vw, 14rem); font-weight: 800;
   line-height: .92; letter-spacing: -.01em;
   transform: scaleY(1.5); transform-origin: bottom center;
-  color: #b9f2c8;   /* fallback for browsers without background-clip: text */
-  background: linear-gradient(to top, #e4fbea 0%, #cef6d9 20%, #b9f2c8 48%);
+  color: var(--mint);   /* fallback for browsers without background-clip: text */
+  background: var(--grad-mint);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1501,8 +1555,8 @@ body.cs-lock::before { opacity: 1; }
   font-size: clamp(46px, 7.2vw, 100px); font-weight: 700; line-height: 1; letter-spacing: -.02em;
   text-transform: uppercase;
   /* light-pink linear gradient, fading up */
-  color: #ffd8e4;   /* fallback for no background-clip: text */
-  background: linear-gradient(to top, #ffeef4 0%, #ffe1eb 20%, #ffd8e4 48%);
+  color: var(--light-pink);   /* fallback for no background-clip: text */
+  background: var(--grad-pink);
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1549,7 +1603,7 @@ body.cs-lock::before { opacity: 1; }
   position: relative;
   font-family: var(--display); font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
-  color: #b9f2c8; background: var(--bg); padding: 8px 16px;
+  color: var(--mint); background: var(--bg); padding: 8px 16px;
   /* Stretch the glyphs taller without widening them (matches the hero bigname). */
   display: inline-block; transform: scaleY(1.5); transform-origin: center;
 }
@@ -1734,7 +1788,7 @@ body.cs-lock::before { opacity: 1; }
 .globe-intro .story-finale-year {
   font-family: var(--display); font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
-  color: #b9f2c8; margin-bottom: 24px;
+  color: var(--mint); margin-bottom: 24px;
 }
 /* Stretch the 2025 glyphs taller to match .tl-year and the other timeline dates.
    Scaling an inner span (not the <p>) keeps the mobile connector — the ::before
@@ -1790,7 +1844,7 @@ body.cs-lock::before { opacity: 1; }
   position: relative; z-index: 1;
   font-family: var(--display); font-synthesis: none;
   font-size: calc(clamp(1.2rem, 2vw, 1.6rem) + 24px); font-weight: 800; letter-spacing: -.01em;
-  color: #b9f2c8; text-shadow: none;
+  color: var(--mint); text-shadow: none;
   display: inline-block; transform: scaleY(1.5); transform-origin: bottom center;
   margin-bottom: 24px;
 }
