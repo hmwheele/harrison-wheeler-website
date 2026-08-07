@@ -332,7 +332,8 @@ html.deck-reduce .deck-charts-grid {
   grid-auto-rows: minmax(0, 1fr);
 }
 .deck-slide--belief .deck-split-copy,
-.deck-slide--places .deck-split-copy {
+.deck-slide--places .deck-split-copy,
+.deck-slide--aboutvids .deck-split-copy {
   align-self: start;
   padding-top: var(--about-copy-top);
 }
@@ -568,6 +569,44 @@ html.deck-reduce .deck-places-media .deck-globe {
   transition: none; opacity: 1; transform: none;
 }
 
+/* ── The globe slide, held under the video slide ────────────────────
+   deck.js marks this slide .is-under while the video slide is up. Both sit
+   in the stage's one grid cell, so it stays on screen behind the wells:
+   the globe holds its place and keeps spinning while they rise over it, and
+   advancing reads as the wells arriving rather than as a second slide. */
+.deck-slide.is-under {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: none;
+}
+/* the copy column is identical on both slides and sits in the same place —
+   drop this one so the text doesn't double-render */
+.deck-slide.is-under .deck-split-copy { opacity: 0; }
+/* the globe holds: no exit, no re-entrance if it was already up */
+.deck-slide--places.is-under .deck-places-media .deck-globe {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.5s ease;
+}
+/* the photo cards don't — they clear off as the video wells arrive, so the
+   globe is left bare underneath rather than two sets of images stacking up */
+.deck-slide--places.is-under .deck-globe-media .deck-media-ph {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  transition: opacity 0.34s ease, transform 0.4s cubic-bezier(0.4, 0, 0.6, 1);
+}
+/* leaving first, in the order they arrived */
+.deck-slide--places.is-under .deck-globe-media .deck-media-ph--portrait { transition-delay: 0.05s; }
+.deck-slide--places.is-under .deck-globe-media .deck-media-ph--square { transition-delay: 0.1s; }
+.deck-slide--places.is-under .deck-globe-media .deck-media-ph--vertical { transition-delay: 0.15s; }
+/* the portrait already left on entry — keep it gone rather than letting its
+   rest state reappear behind the wells */
+.deck-slide--places.is-under .deck-places-media .deck-portrait {
+  opacity: 0;
+  transform: translateX(135%);
+  transition: none;
+}
+
 .deck-globe {
   position: relative; z-index: 1;
   min-width: 0;
@@ -618,10 +657,10 @@ html.deck-reduce .deck-places-media .deck-globe {
   /* hidden until the globe-media wrapper gets .is-revealed */
   opacity: 0;
   transform: translateY(16px) scale(0.96);
-  transition: opacity 0.6s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.32s ease, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .deck-globe-media.is-revealed .deck-media-ph { opacity: 1; transform: none; }
-/* filled card: real media crossfades over the icon/label placeholder */
+/* filled card: real media covers the icon/label placeholder */
 .deck-media-ph--filled { overflow: hidden; }
 .deck-media-ph--filled .deck-media-ph-icon,
 .deck-media-ph--filled .deck-media-ph-label { display: none; }
@@ -634,13 +673,132 @@ html.deck-reduce .deck-places-media .deck-globe {
 }
 .deck-media-img.is-shown { opacity: 1; }
 html.deck-reduce .deck-media-img { transition: none; }
-.deck-globe-media.is-revealed .deck-media-ph--portrait { transition-delay: 0.12s; }
-.deck-globe-media.is-revealed .deck-media-ph--square { transition-delay: 0.24s; }
+.deck-globe-media.is-revealed .deck-media-ph--portrait { transition-delay: 0.07s; }
+.deck-globe-media.is-revealed .deck-media-ph--square { transition-delay: 0.14s; }
+.deck-globe-media.is-revealed .deck-media-ph--vertical { transition-delay: 0.21s; }
 /* sizes + positions relative to the square .deck-globe, overlapping the disc */
 .deck-media-ph--landscape { width: 56%; aspect-ratio: 16 / 9; right: 4%; bottom: 4%; }
 .deck-media-ph--portrait  { width: 26%; aspect-ratio: 9 / 16; right: 0%; top: 12%; }
 .deck-media-ph--square    { width: 30%; aspect-ratio: 1 / 1;  left: -14%; top: 6%; }
+/* bottom left, clear of the square above it and the landscape card to its
+   right — the only corner of the disc still open */
+.deck-media-ph--vertical  { width: 24%; aspect-ratio: 9 / 16; left: -6%; bottom: 2%; }
 .deck-media-ph-icon svg { width: 26px; height: 26px; display: block; }
+/* ── About, continued: two portrait video wells staggered on the right ── */
+/* The split grid auto-sizes its single row (align start), so the media
+   column has no height to centre in — give this variant a full-height row
+   and let the pair centre its wells inside it. */
+.deck-slide--aboutvids {
+  grid-template-rows: minmax(0, 1fr);
+  align-items: stretch;
+  /* Wider media column than the other split slides. The wells are sized by
+     the width they have to share (see .deck-vid-ph), so the column is what
+     sets how big they get — give the About list exactly the width its
+     longest line needs and hand the rest to the wells. */
+  grid-template-columns: max-content minmax(0, 1fr);
+}
+.deck-vidpair {
+  min-width: 0;
+  align-self: center;
+  /* centre on the slide, not the padding box — matches .deck-places-media */
+  margin-bottom: calc(var(--title-top) - var(--deck-pad-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 2.6vw, 44px);
+  /* the height the wells want; each derives its width from its own ratio */
+  --well-h: min(56vh, 470px);
+}
+/* Sized by width, not height: the row is usually wider than the column it
+   sits in, so flex shrinks the wells — and a well shrunk in width alone
+   would crop its clip under object-fit. Giving each an explicit width and
+   letting `height: auto` follow the aspect ratio means shrinking scales the
+   well instead of squeezing it, so every clip stays whole. */
+.deck-vid-ph {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  min-width: 0;
+  height: auto;
+  width: calc(var(--well-h) * 9 / 16);
+  aspect-ratio: 9 / 16;
+  background: rgba(22, 21, 28, 0.72);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-dim);
+}
+/* the clip fills the well over the icon/label fallback */
+.deck-vid-ph video,
+.deck-vid-ph img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* The wells are portrait by default, which suits the 9:16 clip in --a. The
+   --b clip is 484×640, so a 9/16 box would crop a quarter of its width
+   away — give that well the clip's own ratio instead and nothing is cut. */
+.deck-vid-ph--b {
+  aspect-ratio: 484 / 640;
+  width: calc(var(--well-h) * 484 / 640);
+}
+/* the 1:1 photo between the clips — shorter, squared, in front of both */
+.deck-vid-ph--sq {
+  width: calc(var(--well-h) * 0.54);
+  aspect-ratio: 1 / 1;
+  margin-inline: clamp(-64px, -4vw, -32px);
+  z-index: 3;
+}
+/* the stagger: first well rides high in front tilting left, second sits
+   low behind tilting right, tucked under its neighbour's edge. Both rest
+   below their seats, transparent, until the slide activates — then they
+   rise in from the bottom, the back one a beat later. */
+.deck-vid-ph--a,
+.deck-vid-ph--b,
+.deck-vid-ph--sq {
+  opacity: 0;
+  transition: transform .7s cubic-bezier(.22, 1, .36, 1), opacity .55s ease;
+}
+.deck-vid-ph--sq { transform: translateY(110px) rotate(3.5deg); }
+.deck-slide--aboutvids.is-active .deck-vid-ph--sq {
+  transform: translateY(0) rotate(3.5deg);
+  opacity: 1;
+  transition-delay: .28s;
+}
+.deck-vid-ph--a {
+  transform: translateY(calc(clamp(-44px, -4.5vh, -26px) + 90px)) rotate(-2.5deg);
+  z-index: 2;
+}
+.deck-vid-ph--b {
+  transform: translateY(calc(clamp(26px, 4.5vh, 44px) + 90px)) rotate(2.5deg);
+  margin-left: clamp(-56px, -3.5vw, -28px);
+  z-index: 1;
+}
+.deck-slide--aboutvids.is-active .deck-vid-ph--a {
+  transform: translateY(clamp(-44px, -4.5vh, -26px)) rotate(-2.5deg);
+  opacity: 1;
+}
+.deck-slide--aboutvids.is-active .deck-vid-ph--b {
+  transform: translateY(clamp(26px, 4.5vh, 44px)) rotate(2.5deg);
+  opacity: 1;
+  transition-delay: .14s;
+}
+html.deck-reduce .deck-vid-ph--a,
+html.deck-reduce .deck-vid-ph--b,
+html.deck-reduce .deck-vid-ph--sq {
+  transition: none;
+  opacity: 1;
+}
+html.deck-reduce .deck-vid-ph--a { transform: translateY(clamp(-44px, -4.5vh, -26px)) rotate(-2.5deg); }
+html.deck-reduce .deck-vid-ph--b { transform: translateY(clamp(26px, 4.5vh, 44px)) rotate(2.5deg); }
+html.deck-reduce .deck-vid-ph--sq { transform: rotate(3.5deg); }
 .deck-media-ph-label {
   font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase;
 }
@@ -1069,6 +1227,38 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
 }
 .dgm-life-panel { fill: rgba(208, 188, 255, 0.06); }
 .dgm-life-panel--focus { fill: rgba(208, 188, 255, 0.12); }
+/* Journey-board dashed wave: a thin sine the milestones sit on. */
+.dgm-life-path {
+  fill: none;
+  stroke: #eceae4;
+  stroke-width: 1.5;
+  stroke-dasharray: 6 7;
+  opacity: .55;
+}
+/* Journey-board popover tags: white pill + tail, display caps in ink. */
+.dgm-life-pop { fill: #fff; }
+.viz-svg .dgm-life-poplbl {
+  fill: #17151b;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 20px;
+  letter-spacing: .02em;
+}
+/* Journey-board header band text: mono, uppercase, letterspaced. */
+.viz-svg .dgm-life-hdr {
+  fill: var(--viz-ink);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: .22em;
+}
+/* The lifecycle board centres its title, as on the reference layout. */
+.deck-slide--diagram-full[data-label="Marketing lifecycle"] .deck-title {
+  width: 100%;
+  text-align: center;
+}
+/* …and lets its journey line run past the canvas to the slide edges. */
+.deck-slide--diagram-full[data-label="Marketing lifecycle"] .viz-svg { overflow: visible; }
 .dgm-life-dot { fill: var(--light-pink); }
 .dgm-chev-lbl { fill: #ffffff; font-family: var(--mono); font-size: 11px; font-weight: 400; }
 .dgm-callout  { fill: var(--viz-ink); font-family: var(--mono); font-size: 10px; }
@@ -1813,7 +2003,7 @@ html.deck-reduce .deck-guest-row { animation: none; }
      it's what actually reads as the card's top padding */
   padding: clamp(32px, 3.4vw, 52px) clamp(22px, 2.4vw, 34px) clamp(28px, 2.8vw, 40px);
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid var(--primary);   /* #d0bcff */
 }
 .deck-quote-mark {
   font-family: var(--font);
@@ -4316,6 +4506,9 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
 }
 /* three or fewer cards read better stacked than in a ragged 2x2 */
 .deck-quad--stack { grid-template-columns: minmax(0, 1fr); }
+/* stacked headed notes (serif head + mono body, no card chrome) breathe
+   more than the pill cards do */
+.deck-quad--notes { gap: clamp(24px, 4.5vh, 56px); }
 .deck-quad-item {
   display: flex;
   align-items: center;

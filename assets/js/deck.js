@@ -539,19 +539,18 @@
     // Media placeholders overlap the globe and fade in after it spins a bit.
     var PLAY = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
     var IMG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>';
-    // Vertical media — cycles/crossfades inside the portrait card.
-    var VERTICAL = [
-      'assets/slide/about/vertical/taiwan.webp',
-      'assets/slide/about/vertical/kyoto.webp',
-      'assets/slide/about/vertical/chongqing.webp',
-      'assets/slide/about/vertical/fuji.webp'
-    ];
+    // One still per card — the portrait used to crossfade through the whole
+    // vertical set; it's a plain image block like the other two now.
     var portrait = mediaPlaceholder('portrait', 'Portrait · 9:16', IMG);
     portrait.classList.add('deck-media-ph--filled');
-    VERTICAL.forEach(function (src, i) {
-      var im = el('img.deck-media-img' + (i === 0 ? '.is-shown' : ''), { src: src, alt: '' });
-      portrait.appendChild(im);
-    });
+    portrait.appendChild(el('img.deck-media-img.is-shown', {
+      src: 'assets/slide/about/vertical/taiwan.webp', alt: ''
+    }));
+    var chongqing = mediaPlaceholder('vertical', 'Portrait · 9:16', IMG);
+    chongqing.classList.add('deck-media-ph--filled');
+    chongqing.appendChild(el('img.deck-media-img.is-shown', {
+      src: 'assets/slide/about/vertical/chongqing.webp', alt: ''
+    }));
     var square = mediaPlaceholder('square', 'Photo · 1:1', IMG);
     square.classList.add('deck-media-ph--filled');
     square.appendChild(el('img.deck-media-img.is-shown', { src: 'assets/slide/about/cat.jpg', alt: '' }));
@@ -561,7 +560,8 @@
     var media = el('div.deck-globe-media', { 'aria-hidden': 'true' }, [
       landscape,
       portrait,
-      square
+      square,
+      chongqing
     ]);
     return el('div.deck-globe', { 'aria-hidden': 'true' }, [
       el('div.deck-globe-map', { 'data-globe': '' }),
@@ -577,34 +577,21 @@
     ]);
   }
 
-  // Fade the media placeholders in after the globe has spun for a moment,
-  // then crossfade the vertical images inside the portrait card.
-  var placesMediaTimer = null, mediaCycleTimer = null;
+  // Pop the media cards in shortly after the globe appears — long enough to
+  // read as landing on top of it, short enough not to wait on.
+  var PLACES_MEDIA_MS = 700;
+  var placesMediaTimer = null;
   function revealPlacesMedia(slide) {
     var wrap = slide.querySelector('.deck-globe-media');
     if (!wrap) return;
     wrap.classList.remove('is-revealed');    // reset so it replays on re-entry
     clearTimeout(placesMediaTimer);
-    clearInterval(mediaCycleTimer);
     var reveal = function () {
       if (!slide.classList.contains('is-active')) return;
       wrap.classList.add('is-revealed');
-      startMediaCycle(slide);
     };
     if (reduce) { reveal(); return; }
-    placesMediaTimer = setTimeout(reveal, 2400);
-  }
-  function startMediaCycle(slide) {
-    var imgs = slide.querySelectorAll('.deck-media-ph--portrait .deck-media-img');
-    if (imgs.length < 2 || reduce) return;
-    clearInterval(mediaCycleTimer);
-    var idx = 0;
-    mediaCycleTimer = setInterval(function () {
-      if (!slide.classList.contains('is-active') || document.hidden) return;
-      imgs[idx].classList.remove('is-shown');
-      idx = (idx + 1) % imgs.length;
-      imgs[idx].classList.add('is-shown');
-    }, 3600);
+    placesMediaTimer = setTimeout(reveal, PLACES_MEDIA_MS);
   }
 
   /* ── Mapbox globe (reuses the site's token; SVG wireframe fallback) ── */
@@ -759,7 +746,8 @@
     });
   }
 
-  // Slow auto-spin, paused when the slide isn't the active one.
+  // Slow auto-spin, paused when the slide is off screen. `is-under` counts as
+  // on screen — the globe keeps turning behind the video slide.
   function spinDeckGlobe(map, mount) {
     var slide = mount.closest('.deck-slide');
     updateGlobePinFade(map);
@@ -768,7 +756,8 @@
     (function frame(ts) {
       if (last === null) last = ts;
       var dt = Math.min(64, ts - last); last = ts;
-      if (slide && slide.classList.contains('is-active') && !document.hidden) {
+      if (slide && (slide.classList.contains('is-active') ||
+                    slide.classList.contains('is-under')) && !document.hidden) {
         try { var ctr = map.getCenter(); ctr.lng += dt * 0.0016; map.setCenter(ctr); } catch (e) {}
         updateGlobePinFade(map);
       }
@@ -777,23 +766,58 @@
   }
 
   // "About / personal" slide — bullet facts on the left, globe on the right.
+  var ABOUT_FACTS = [
+    '🏙️ Born in Milwaukee',
+    '🏈 Former D1 athlete',
+    '✈️ One-year sabbatical in Asia',
+    '📷 Avid photographer and drone lover',
+    '🎙️ Podcast with downloads in 100 countries',
+    '🐱 Cat-dad to Luna'
+  ];
+  function aboutCopyColumn() {
+    return el('div.deck-split-copy', null, [
+      el('h2.deck-title', null, ['About']),
+      el('ul.deck-facts', null, ABOUT_FACTS.map(function (f) { return el('li', null, [f]); }))
+    ]);
+  }
   function slidePlaces() {
-    var facts = [
-      '🏙️ Born in Milwaukee',
-      '🏈 Former D1 athlete',
-      '✈️ One-year sabbatical in Asia',
-      '📷 Avid photographer and drone lover',
-      '🐱 I have a pet cat, Luna'
-    ];
     return el('section.deck-slide.deck-slide--places.deck-slide--split', { 'data-label': 'About' }, [
-      el('div.deck-split-copy', null, [
-        el('h2.deck-title', null, ['About']),
-        el('ul.deck-facts', null, facts.map(function (f) { return el('li', null, [f]); }))
-      ]),
+      aboutCopyColumn(),
       // The portrait rides over from the previous slide (same [data-shared]
       // key, so the swap cuts and it stays put), then slides off to the
       // right as the globe arrives underneath it.
       el('div.deck-places-media', null, [globeGraphic(), portraitCard()].filter(Boolean))
+    ]);
+  }
+
+  /* About, continued — the same copy column, with two portrait video
+     placeholders staggered against each other on the right. */
+  var VID_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/>' +
+    '<path d="M10 9.2 15.6 12 10 14.8Z"/></svg>';
+  function aboutVideoWell(mod, src) {
+    var v = el('video', { src: src, loop: '', playsinline: '', preload: 'metadata', 'aria-hidden': 'true' });
+    // properties, not attributes — the autoplay gate reads el.muted
+    v.muted = true;
+    v.autoplay = true;
+    return el('figure.deck-vid-ph.deck-vid-ph--' + mod, null, [
+      // icon/label stay underneath as the fallback if the clip can't decode
+      el('span.deck-media-ph-icon', { html: VID_ICON }),
+      el('span.deck-media-ph-label', null, ['Video']),
+      v
+    ]);
+  }
+  function slideAboutVideos() {
+    return el('section.deck-slide.deck-slide--aboutvids.deck-slide--split', { 'data-label': 'About video' }, [
+      aboutCopyColumn(),
+      el('div.deck-vidpair', { 'aria-hidden': 'true' }, [
+        aboutVideoWell('a', 'assets/slide/about/video/video2.MP4'),
+        // the 1:1 photo rides between the two clips, in front of both
+        el('figure.deck-vid-ph.deck-vid-ph--sq', null, [
+          el('img', { src: 'assets/slide/about/video/profile_running_image.jpg', alt: '' })
+        ]),
+        aboutVideoWell('b', 'assets/slide/about/video/video1.mp4')
+      ])
     ]);
   }
 
@@ -1824,13 +1848,14 @@
 
   var HOME_BUILDERS = [
     // the photo wall closes the About run rather than sitting after How I lead
-    // slideOrgTree also opens the Pods case study — the builder runs twice,
-    // so each deck gets its own copy of the diagram.
-    slideTitle, slideBelief, slidePlaces, slidePhotoWall, slideAboutCards, slideHowILead, slideOrgTreeHome, slideWork,
-    slidePodcast, slideCTA
+    slideTitle, slideBelief, slidePlaces, slideAboutVideos, slidePhotoWall, slideHowILead, slideWork,
+    slideCTA
   ];
   /* Cut from the main flow (the builders are still defined and can be
      dropped back into the list above at any point):
+       slidePodcast     'Podcast'      Technically Speaking
+       slideAboutCards  'How I work'   the three how-I-work cards
+       slideOrgTreeHome 'Org'          org tree (still opens the Pods deck)
        slideTimeline    'Career'       A decade leading design
        slideLeadcraft   'LeadCraft'    LeadCraft
        slideCommunity   'Community'    Community
@@ -1894,27 +1919,35 @@
   /* What the evidence that follows is evidence of: title in the left rail,
      the four signals as a 2x2 beside it. */
   var GROWTH_SIGNALS = [
-    'Compounding Debt',
-    'Experience',
-    'New User Acquisition'
+    { head: 'Compounding Debt', note: 'Placeholder — what the stacked quality, product, and org debt looked like.' },
+    { head: 'Experience', note: 'Placeholder — what churn, NPS, and the top-50 complaints said about usability.' },
+    { head: 'New User Acquisition', note: 'Placeholder — where self-serve customers came from, and where they dropped off.' }
   ];
 
   /* The three threads the evidence pulled together, framed before the
      buy-in story. */
-  var MAKING_SENSE = ['Marketing lifecycle', 'User retention', 'Operational challenges'];
+  var MAKING_SENSE = [
+    { head: 'Marketing lifecycle', note: 'Placeholder — a campaign lives on a 90-day continuum, not one-off touchpoints.' },
+    { head: 'User retention', note: 'Placeholder — time-to-value in the first week decides who stays past it.' },
+    { head: 'Operational challenges', note: 'Placeholder — pods owned surfaces, not the connected system between them.' }
+  ];
+
+  /* Serif head over a mono note, matching the Approach-steps grid. */
+  function headedNoteStack(items) {
+    return el('div.deck-quad.deck-quad--stack.deck-quad--notes', null, items.map(function (s2) {
+      return el('div.deck-note', null, [
+        el('p.deck-note-head', null, [s2.head]),
+        el('p.deck-note-body', null, [s2.note])
+      ]);
+    }));
+  }
 
   function slideMakingSense() {
-    return titleSideSlide('Making sense of it', 'Making Sense of It',
-      el('div.deck-quad.deck-quad--stack', null, MAKING_SENSE.map(function (t) {
-        return el('div.deck-quad-item', null, [el('p.deck-quad-title', null, [t])]);
-      })));
+    return titleSideSlide('Making sense of it', 'Making Sense of It', headedNoteStack(MAKING_SENSE));
   }
 
   function slideSignals() {
-    return titleSideSlide('Understanding the signals', 'Understanding the Signals',
-      el('div.deck-quad.deck-quad--stack', null, GROWTH_SIGNALS.map(function (t) {
-        return el('div.deck-quad-item', null, [el('p.deck-quad-title', null, [t])]);
-      })));
+    return titleSideSlide('Understanding the signals', 'Understanding the Signals', headedNoteStack(GROWTH_SIGNALS));
   }
 
   /* The drop-off, stated plainly — it sets up the verbatims that follow. */
@@ -2144,24 +2177,27 @@
      fractions of the panel, so a milestone sits where it does on the
      original whiteboard rather than on a grid. Execution is the phase the
      work focused on, so it carries the accent outline. */
+  /* The journey is a true sine wave — a crest over Onboarding, a trough in
+     Plan, a crest in Execution, a trough in Evaluation — and every pin sits
+     ON the wave: only its x is authored, the y comes from the curve. */
   var LIFECYCLE_PHASES = [
     { name: 'Onboarding', dots: [
-      { t: 'Campaign Manager', x: 0.22, y: 0.46 },
-      { t: 'Install insight tag', x: 0.62, y: 0.72 }
+      { t: 'Campaign Manager', x: 0.12 },
+      { t: 'Install insight tag', x: 0.84 }
     ] },
     { name: 'Plan', dots: [
-      { t: 'Creates campaign', x: 0.14, y: 0.42 },
-      { t: 'Build audience', x: 0.46, y: 0.62 },
-      { t: 'Launch campaign', x: 0.82, y: 0.36 }
+      { t: 'Creates campaign', x: 0.14 },
+      { t: 'Build audience', x: 0.56 },
+      { t: 'Launch campaign', x: 0.91 }
     ] },
     { name: 'Execution', focus: true, dots: [
-      { t: 'Completes campaign', x: 0.42, y: 0.32 },
-      { t: 'Optimizations and recommendations', x: 0.14, y: 0.68 },
-      { t: 'Performance measurement', x: 0.76, y: 0.52 }
+      { t: 'Completes campaign', x: 0.21 },
+      { t: 'Optimize', x: 0.60 },
+      { t: 'Measure', x: 0.88 }
     ] },
     { name: 'Evaluation', dots: [
-      { t: 'Quarterly Performance Review', x: 0.58, y: 0.50 },
-      { t: 'Audience segmentation', x: 0.20, y: 0.74 }
+      { t: 'Review performance', x: 0.90 },
+      { t: 'Audience segmentation', x: 0.50 }
     ] }
   ];
 
@@ -2186,39 +2222,54 @@
       stroke: 'var(--dgm-line)', 'stroke-width': 1.5, 'marker-end': 'url(#dgm-life-arrow)'
     }));
 
+    // Square-cornered panels with a mono header band, as on the reference
+    // journey board: purple hairline box, header row split off by a divider.
+    var hdrH = 54;
+    // The journey sine: crest over the Onboarding panel's centre, then a
+    // trough/crest alternating each column (half a wavelength per panel).
+    var waveMid = 320, waveAmp = 85;
+    var waveLen = 2 * (panelW + gap), waveCrest = pad + panelW / 2;
+    function waveY(x) { return waveMid - waveAmp * Math.cos((x - waveCrest) * 2 * Math.PI / waveLen); }
     LIFECYCLE_PHASES.forEach(function (p, pi) {
       var px = pad + pi * (panelW + gap);
       k.push(sEl('rect', {
-        x: px, y: panelTop, width: panelW, height: panelH, rx: 10,
-        fill: 'var(--dgm-node)',
-        stroke: p.focus ? 'var(--dgm-node-bd)' : 'var(--dgm-line)',
-        'stroke-width': p.focus ? 2 : 1,
-        class: p.focus ? 'dgm-life-panel dgm-life-panel--focus' : 'dgm-life-panel'
+        x: px, y: panelTop, width: panelW, height: panelH, rx: 0,
+        stroke: 'rgba(208, 188, 255, 0.6)', 'stroke-width': 1,
+        class: 'dgm-life-panel'
+      }));
+      k.push(sEl('rect', {
+        x: px, y: panelTop, width: panelW, height: hdrH, rx: 0,
+        fill: 'rgba(208, 188, 255, 0.08)', stroke: 'none'
+      }));
+      k.push(sEl('line', {
+        x1: px, y1: panelTop + hdrH, x2: px + panelW, y2: panelTop + hdrH,
+        stroke: 'rgba(208, 188, 255, 0.6)', 'stroke-width': 1
       }));
       k.push(sEl('text', {
-        x: px + panelW / 2, y: panelTop + 34, 'text-anchor': 'middle',
-        class: 'dgm-lane-lbl', text: p.name
+        x: px + panelW / 2, y: panelTop + hdrH / 2 + 6, 'text-anchor': 'middle',
+        class: 'dgm-life-hdr', text: p.name.toUpperCase()
       }));
 
-      p.dots.forEach(function (d) {
-        var cx = px + d.x * panelW, cy = panelTop + d.y * panelH;
-        // Label above the dot, wrapped to the panel so it never crosses out
-        // of its phase; the last line sits just clear of the dot.
-        var charW = 8.6;                       // 16px serif, roughly
-        var lines = wrapWords(d.t, Math.floor((panelW - 20) / charW));
-        var widest = lines.reduce(function (w, l) { return Math.max(w, l.length); }, 0);
-        // keep the centred label inside its own panel
-        var half = (widest * charW) / 2;
-        var lx = Math.max(px + half + 8, Math.min(cx, px + panelW - half - 8));
-        lines.forEach(function (ln, li) {
-          k.push(sEl('text', {
-            x: lx, y: cy - 26 - (lines.length - 1 - li) * 22,
-            'text-anchor': 'middle', class: 'dgm-life-lbl', text: ln
-          }));
-        });
-        k.push(sEl('circle', { cx: cx, cy: cy, r: 9, fill: 'var(--dgm-ink)', class: 'dgm-life-dot' }));
+      // Milestones as a bulleted list anchored to the bottom of the panel —
+      // pink marker dots, serif copy, stacked upward from the base.
+      var n = p.dots.length;
+      p.dots.forEach(function (d, di) {
+        var ly = panelTop + panelH - 26 - (n - 1 - di) * 34;
+        k.push(sEl('circle', { cx: px + 28, cy: ly - 6, r: 4, class: 'dgm-life-dot' }));
+        k.push(sEl('text', { x: px + 44, y: ly, 'text-anchor': 'start', class: 'dgm-life-lbl', text: d.t }));
       });
     });
+
+    // Dashed journey wave running off both edges of the slide (the svg is
+    // overflow: visible for this board) — sampled finely enough that the
+    // dashes read as one smooth sine.
+    (function () {
+      var d = '', x0 = -320, x1 = W + 320;
+      for (var x = x0; x <= x1; x += 12) {
+        d += (d ? ' L' : 'M') + x + ',' + waveY(x).toFixed(1);
+      }
+      k.push(sEl('path', { d: d, class: 'dgm-life-path' }));
+    })();
 
     return svgRoot(W, H, k);
   }
@@ -4786,9 +4837,11 @@
     mode = opts.mode || 'home';
     slides = slideEls;
 
-    // Any deck swap dismisses a lingering entry hint (home re-shows it after).
+    // Any deck swap dismisses a lingering entry hint (home re-shows it after)
+    // and drops the underlay left on the outgoing deck's slides.
     clearTimeout(hintTimer);
     if (hintEl) hintEl.classList.add('is-hidden');
+    clearUnder();
 
     // Slides
     while (stage.firstChild) stage.removeChild(stage.firstChild);
@@ -4834,12 +4887,15 @@
     // Every case-study slide is dark now, so the chrome is always the
     // light-on-dark treatment.
     var activeSlide = slides[current];
+    syncUnder(activeSlide);
     deck.classList.toggle('deck--dark-slide', true);
 
     // The moving grid shows only on the title, about, and case-study cover
     // slides (it keeps animating underneath, so the drift never resets).
+    // aboutvids is on the list because the globe slide stays under it — the
+    // backdrop shouldn't change while the same globe is still on screen.
     var GRID_ON = ['deck-slide--title', 'deck-slide--belief', 'deck-slide--places',
-                   'deck-slide--cs-title', 'deck-slide--glow'];
+                   'deck-slide--aboutvids', 'deck-slide--cs-title', 'deck-slide--glow'];
     deck.classList.toggle('deck--grid', !!(activeSlide && GRID_ON.some(function (c) {
       return activeSlide.classList.contains(c);
     })));
@@ -4937,6 +4993,37 @@
       n.style.transform = '';
       setTimeout(function () { n.style.transition = ''; n.style.transform = ''; }, 800);
     });
+  }
+
+  /* ── Globe under the video wells: one move, not two slides ──────────
+     Every slide sits in the stage's single grid cell, so a slide kept
+     visible underneath the active one overlaps it. While the video slide is
+     up, the globe slide stays on screen behind it — the globe holds its
+     place and keeps spinning as the wells rise over it, so advancing reads
+     as the wells arriving rather than as a second slide. */
+  var underEl = null;
+  function clearUnder() {
+    if (underEl) underEl.classList.remove('is-under');
+    underEl = null;
+  }
+  // Keep the globe slide underneath whenever the video slide is up. Driven
+  // from render(), so jumping in from the overview lands the same way.
+  function syncUnder(activeSlide) {
+    var want = null;
+    if (!reduce && activeSlide &&
+        activeSlide.classList.contains('deck-slide--aboutvids')) {
+      want = slides.filter(function (s) {
+        return s.classList.contains('deck-slide--places');
+      })[0] || null;
+    }
+    if (want === underEl) return;
+    clearUnder();
+    if (!want) return;
+    underEl = want;
+    want.classList.add('is-under');
+    // Jumping straight to the video slide, the globe may never have been
+    // built — it only mounts when its own slide goes active.
+    initDeckGlobe(want);
   }
 
   var cutTimer = null;
