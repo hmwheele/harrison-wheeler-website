@@ -795,7 +795,11 @@
   var VID_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" ' +
     'stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="3"/>' +
     '<path d="M10 9.2 15.6 12 10 14.8Z"/></svg>';
-  function aboutVideoWell(mod, src) {
+  // Where the shot was taken, set into the well's bottom-left corner.
+  function wellCaption(place) {
+    return el('figcaption.deck-vid-cap', null, [place]);
+  }
+  function aboutVideoWell(mod, src, place) {
     var v = el('video', { src: src, loop: '', playsinline: '', preload: 'metadata', 'aria-hidden': 'true' });
     // properties, not attributes — the autoplay gate reads el.muted
     v.muted = true;
@@ -804,19 +808,21 @@
       // icon/label stay underneath as the fallback if the clip can't decode
       el('span.deck-media-ph-icon', { html: VID_ICON }),
       el('span.deck-media-ph-label', null, ['Video']),
-      v
+      v,
+      wellCaption(place)
     ]);
   }
   function slideAboutVideos() {
     return el('section.deck-slide.deck-slide--aboutvids.deck-slide--split', { 'data-label': 'About video' }, [
       aboutCopyColumn(),
       el('div.deck-vidpair', { 'aria-hidden': 'true' }, [
-        aboutVideoWell('a', 'assets/slide/about/video/video2.MP4'),
+        aboutVideoWell('a', 'assets/slide/about/video/video2.MP4', 'South Korea'),
         // the 1:1 photo rides between the two clips, in front of both
         el('figure.deck-vid-ph.deck-vid-ph--sq', null, [
-          el('img', { src: 'assets/slide/about/video/profile_running_image.jpg', alt: '' })
+          el('img', { src: 'assets/slide/about/video/profile_running_image.jpg', alt: '' }),
+          wellCaption('Singapore')
         ]),
-        aboutVideoWell('b', 'assets/slide/about/video/video1.mp4')
+        aboutVideoWell('b', 'assets/slide/about/video/video1.mp4', 'Tokyo')
       ])
     ]);
   }
@@ -1046,19 +1052,24 @@
   }
 
   // Hub & spokes: themes → Pods hub → deliverables.
-  function diagramPods() {
+  /* Hub and chips: the pods globe in the middle, a row of themes above and
+     below. `o` overrides either row and the chip metrics — a shorter set
+     wants wider chips and more air than the default nine. */
+  function diagramPods(o) {
+    o = o || {};
     var W = 560, H = 330, cx = 280, hubY = 168, hubR = 34;
-    // evenly spaced, no collisions. The bottom row spans wider (5 chips)
-    // than the top (4), so its chips are a little narrower.
-    var TOP_W = 118, TOP_GAP = 18, BOT_W = 100, BOT_GAP = 10;
-    var topStart = (W - (4 * TOP_W + 3 * TOP_GAP)) / 2 + TOP_W / 2;
-    var botStart = (W - (5 * BOT_W + 4 * BOT_GAP)) / 2 + BOT_W / 2;
-    var top = ['Initiative', 'JTBD', 'Surface', 'Customer'].map(function (t, i) {
-      return { x: topStart + i * (TOP_W + TOP_GAP), t: t };
-    });
-    var bot = ['KPI', 'Data', 'Research', 'Narrative', 'Success'].map(function (t, i) {
-      return { x: botStart + i * (BOT_W + BOT_GAP), t: t };
-    });
+    // evenly spaced, no collisions. By default the bottom row spans wider
+    // (5 chips) than the top (4), so its chips are a little narrower.
+    var topList = o.top || ['Initiative', 'JTBD', 'Surface', 'Customer'];
+    var botList = o.bot || ['KPI', 'Data', 'Research', 'Narrative', 'Success'];
+    var TOP_W = o.boxW || 118, TOP_GAP = o.gap || 18;
+    var BOT_W = o.boxW || 100, BOT_GAP = o.gap || 10;
+    function lay(list, boxW, gap) {
+      var start = (W - (list.length * boxW + (list.length - 1) * gap)) / 2 + boxW / 2;
+      return list.map(function (t, i) { return { x: start + i * (boxW + gap), t: t }; });
+    }
+    var top = lay(topList, TOP_W, TOP_GAP);
+    var bot = lay(botList, BOT_W, BOT_GAP);
     var k = [];
     top.forEach(function (b) {
       k.push(sEl('path', { d: 'M' + b.x + ',48 C' + b.x + ',108 ' + cx + ',108 ' + cx + ',' + (hubY - hubR), fill: 'none', stroke: 'var(--dgm-line)', 'stroke-width': 2 }));
@@ -1069,10 +1080,29 @@
       k.push(dgmBox(b.x - BOT_W / 2, 282, BOT_W, 30, b.t));
     });
     var hubDefs = sEl('defs', null, [vizNoiseFilter()]);
-    podGlobe(k, hubDefs, cx, hubY, hubR);
-    k.push(sEl('text', { x: cx + hubR + 10, y: hubY + 5, 'text-anchor': 'start', class: 'dgm-node-lbl', text: 'Pods' }));
+    // `hubless` leaves the hub empty for an HTML orb to sit in (see
+    // .deck-themesplit-viz) — the same orb can then travel between slides.
+    if (!o.hubless) {
+      podGlobe(k, hubDefs, cx, hubY, hubR);
+      k.push(sEl('text', { x: cx + hubR + 10, y: hubY + 5, 'text-anchor': 'start', class: 'dgm-node-lbl', text: 'Pods' }));
+    }
     k.unshift(hubDefs);
     return svgRoot(W, H, k);
+  }
+
+  /* The pod globe on its own, framed tight to the sphere and its ground
+     shadow — so the figure's box IS the sphere's box, and CSS can size and
+     place it. `sharedKey` marks it as a persistent element, which lets the
+     deck carry it from one slide to the next (see flipShared). */
+  function orbFigure(sharedKey) {
+    var r = 100, defs = sEl('defs', null, [vizNoiseFilter()]), k = [];
+    podGlobe(k, defs, r, r, r);
+    k.unshift(defs);
+    var svg = svgRoot(r * 2, r * 2.29, k);
+    svg.setAttribute('class', 'viz-svg');
+    var attrs = { 'aria-hidden': 'true' };
+    if (sharedKey) attrs['data-shared'] = sharedKey;
+    return el('figure.deck-orb-fig', attrs, [svg]);
   }
 
   /* A stack of plates seen in three-quarter view. Layers land bottom-up
@@ -1131,10 +1161,12 @@
 
   /* ── Headline stats: "Metrics" in one column, the figures stacked in the
      other. `dir` draws the ▲/▼ delta marker. ───────────────────────── */
+  // `dir` is optional — a plain count carries no delta marker.
   var STAT_HERO = [
     { value: '47%',  dir: 'down', label: 'Project reduction' },
     { value: '88',   dir: 'up',   label: 'Team morale was at an all time high.' },
-    { value: '100%', dir: 'up',   label: 'Shipping velocity' }
+    { value: '100%', dir: 'up',   label: 'Shipping velocity' },
+    { value: '5',    dir: 'up',   label: 'New headcount' }
   ];
 
   /* ── Full-bleed statement: one large paragraph, nothing else. ─────── */
@@ -1154,11 +1186,9 @@
         el('div.deck-statfigs-head', null, [el('h2.deck-title', null, ['Results'])]),
         el('div.deck-statfigs', null, STAT_HERO.map(function (s) {
           return el('div.deck-statfig', null, [
-            el('div.deck-statfig-num', null, [
-              el('span.deck-statfig-val', null, [s.value]),
-              el('span.deck-statfig-dir', { 'data-dir': s.dir, 'aria-hidden': 'true' },
-                 [s.dir === 'down' ? '▼' : '▲'])
-            ]),
+            el('div.deck-statfig-num', null, [el('span.deck-statfig-val', null, [s.value])].concat(
+              s.dir ? [el('span.deck-statfig-dir', { 'data-dir': s.dir, 'aria-hidden': 'true' },
+                          [s.dir === 'down' ? '▼' : '▲'])] : [])),
             el('div.deck-statfig-label', null, [s.label])
           ]);
         }))
@@ -1812,6 +1842,8 @@
 
   function animateDiagram(slide) {
     if (reduce) return;
+    // numerals that tick up as the drawing lands (the load slide's 99+)
+    slide.querySelectorAll('.dgm-count').forEach(countUp);
     var paths = slide.querySelectorAll('.dgm-grow-path');
     var rects = slide.querySelectorAll('.dgm-grow-rect');
     if (!paths.length && !rects.length) return;
@@ -1832,12 +1864,12 @@
      slides carrying the same key cut rather than cross-fade, so a diagram
      that only changes which nodes are lit reads as one drawing changing
      state instead of two slides swapping. */
+  // Pass an empty title for a drawing that carries the slide on its own.
   function diagramSlide(label, title, svg, shared) {
     var stageAttrs = shared ? { 'data-shared': shared } : null;
-    return el('section.deck-slide.deck-slide--diagram-full', { 'data-label': label }, [
-      el('h2.deck-title', null, [title]),
-      el('div.deck-diagram-stage', stageAttrs, [svg])
-    ]);
+    return el('section.deck-slide.deck-slide--diagram-full', { 'data-label': label },
+      (title ? [el('h2.deck-title', null, [title])] : [])
+        .concat([el('div.deck-diagram-stage', stageAttrs, [svg])]));
   }
   function slideDgmTree() { return diagramSlide('Marketing', 'Marketing solutions', diagramTree()); }
   function slideDgmPods() { return diagramSlide('Narrative', 'Narrative development', diagramPods()); }
@@ -1919,9 +1951,15 @@
   /* What the evidence that follows is evidence of: title in the left rail,
      the four signals as a 2x2 beside it. */
   var GROWTH_SIGNALS = [
-    { head: 'Compounding Debt', note: 'Placeholder — what the stacked quality, product, and org debt looked like.' },
-    { head: 'Experience', note: 'Placeholder — what churn, NPS, and the top-50 complaints said about usability.' },
-    { head: 'New User Acquisition', note: 'Placeholder — where self-serve customers came from, and where they dropped off.' }
+    { head: 'Compounding Debt', note: 'Customer success owned a top 50 issues list. ' +
+      'It showed broken windows across the experience, and they were what drove ' +
+      'customer satisfaction down.' },
+    { head: 'Experience', note: 'Surfaces existed but never connected — boosting, ' +
+      'notifications, recommendations. A sign we were shipping the org chart.' },
+    { head: 'New User Acquisition', note: 'There were more points than ever for ' +
+      'customers to land in the platform. LinkedIn was acquiring users through the ' +
+      'flagship sales teams, who sent people to the marketing site, and new ' +
+      'customers were discovering Campaign Manager through Pages.' }
   ];
 
   /* The three threads the evidence pulled together, framed before the
@@ -2162,7 +2200,7 @@
   function slideUnderstandingData() {
     return el('section.deck-slide.deck-slide--pointsplit', { 'data-label': 'User retention' }, [
       el('div.deck-split-head', null, [
-        el('h2.deck-title', null, ['User retention']),
+        el('h2.deck-title', null, ['Making Sense of It']),
         el('p.deck-split-sub', null, ['Opportunity was left on the table'])
       ]),
       el('ul.deck-split-list', null, DATA_POINTS.map(function (d) {
@@ -2442,7 +2480,8 @@
       el('div.deck-vizsplit', null, [
         el('div.deck-vizsplit-copy', null, [
           el('h2.deck-title', null, ['Solution']),
-          el('ul.deck-facts', null, SOLUTION_POINTS.map(function (t) { return el('li', null, [t]); }))
+          el('ul.deck-facts.deck-facts--bulleted', null,
+            SOLUTION_POINTS.map(function (t) { return el('li', null, [t]); }))
         ]),
         el('div.deck-vizsplit-chart', null, [diagramVenn()])
       ])
@@ -2482,7 +2521,7 @@
   /* Outcomes for the growth deck: section title on the left rail, the four
      figures as a 2×2 of the same bordered stat cards used elsewhere. */
   var GROWTH_OUTCOMES = [
-    { v: '14-day', l: 'reduction in time-to-value churn' },
+    { v: '14-day', l: 'reduction in churn' },
     { v: '32%',    l: 'increase in campaigns created' },
     { v: '175%',   l: 'increase in engagement with the Audiences product' },
     { v: '24%',    l: 'increase in conversion-tracking engagement' }
@@ -2889,27 +2928,22 @@
     return sEl('g', {}, slabs);
   }
 
+  /* The load, stripped to the two things that carry it: the count and the
+     stack it stands for. No panel, no labels — the Designers panel that used
+     to sit alongside (four pod globes) is gone too, since the pods arrive on
+     their own slide later. The stack is anchored to the bottom of the canvas
+     so it rises out of the slide's bottom margin rather than floating. */
   function diagramLoad() {
     var W = 1200, H = 600, k = [], defs = sEl('defs', null, [vizNoiseFilter()]);
     k.push(defs);
-    // Outline only, and flush to the canvas edge (2 units clears the stroke)
-    // so the panels line up with the slide title above them.
-    [2, 612].forEach(function (x) {
-      k.push(sEl('rect', {
-        x: x, y: 24, width: 586, height: 552, rx: 22,
-        fill: 'none', stroke: 'var(--border)', 'stroke-width': 1.5
-      }));
-    });
-    k.push(sEl('text', { x: 34, y: 80, 'text-anchor': 'start', class: 'dgm-lane-lbl', text: 'Projects' }));
-    k.push(sEl('text', { x: 644, y: 80, 'text-anchor': 'start', class: 'dgm-lane-lbl', text: 'Designers' }));
-    k.push(sEl('text', { x: 295, y: 162, 'text-anchor': 'middle', class: 'dgm-stat-lbl', text: '99+' }));
-    k.push(isoTower(defs, { cx: 295, yTop: 178, w: 112, count: 13, slabH: 18 }));
-    k.push(sEl('text', { x: 295, y: 546, 'text-anchor': 'middle', class: 'dgm-cap', text: 'Quarterly requests' }));
-    // four pods in a diamond, matching the source slide's cluster —
-    // globes at one flat size, pulled in tight around the centre.
-    [[905, 215], [800, 320], [1010, 320], [905, 425]].forEach(function (c) {
-      podGlobe(k, defs, c[0], c[1], 66);
-    });
+    var cx = W / 2, w = 150, count = 22, slabH = 22;
+    // An iso tower stands w + count*slabH tall. Starting it here puts the
+    // base well past H, and the SVG clips at the viewBox — so the stack runs
+    // off the bottom of the slide instead of resolving into a tidy object.
+    var yTop = 196;
+    // .dgm-count opts the numeral into the count-up on entry (animateDiagram)
+    k.push(sEl('text', { x: cx, y: yTop - 76, 'text-anchor': 'middle', class: 'dgm-stat-lbl dgm-count', text: '99+' }));
+    k.push(isoTower(defs, { cx: cx, yTop: yTop, w: w, count: count, slabH: slabH }));
     var svg = svgRoot(W, H, k);
     svg.setAttribute('class', 'viz-svg viz-svg--wide');
     return svg;
@@ -2950,7 +2984,13 @@
     return svg;
   }
 
-  function slideOrgTree() { return diagramSlide('Org', 'LinkedIn Marketing Solutions', diagramTree()); }
+  /* --dgmtitle-center sets the title centred over the drawing at a fixed
+     48px, rather than the display-scale --t-title in the left rail. */
+  function slideOrgTree() {
+    var s = diagramSlide('Org', 'LinkedIn Marketing Solutions', diagramTree());
+    s.classList.add('deck-slide--dgmtitle-center');
+    return s;
+  }
   /* Home-deck copy: the title centres over the tree and sits a step down.
      Scoped to this instance so the Pods deck's version is untouched. */
   function slideOrgTreeHome() {
@@ -2963,15 +3003,50 @@
     if (svg) svg.setAttribute('viewBox', '0 10 500 231');
     return s;
   }
-  function slidePilotTeam() { return diagramSlide('Pilot team', 'Pilot team', diagramTree(0)); }
-  function slideThemes() { return diagramSlide('Themes', 'Identify themes', diagramPods()); }
-  // No slide title — each panel is already headed Projects / Designers.
+  // Same org, the pilot picked out of it — so it carries the same heading.
+  function slidePilotTeam() {
+    var s = diagramSlide('Pilot team', 'LinkedIn Marketing Solutions', diagramTree(0));
+    s.classList.add('deck-slide--dgmtitle-center');
+    return s;
+  }
+  /* The orb, named — the themes hanging off it come on the next slide, so
+     this one is just the pod and the word. */
+  function slidePodsOrb() {
+    return el('section.deck-slide.deck-slide--podorb', { 'data-label': 'Pods' }, [
+      el('div.deck-orb', null, [
+        orbFigure('podorb'),
+        el('h2.deck-title', null, ['Pods'])
+      ])
+    ]);
+  }
+
+  /* No title — the themes off the hub carry it, two above and two below, with
+     what the structure bought on the right. The hub is left empty in the
+     drawing and filled by the same orb the previous slide holds, so advancing
+     travels it into place rather than swapping one picture for another. */
+  function slideThemes() {
+    var viz = diagramPods({
+      top: ['Roles', 'Rituals'],
+      bot: ['Prioritization', 'Narrative'],
+      boxW: 150, gap: 44, hubless: true
+    });
+    return el('section.deck-slide.deck-slide--themesplit', { 'data-label': 'Themes' }, [
+      el('div.deck-themesplit', null, [
+        el('div.deck-themesplit-viz', null, [viz, orbFigure('podorb')]),
+        el('ul.deck-split-list.deck-split-list--bulleted', null,
+          POD_APPROACH.map(function (t) { return el('li', null, [t]); }))
+      ])
+    ]);
+  }
+  // No slide title, and --loadbottom sits the stage on the slide's bottom
+  // margin so the stack rises out of it (see diagramLoad).
   function slideLoad() {
-    return el('section.deck-slide.deck-slide--diagram-full', { 'data-label': 'The load' }, [
+    return el('section.deck-slide.deck-slide--diagram-full.deck-slide--loadbottom', { 'data-label': 'The load' }, [
       el('div.deck-diagram-stage', null, [diagramLoad()])
     ]);
   }
-  function slidePodsAndStacks() { return diagramSlide('Pods', 'A pod per theme, each with its own stack', diagramPodsAndStacks()); }
+  // No title — the four labelled pods say it.
+  function slidePodsAndStacks() { return diagramSlide('Pods', '', diagramPodsAndStacks()); }
 
   function slideMandate() {
     return el('section.deck-slide.deck-slide--statement', { 'data-label': 'The mandate' }, [
@@ -3006,7 +3081,8 @@
           ])
         ]),
         el('div.deck-statfigs-head', null, [
-          el('ul.deck-facts', null, MORALE_REASONS.map(function (t) { return el('li', null, [t]); }))
+          el('ul.deck-facts.deck-facts--bulleted', null,
+            MORALE_REASONS.map(function (t) { return el('li', null, [t]); }))
         ])
       ])
     ]);
@@ -3380,9 +3456,11 @@
       { after: 'Overview',   build: slideLegacyModel },
       { after: 'Overview',   build: slidePushback },
       { after: 'Overview',   build: slideSignals },
-      { after: 'Overview',   build: slideCompoundingDebt },
+      // slideCompoundingDebt's bullets now live as prose in the Compounding
+      // Debt note on slideSignals; the builder is still defined below.
       { after: 'Background', build: slideTop50 },
-      { after: 'Background', build: slideMakingSense },
+      // slideMakingSense is cut — its title now sits on slideUnderstandingData,
+      // which carries the same point with the numbers behind it.
       { after: 'Background', build: slideAcquisition },
       { after: 'Background', build: slideUnderstandingData },
       { after: 'Approach',   build: slideLifecycle },
@@ -3410,20 +3488,23 @@
       { after: 'Outcomes',   build: slideDgmRoadmap }
     ],
     pods: [
-      { after: 'Overview',   build: slideOrgTree },
-      { after: 'Overview',   build: slideMandate },
       { after: 'Background', build: slideOldWay },
+      // the org chart sets up the load it was carrying, so it sits with it
+      { after: 'Background', build: slideOrgTree },
       { after: 'Background', build: slideLoad },
       { after: 'Background', build: slideMorale },
       { after: 'Background', build: slideStatement },
       { after: 'Approach',   build: slidePriorities },
       { after: 'Approach',   build: slideDiscussProjects },
+      { after: 'Approach',   build: slidePodsOrb },
+      { after: 'Approach',   build: slideDefineRituals },
       { after: 'Approach',   build: slideThemes },
       { after: 'Approach',   build: slideDefineRoles },
-      { after: 'Approach',   build: slideDefineRituals },
       { after: 'Solution',   build: slidePilotTeam },
       { after: 'Solution',   build: slidePodsAndStacks },
-      { after: 'Solution',   build: slidePodApproach },
+      // slidePodApproach is cut — POD_APPROACH now reads beside the themes
+      // diagram (slideThemes), so the standalone slide repeated it.
+
       { after: 'Outcomes',   build: slideStatHero }
     ],
     'video-recorder': [
@@ -3462,6 +3543,15 @@
     var name = String(src || '').split('/').pop();
     return CS_CAPTIONS[name] || 'Caption placeholder';
   }
+
+  /* Titles for the split-laptop figure slides — the machine bleeds off the
+     right, so these head the left rail. Keyed by file name like the captions
+     above; a slide with neither still shows the machine alone. */
+  var CS_FIG_TITLES = {
+    'campaing_automation.jpg': 'AI-powered campaign creation',
+    'onboarding.jpg': 'New user onboarding',
+    'measurement_insights.jpg': 'Measurement Insights'
+  };
 
   /* Studies whose body hero art does NOT get its own slide after the cover:
      the cover already opens on that same image, so the slide just repeats
@@ -4395,8 +4485,16 @@
      with a bolded lead-in. On a slide those become columns: the lead-in is
      the card's heading, the first sentence of the paragraph its summary.
      Returns null if the section has no paragraphs to lay out. */
+  /* Studies whose reflection reads better as a statement with the takeaways
+     beside it: the title carries the point and sits alone on the left, the
+     cards drop to headings only and stack on the right. */
+  var CS_REFLECT_SPLIT = {
+    pods: 'From scarcity to value'
+  };
+
   function reflectionSlideFrom(nodes, label, key) {
     var skip = CS_REFLECT_SKIP[key] || [];
+    var splitTitle = CS_REFLECT_SPLIT[key];
     var cards = [];
     nodes.forEach(function (n) {
       if (n.nodeType !== 1 || n.tagName !== 'P') return;
@@ -4411,13 +4509,24 @@
       }
       if (head && skip.indexOf(head) >= 0) return;
       var body = firstSentence(p.textContent);
-      if (!head && !body) return;
+      // the split layout is headings only, so a paragraph without one has
+      // nothing left to show
+      if (splitTitle ? !head : (!head && !body)) return;
       cards.push(el('article.deck-reflect-card', null, [
         head ? el('h3.deck-reflect-head', null, [head]) : null,
-        body ? el('p.deck-reflect-body', null, [body]) : null
+        (body && !splitTitle) ? el('p.deck-reflect-body', null, [body]) : null
       ].filter(Boolean)));
     });
     if (!cards.length) return null;
+    if (splitTitle) {
+      return el('section.deck-slide.deck-slide--cs.deck-slide--reflect.deck-slide--reflectsplit',
+        { 'data-label': label }, [
+          el('div.deck-reflect-split', null, [
+            el('h2.deck-title', null, [splitTitle]),
+            el('div.deck-reflect-grid', null, cards)
+          ])
+        ]);
+    }
     return el('section.deck-slide.deck-slide--cs.deck-slide--reflect', { 'data-label': label }, [
       el('h2.deck-title', null, ['Reflection']),
       el('div.deck-reflect-grid', null, cards)
@@ -4428,7 +4537,11 @@
      sentence. It carries more weight as its own slide, so we lift it out of
      the Overview list and split it into the role itself plus what it owned.
      Returns null when a study has no Role bullet. */
-  function roleSlideFrom(nodes, label) {
+  /* Studies whose role slide drops the byline over the list — the list is
+     the point, and the title rail already says "Role". */
+  var CS_ROLE_NO_BYLINE = { pods: 1 };
+
+  function roleSlideFrom(nodes, label, key) {
     var li = null;
     nodes.forEach(function (n) {
       if (li || n.nodeType !== 1) return;
@@ -4454,10 +4567,12 @@
       .filter(function (s) { return s.length > 1; })
       .map(function (s) { return s.charAt(0).toUpperCase() + s.slice(1); });
 
+    var noByline = CS_ROLE_NO_BYLINE[key];
     var right = el('div.deck-role-body', null, [
-      el('p.deck-role-title', null, [title]),
-      el('ul.deck-role-list', null, items.map(function (t) { return el('li', null, [t]); }))
-    ]);
+      noByline ? null : el('p.deck-role-title', null, [title]),
+      el('ul.deck-role-list' + (noByline ? '.deck-role-list--dots' : ''), null,
+        items.map(function (t) { return el('li', null, [t]); }))
+    ].filter(Boolean));
     return titleSideSlide(label, 'Role', right, '.deck-slide--role');
   }
 
@@ -4547,7 +4662,7 @@
       } else {
         // Lift the Role bullet out before the section slide is built, so it
         // isn't listed twice — it becomes its own slide immediately after.
-        if (label === 'Overview') roleSlide = roleSlideFrom(textNodes, 'Role');
+        if (label === 'Overview') roleSlide = roleSlideFrom(textNodes, 'Role', key);
         // Reflection lays out as columns rather than a wall of paragraphs.
         var reflect = label === 'Reflection' ? reflectionSlideFrom(textNodes, label, key) : null;
         if (reflect) {
@@ -4622,14 +4737,17 @@
         // Caption on the left, the machine bleeding off the right edge.
         if (splitLaptop && group.length === 1 && group[0].tagName === 'IMG') {
           var src = group[0].getAttribute('src');
-          // No written caption yet → the machine carries the slide alone,
-          // rather than announcing a placeholder in the left rail.
-          var cap = CS_CAPTIONS[String(src || '').split('/').pop()];
+          // No title or written caption yet → the machine carries the slide
+          // alone, rather than announcing a placeholder in the left rail.
+          var figName = String(src || '').split('/').pop();
+          var figTitle = CS_FIG_TITLES[figName], cap = CS_CAPTIONS[figName];
+          var copy = [];
+          if (figTitle) copy.push(el('h2.deck-title', null, [figTitle]));
+          if (cap) copy.push(el('p.deck-body', null, [cap]));
           slides.push(el('section.deck-slide.deck-slide--titlefig.deck-slide--laptop.deck-slide--capfig',
             { 'data-label': label + ' — image' }, [
               el('div.deck-titlefig', null, [
-                el('div.deck-titlefig-copy', null,
-                   cap ? [el('p.deck-body', null, [cap])] : []),
+                el('div.deck-titlefig-copy', null, copy),
                 laptopFrame('', src)
               ])
             ]));
@@ -4985,13 +5103,24 @@
       if (!a) return;
       var b = n.getBoundingClientRect();
       var dx = a.left - b.left, dy = a.top - b.top;
-      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+      // An element that also changes size (the pod orb between its own slide
+      // and the themes hub) scales from the old box as well as moving.
+      var s = b.width ? a.width / b.width : 1;
+      var moved = Math.abs(dx) >= 1 || Math.abs(dy) >= 1;
+      var resized = Math.abs(s - 1) >= 0.01;
+      if (!moved && !resized) return;
+      var from = 'translate(' + dx + 'px, ' + dy + 'px)' + (resized ? ' scale(' + s + ')' : '');
       n.style.transition = 'none';
-      n.style.transform = 'translate(' + dx + 'px, ' + dy + 'px)';
+      // top left so the scale grows out of the old box's corner, which is
+      // what dx/dy were measured against
+      if (resized) n.style.transformOrigin = 'top left';
+      n.style.transform = from;
       void n.offsetWidth;                                  // reflow so the start sticks
       n.style.transition = 'transform 0.72s cubic-bezier(0.22, 1, 0.36, 1)';
       n.style.transform = '';
-      setTimeout(function () { n.style.transition = ''; n.style.transform = ''; }, 800);
+      setTimeout(function () {
+        n.style.transition = ''; n.style.transform = ''; n.style.transformOrigin = '';
+      }, 800);
     });
   }
 

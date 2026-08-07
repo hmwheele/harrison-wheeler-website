@@ -533,6 +533,20 @@ html.deck-reduce .deck-about-card {
 }
 /* Each fact leads with its own emoji, so there is no rule marker as well. */
 .deck-facts li { padding-left: 0; }
+/* …except where the list is plain copy. The list is a flex column, so its
+   items aren't list-items and ::marker won't render — the dot is drawn.
+   Muted like the marker on .deck-debt-list. */
+.deck-facts--bulleted li { padding-left: 1.1em; }
+.deck-facts--bulleted li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
 /* Globe + the outgoing portrait share one cell. The portrait is absolute so
    it never affects the globe's square box. */
 .deck-places-media { position: relative; min-width: 0; }
@@ -741,6 +755,28 @@ html.deck-reduce .deck-media-img { transition: none; }
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+/* Where the shot was taken, set into the bottom-left corner over the clip.
+   Same smoked-glass treatment as the globe slide's cards, so it stays
+   legible over a bright frame (sky, pavement) without a full scrim. */
+.deck-vid-cap {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 2;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(22, 21, 28, 0.72);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--text);
 }
 /* The wells are portrait by default, which suits the 9:16 clip in --a. The
    --b clip is 484×640, so a 9/16 box would crop a quarter of its width
@@ -1051,7 +1087,8 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
    Applies to .deck-slide--charts and .deck-slide--diagram-full.
    ═══════════════════════════════════════════════════════════════════ */
 .deck-slide--charts,
-.deck-slide--diagram-full {
+.deck-slide--diagram-full,
+.deck-slide--themesplit {
   /* — Purple ramp (light → dark). The one ramp for every surface. — */
   --v-p1: #e0d3ff;
   --v-p2: #c4b2ff;
@@ -1099,7 +1136,10 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
 .viz-svg .v-surface-3 { fill: var(--v-fill-3); stroke: var(--v-p4); stroke-width: var(--v-stroke); }
 
 /* ── Framework diagrams — one per full-page slide ──────────────────── */
-.deck-slide--diagram-full {
+/* --themesplit draws the same diagram vocabulary in a split layout, so it
+   needs the same tokens; without them the nodes fall back to black. */
+.deck-slide--diagram-full,
+.deck-slide--themesplit {
   --viz-ink: var(--text);
   --viz-ink-muted: var(--text-muted);
   --dgm-line: var(--v-line);   /* solid — see --v-line */
@@ -1112,6 +1152,12 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
 /* now inherited from .deck-slide — kept only for the doc trail */
 .deck-slide--diagram-full .deck-title {
   margin: 0 0 clamp(12px, 3vh, 40px);
+}
+/* A heading that names the drawing rather than framing it: centred over the
+   diagram at a fixed size, not the display-scale --t-title. */
+.deck-slide--dgmtitle-center .deck-title {
+  text-align: center;
+  font-size: 48px;
 }
 /* Home-deck org slide: the title centres over the tree and steps down a
    size. A deliberate exception to the "a slide title is a slide title"
@@ -1144,6 +1190,65 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
   display: flex; align-items: center; justify-content: center;
   min-height: 0;
   width: 100%;
+}
+/* The load slide's stack is drawn standing on the bottom of its canvas, so
+   the stage sits on the slide's bottom margin and the stack rises out of it
+   instead of floating in a centred box. */
+.deck-slide--loadbottom .deck-diagram-stage { align-items: flex-end; }
+/* …and the stack dissolves into the margin rather than ending on the hard
+   line the viewBox would otherwise cut. */
+.deck-slide--loadbottom .deck-diagram-stage .viz-svg {
+  -webkit-mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 72%, transparent 100%);
+}
+
+/* ── The pod, named: orb on the left, the word beside it ───────────── */
+.deck-slide--podorb { justify-content: center; }
+.deck-orb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(24px, 3.6vw, 72px);
+  width: 100%;
+}
+.deck-orb .deck-orb-fig { width: min(42vh, 360px); }
+.deck-orb-fig { flex: 0 0 auto; margin: 0; }
+.deck-orb-fig .viz-svg { width: 100%; height: auto; display: block; }
+
+/* ── Themes: the drawing on the left, what it bought on the right ──── */
+.deck-slide--themesplit { justify-content: center; }
+.deck-themesplit {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(24px, 4vw, 72px);
+  width: 100%;
+}
+.deck-themesplit-viz { position: relative; min-width: 0; }
+.deck-themesplit-viz > .viz-svg { width: 100%; height: auto; display: block; }
+/* The orb drops into the hub the connectors run to. The drawing is a
+   560×330 viewBox with a hub of r=34 at (280, 168), and the orb figure's box
+   is exactly its sphere — so these percentages put the two in register, and
+   both scale with the column. Placed with left/top, not a centring
+   transform: flipShared writes to `transform` while the orb is travelling. */
+.deck-themesplit-viz .deck-orb-fig {
+  position: absolute;
+  left: 43.93%;                 /* 50% − (34 / 560) */
+  top: 40.61%;                  /* (168 − 34) / 330 */
+  width: 12.14%;                /* 68 / 560 */
+}
+@media (max-width: 860px) {
+  .deck-themesplit { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+/* .deck-title is already the display face (Neudron); it only needs to drop
+   the heading margin and stand a size up, since it's the whole slide. */
+.deck-orb .deck-title {
+  margin: 0;
+  font-size: clamp(3.4rem, 11vh, 8rem);
+}
+@media (max-width: 860px) {
+  .deck-orb { flex-direction: column; gap: 20px; }
+  .deck-orb-fig { width: min(38vh, 240px); }
 }
 .deck-diagram-stage .viz-svg {
   width: 100%;
@@ -1274,9 +1379,11 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
 .viz-svg .dgm-callout-title { font-size: 32px; }
 /* `.viz-svg` prefix so it beats `.viz-svg text { font-family: var(--mono) }` */
 .viz-svg .dgm-cycle-lbl { font-family: var(--mono); font-size: 21px; font-weight: 400; }
+/* Only the load slide's 99+ uses this — sized to stand with the stack under
+   it rather than to sit as a caption. */
 .viz-svg .dgm-stat-lbl {
   font-family: var(--display);
-  font-synthesis: none; font-weight: 800; font-size: 54px; fill: var(--viz-ink);
+  font-synthesis: none; font-weight: 800; font-size: 108px; fill: var(--viz-ink);
 }
 /* The hub label at the centre of a cycle diagram ("Analyze + Optimize") is
    display type, not diagram chrome. */
@@ -1742,6 +1849,7 @@ html.deck-reduce .deck-guest-row { animation: none; }
   gap: clamp(14px, 2vw, 28px);
 }
 .deck-legacy-cell {
+  position: relative;
   display: flex;
   container-type: inline-size;   /* type sizes off the cell */
   align-items: center;
@@ -1756,6 +1864,21 @@ html.deck-reduce .deck-guest-row { animation: none; }
   text-transform: uppercase;
   color: var(--text);
 }
+/* Grain with the linear top→bottom falloff, same recipe as the about
+   cards: fractalNoise at 0.85 / 3 octaves, desaturated. */
+.deck-legacy-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.16;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, transparent 100%);
+}
+/* the label sits above the grain layer */
+.deck-legacy-cell > span { position: relative; }
 @media (max-width: 860px) {
   .deck-legacy-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
 }
@@ -2067,6 +2190,19 @@ html.deck-reduce .deck-guest-row { animation: none; }
   color: var(--text);
 }
 .deck-split-list strong { font-weight: 400; color: var(--primary); }
+/* --bulleted marks each point, for the lists that read as a set rather than
+   as stat lines. Flex items aren't list-items, so the dot is drawn. */
+.deck-split-list--bulleted li { position: relative; padding-left: 1.1em; }
+.deck-split-list--bulleted li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.58em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
 
 /* ── B2B Events slides ─────────────────────────────────────────────
       figure + copy, big stat row, staircase, triptych, spec columns. */
@@ -3282,6 +3418,13 @@ html.deck-reduce .deck-slide--laptop.deck-slide--capfig .deck-laptop {
   width: 16px; height: 2px;
   background: var(--primary);
 }
+/* --dots swaps the rule for a bullet, for the studies whose role list reads
+   as points rather than a run of clauses. */
+.deck-role-list--dots li::before {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  top: 0.56em;
+}
 
 /* Principles: lead-in bold, the rest as running serif copy. */
 .deck-principles {
@@ -3880,6 +4023,26 @@ html.deck-reduce .deck-wall-track { animation: none; }
   border: 1px solid var(--border);
   border-radius: clamp(12px, 1.2vw, 16px);
 }
+/* A fourth figure doesn't fit as a stack — four go two-up instead, with the
+   numerals and box padding sized down to suit the narrower boxes. */
+.deck-statfigs:has(> .deck-statfig:nth-child(4)) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+.deck-statfigs:has(> .deck-statfig:nth-child(4)) .deck-statfig {
+  padding: clamp(16px, 1.7vw, 28px);
+}
+.deck-statfigs:has(> .deck-statfig:nth-child(4)) .deck-statfig-val {
+  font-size: clamp(2.8rem, 6.6vw, 6.2rem);
+}
+.deck-statfigs:has(> .deck-statfig:nth-child(4)) .deck-statfig-dir {
+  font-size: clamp(0.8rem, 1.7vw, 1.5rem);
+}
+/* Two-up figures need more of the slide than the even split gives them. */
+.deck-statfigs-split:has(.deck-statfig:nth-child(4)) {
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1fr);
+}
 /* Number + delta marker share a baseline; the marker is optically raised
    so it aligns with the cap height rather than the baseline. */
 /* Number left, delta marker pushed to the right edge of the box. */
@@ -4220,6 +4383,21 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
 }
 .deck-reflect-card:first-child { padding-top: 0; }
 .deck-reflect-card:last-child { padding-bottom: 0; border-bottom: 0; }
+/* Split variant: the title states the shift and holds the left on its own,
+   the takes stack beside it as headings with no body copy. */
+.deck-slide--reflectsplit { justify-content: center; }
+.deck-reflect-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(28px, 5vw, 88px);
+  width: 100%;
+}
+.deck-slide--reflectsplit .deck-title { margin: 0; }
+.deck-slide--reflectsplit .deck-reflect-grid { width: 100%; flex: 0 1 auto; }
+@media (max-width: 860px) {
+  .deck-reflect-split { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+}
 /* Check variant (What good looks like): a mint check circle sits left
    of each row — the qualities read as boxes ticked. */
 .deck-reflect-grid--check .deck-reflect-card {
