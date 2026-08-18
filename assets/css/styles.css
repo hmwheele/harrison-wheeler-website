@@ -1470,6 +1470,13 @@ body.cs-lock::before { opacity: 1; }
   line-height: 1.4;
   color: var(--text); max-width: 30em; margin: 0 auto;
 }
+.story-tagline-sub {
+  font-family: var(--serif); font-weight: var(--serif-light);
+  font-size: 1.05rem; line-height: 1.7;
+  color: var(--light-pink); opacity: .85;
+  max-width: 44em; margin: 22px auto 0; text-align: center;
+}
+.story-tagline-sub strong { font-weight: 400; color: var(--text); }
 .story-intro {
   max-width: 42em; margin: 0;
   font-family: var(--serif); font-weight: var(--serif-light);

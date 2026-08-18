@@ -1,4 +1,14 @@
 User-agent: *
 Allow: /
 
+# Knowledge Graph crawlers and AI answer engines — explicitly welcome.
+User-agent: Googlebot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
 Sitemap: https://www.harrisonwheeler.com/sitemap.xml

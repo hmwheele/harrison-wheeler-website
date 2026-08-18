@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — Harrison Wheeler</title>
   <meta name="description" content="About Harrison Wheeler: from a donated computer in Milwaukee to leading design teams at LinkedIn and Zendesk, and a life of building, speaking, and traveling." />
+  <meta name="author" content="Harrison Wheeler" />
   <link rel="canonical" href="https://www.harrisonwheeler.com/about" />
 
   <link rel="icon" href="assets/favicon.ico" sizes="any" />
@@ -22,6 +23,10 @@
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Harrison Wheeler" />
+  <meta property="profile:first_name" content="Harrison" />
+  <meta property="profile:last_name" content="Wheeler" />
+  <meta property="profile:username" content="hmwheele" />
+  <meta property="profile:gender" content="male" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -29,7 +34,12 @@
   <meta name="twitter:description" content="From a donated computer in Milwaukee to leading design teams used by more than a billion people." />
   <meta name="twitter:image" content="https://www.harrisonwheeler.com/assets/og-image.jpg?v=2" />
 
-  <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN" />
+  <!-- Google Search Console verification. Paste the token from
+       Search Console > Settings > Ownership verification > HTML tag,
+       then uncomment. An invalid token verifies nothing, so this stays
+       commented out until the real value is in place.
+  <meta name="google-site-verification" content="PASTE_GSC_TOKEN_HERE" />
+  -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-V0RBJMB8WZ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -47,45 +57,281 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "ProfilePage",
-    "url": "https://www.harrisonwheeler.com/about",
-    "mainEntity": {
-      "@type": "Person",
-      "@id": "https://www.harrisonwheeler.com/#person",
-      "name": "Harrison Wheeler",
-      "givenName": "Harrison",
-      "familyName": "Wheeler",
-      "url": "https://www.harrisonwheeler.com/",
-      "image": "https://www.harrisonwheeler.com/assets/og-image.jpg?v=2",
-      "jobTitle": "Design Leader & Founder",
-      "description": "Design leader who has spent over a decade leading design teams at companies like LinkedIn and Zendesk, scaling organizations and shipping products used by more than a billion people.",
-      "worksFor": {
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://www.harrisonwheeler.com/#person",
+        "mainEntityOfPage": {
+          "@id": "https://www.harrisonwheeler.com/about#webpage"
+        },
+        "name": "Harrison Wheeler",
+        "givenName": "Harrison",
+        "familyName": "Wheeler",
+        "gender": "Male",
+        "birthDate": "1987",
+        "birthPlace": {
+          "@type": "Place",
+          "name": "Milwaukee, Wisconsin, United States",
+          "sameAs": "https://en.wikipedia.org/wiki/Milwaukee"
+        },
+        "nationality": {
+          "@type": "Country",
+          "name": "United States of America"
+        },
+        "knowsLanguage": "en",
+        "url": "https://www.harrisonwheeler.com/",
+        "image": {
+          "@id": "https://www.harrisonwheeler.com/#headshot"
+        },
+        "description": "Harrison Wheeler is an American design leader, founder, and podcast host. Over a decade leading design at LinkedIn and Zendesk, he scaled design organizations and shipped products used by more than a billion people. He is the founder of LeadCraft and the host and creator of the Technically Speaking podcast.",
+        "disambiguatingDescription": "American product design leader, founder of LeadCraft, and host of the Technically Speaking podcast.",
+        "jobTitle": [
+          "Design Leader",
+          "Founder",
+          "Podcast Host"
+        ],
+        "hasOccupation": [
+          {
+            "@type": "Occupation",
+            "name": "Product Design Leader",
+            "occupationLocation": {
+              "@type": "City",
+              "name": "San Francisco"
+            }
+          },
+          {
+            "@type": "Occupation",
+            "name": "Podcaster"
+          }
+        ],
+        "worksFor": {
+          "@id": "https://www.harrisonwheeler.com/#leadcraft"
+        },
+        "alumniOf": [
+          {
+            "@type": "CollegeOrUniversity",
+            "name": "University of Iowa",
+            "sameAs": "https://en.wikipedia.org/wiki/University_of_Iowa"
+          },
+          {
+            "@type": "Organization",
+            "name": "LinkedIn",
+            "url": "https://www.linkedin.com/",
+            "sameAs": "https://en.wikipedia.org/wiki/LinkedIn"
+          },
+          {
+            "@type": "Organization",
+            "name": "Zendesk",
+            "url": "https://www.zendesk.com/",
+            "sameAs": "https://en.wikipedia.org/wiki/Zendesk"
+          },
+          {
+            "@type": "Organization",
+            "name": "Base CRM"
+          }
+        ],
+        "homeLocation": {
+          "@type": "Place",
+          "name": "San Francisco, California, United States",
+          "sameAs": "https://en.wikipedia.org/wiki/San_Francisco"
+        },
+        "workLocation": {
+          "@type": "Place",
+          "name": "San Francisco, California, United States"
+        },
+        "award": [
+          "Amplitude Product 50 — Best Product Design Leader (2026)",
+          "Smashing Magazine Person of the Week"
+        ],
+        "knowsAbout": [
+          "Product Design",
+          "Design Leadership",
+          "Design Management",
+          "Design Systems",
+          "User Experience Design",
+          "Design Organization Strategy",
+          "Team Building",
+          "Facilitation",
+          "AI in Design",
+          "Mentorship and Coaching"
+        ],
+        "sameAs": [
+          "https://www.linkedin.com/in/hmwheeler",
+          "https://github.com/hmwheele",
+          "https://medium.com/@hmwheele",
+          "https://technicallyspeakinghw.substack.com",
+          "https://technicallyspeakinghw.com",
+          "https://www.threads.com/@hmwheele",
+          "https://bsky.app/profile/hmwheele.bsky.social",
+          "https://www.youtube.com/@TechnicallySpeakingHW"
+        ],
+        "subjectOf": [
+          {
+            "@type": "Article",
+            "name": "Amplitude Product 50: The Most Innovative People in Product",
+            "url": "https://amplitude.com/blog/product-50-winner-harrison-wheeler",
+            "publisher": {
+              "@type": "Organization",
+              "name": "Amplitude"
+            }
+          },
+          {
+            "@type": "PodcastEpisode",
+            "name": "The Object-Oriented UX — Introducing object-oriented thinking to LinkedIn",
+            "url": "https://ooux.com/resources/episode022",
+            "partOfSeries": {
+              "@type": "PodcastSeries",
+              "name": "The OOUX Podcast"
+            }
+          },
+          {
+            "@type": "PodcastEpisode",
+            "name": "Awkward Silences — How Storytelling Can Make User Research More Impactful",
+            "url": "https://podcast.userinterviews.com/episodes/52-the-missing-ingredient-how-storytelling-can-make-user-research-more-impactful-with-harrison-wheeler-ux-design-manager-at-linkedin",
+            "partOfSeries": {
+              "@type": "PodcastSeries",
+              "name": "Awkward Silences"
+            }
+          }
+        ],
+        "performerIn": [
+          {
+            "@type": "Event",
+            "name": "Figma Config 2022 — The Design MC: Facilitating Safe and Inclusive Environments for Feedback",
+            "startDate": "2022",
+            "superEvent": {
+              "@type": "Event",
+              "name": "Figma Config"
+            }
+          },
+          {
+            "@type": "Event",
+            "name": "Design Matters Tokyo 2025 — How AI is Reshaping Design Leadership and Culture",
+            "startDate": "2025",
+            "location": {
+              "@type": "Place",
+              "name": "Tokyo, Japan"
+            }
+          },
+          {
+            "@type": "Event",
+            "name": "SmashingConf New York 2022",
+            "startDate": "2022",
+            "location": {
+              "@type": "Place",
+              "name": "New York, New York, United States"
+            }
+          },
+          {
+            "@type": "Event",
+            "name": "SmashingConf Freiburg 2023",
+            "startDate": "2023",
+            "location": {
+              "@type": "Place",
+              "name": "Freiburg, Germany"
+            }
+          },
+          {
+            "@type": "Event",
+            "name": "ConveyUX 2025",
+            "startDate": "2025",
+            "location": {
+              "@type": "Place",
+              "name": "Seattle, Washington, United States"
+            }
+          }
+        ]
+      },
+      {
+        "@type": "ImageObject",
+        "@id": "https://www.harrisonwheeler.com/#headshot",
+        "url": "https://www.harrisonwheeler.com/assets/profile-image.jpg",
+        "contentUrl": "https://www.harrisonwheeler.com/assets/profile-image.jpg",
+        "width": 960,
+        "height": 960,
+        "caption": "Harrison Wheeler"
+      },
+      {
         "@type": "Organization",
-        "name": "LeadCraft"
+        "@id": "https://www.harrisonwheeler.com/#leadcraft",
+        "name": "LeadCraft",
+        "description": "A platform for design leaders navigating an era where everything, including how we work with AI, is changing. Frameworks, rituals, and real stories for growing your team and yourself.",
+        "founder": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        },
+        "url": "https://www.harrisonwheeler.com/"
       },
-      "homeLocation": {
-        "@type": "Place",
-        "name": "San Francisco, California, United States"
+      {
+        "@type": "PodcastSeries",
+        "@id": "https://www.harrisonwheeler.com/#podcast",
+        "name": "Technically Speaking",
+        "url": "https://technicallyspeakinghw.com",
+        "description": "Candid conversations with designers, builders, and leaders on craft, careers, and the human side of building products and teams.",
+        "author": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        },
+        "creator": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        },
+        "sameAs": [
+          "https://www.youtube.com/@TechnicallySpeakingHW",
+          "https://technicallyspeakinghw.substack.com"
+        ]
       },
-      "knowsAbout": [
-        "Product Design",
-        "Design Leadership",
-        "Design Systems",
-        "User Experience",
-        "Team Building",
-        "Facilitation",
-        "AI in Design"
-      ],
-      "sameAs": [
-        "https://www.linkedin.com/in/hmwheeler",
-        "https://github.com/hmwheele",
-        "https://medium.com/@hmwheele",
-        "https://technicallyspeakinghw.substack.com",
-        "https://www.threads.com/@hmwheele",
-        "https://bsky.app/profile/hmwheele.bsky.social",
-        "https://www.youtube.com/@TechnicallySpeakingHW"
-      ]
-    }
+      {
+        "@type": "ProfilePage",
+        "@id": "https://www.harrisonwheeler.com/about#webpage",
+        "url": "https://www.harrisonwheeler.com/about",
+        "name": "About — Harrison Wheeler",
+        "description": "About Harrison Wheeler: from a donated computer in Milwaukee to leading design teams at LinkedIn and Zendesk, and a life of building, speaking, and traveling.",
+        "isPartOf": {
+          "@id": "https://www.harrisonwheeler.com/#website"
+        },
+        "mainEntity": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        },
+        "about": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        },
+        "primaryImageOfPage": {
+          "@id": "https://www.harrisonwheeler.com/#headshot"
+        },
+        "inLanguage": "en-US",
+        "breadcrumb": {
+          "@id": "https://www.harrisonwheeler.com/about#breadcrumb"
+        }
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.harrisonwheeler.com/#website",
+        "url": "https://www.harrisonwheeler.com/",
+        "name": "Harrison Wheeler",
+        "inLanguage": "en-US",
+        "publisher": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        },
+        "about": {
+          "@id": "https://www.harrisonwheeler.com/#person"
+        }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": "https://www.harrisonwheeler.com/about#breadcrumb",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://www.harrisonwheeler.com/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "About"
+          }
+        ]
+      }
+    ]
   }
   </script>
 </head>
@@ -124,6 +370,13 @@
     <!-- ── Tagline, moved below the hero video ── -->
     <section class="story-tagline-band container">
       <h2 class="story-tagline">I design how organizations, and the people inside them, do their best work, building from curiosity and making quality a business strategy.</h2>
+      <!-- Third-person entity summary. Google's entity extraction keys off an
+           explicit "Name is a ..." sentence in visible copy; this mirrors the
+           Person description in the JSON-LD above. -->
+      <p class="story-tagline-sub"><strong>Harrison Wheeler</strong> is an American product design leader, founder of
+        <strong>LeadCraft</strong>, and host and creator of the <strong>Technically Speaking</strong> podcast. Over a decade
+        leading design at <strong>LinkedIn</strong> and <strong>Zendesk</strong>, he scaled design organizations and shipped
+        products used by more than a billion people. He speaks internationally on design leadership, facilitation, and AI.</p>
     </section>
 
     <!-- ── Highlights, beneath the hero video ── -->
@@ -212,7 +465,7 @@
       <!-- 1987 — Born in Milwaukee -->
       <article class="tl-row reverse">
         <div class="tl-media" data-reveal="right">
-          <img src="assets/story/1987.jpg" alt="Harrison as a young boy with his family in Milwaukee" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/1987.jpg" alt="Harrison as a young boy with his family in Milwaukee" loading="lazy" onerror="this.style.display='none'" width="960" height="720" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">1987</span>
@@ -229,7 +482,7 @@
       <!-- 1996 — Milwaukee -->
       <article class="tl-row">
         <div class="tl-media" data-reveal="left">
-          <img src="assets/story/streetview-1996.jpg" alt="Street View — W Appleton Ave, Milwaukee, WI" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/streetview-1996.jpg" alt="Street View — W Appleton Ave, Milwaukee, WI" loading="lazy" onerror="this.style.display='none'" width="1024" height="576" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">1996</span>
@@ -246,7 +499,7 @@
       <!-- 1998 — Milwaukee -->
       <article class="tl-row reverse">
         <div class="tl-media" data-reveal="right">
-          <img src="assets/story/1998.jpg" alt="Harrison as a young student — school portrait" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/1998.jpg" alt="Harrison as a young student — school portrait" loading="lazy" onerror="this.style.display='none'" width="290" height="397" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">1998</span>        </div>
@@ -262,7 +515,7 @@
       <!-- 2005 — Iowa City -->
       <article class="tl-row">
         <div class="tl-media" data-reveal="left">
-          <img src="assets/story/2005.jpg" alt="" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/2005.jpg" alt="" loading="lazy" onerror="this.style.display='none'" width="317" height="454" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">2005</span>        </div>
@@ -278,9 +531,9 @@
       <!-- 2011 — Iowa City  (copy synthesized — edit to taste) -->
       <article class="tl-row reverse">
         <div class="tl-media tl-media--carousel" data-reveal="right">
-          <img src="assets/story/2011/1.JPG" alt="Concerts and shows Harrison promoted" loading="lazy" />
-          <img src="assets/story/2011/2.JPG" alt="" loading="lazy" />
-          <img src="assets/story/2011/3.JPG" alt="" loading="lazy" />
+          <img src="assets/story/2011/1.JPG" alt="Concerts and shows Harrison promoted" loading="lazy" width="1400" height="1207" />
+          <img src="assets/story/2011/2.JPG" alt="" loading="lazy" width="1400" height="1189" />
+          <img src="assets/story/2011/3.JPG" alt="" loading="lazy" width="1400" height="933" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">2011</span>        </div>
@@ -296,7 +549,7 @@
       <!-- 2013 — Chicago -->
       <article class="tl-row">
         <div class="tl-media" data-reveal="left">
-          <img src="assets/story/2013.jpeg" alt="Harrison with his team at Base CRM" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/2013.jpeg" alt="Harrison with his team at Base CRM" loading="lazy" onerror="this.style.display='none'" width="1280" height="960" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">2013</span>        </div>
@@ -312,7 +565,7 @@
       <!-- 2017 — San Francisco -->
       <article class="tl-row reverse">
         <div class="tl-media" data-reveal="right">
-          <img src="assets/story/2017.jpeg" alt="Harrison during his time at LinkedIn" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/2017.jpeg" alt="Harrison during his time at LinkedIn" loading="lazy" onerror="this.style.display='none'" width="2048" height="1536" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">2017</span>        </div>
@@ -328,7 +581,7 @@
       <!-- 2020 — San Francisco -->
       <article class="tl-row">
         <div class="tl-media" data-reveal="left">
-          <img src="assets/story/2020.jpg" alt="" loading="lazy" onerror="this.style.display='none'" />
+          <img src="assets/story/2020.jpg" alt="" loading="lazy" onerror="this.style.display='none'" width="3551" height="3551" />
         </div>
         <div class="tl-node" data-reveal>
           <span class="tl-year">2020</span>        </div>
@@ -398,6 +651,7 @@
     </div>
   </footer>
 
+  <script src="assets/js/images.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/story.js"></script>
 </body>

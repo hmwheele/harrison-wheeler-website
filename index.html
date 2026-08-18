@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Harrison Wheeler — Design leader, builder, community maker</title>
   <meta name="description" content="Harrison Wheeler is a design leader who has spent over a decade leading design teams at companies like LinkedIn and Zendesk, scaling organizations and shipping products used by more than a billion people." />
+  <meta name="author" content="Harrison Wheeler" />
   <link rel="canonical" href="https://www.harrisonwheeler.com/" />
 
   <link rel="icon" href="assets/favicon.ico" sizes="any" />
@@ -30,7 +31,12 @@
   <meta name="twitter:image" content="https://www.harrisonwheeler.com/assets/og-image.jpg?v=2" />
 
   <!-- ===== Google Search Console verification — replace token ===== -->
-  <meta name="google-site-verification" content="REPLACE_WITH_GSC_TOKEN" />
+  <!-- Google Search Console verification. Paste the token from
+       Search Console > Settings > Ownership verification > HTML tag,
+       then uncomment. An invalid token verifies nothing, so this stays
+       commented out until the real value is in place.
+  <meta name="google-site-verification" content="PASTE_GSC_TOKEN_HERE" />
+  -->
 
   <!-- ===== Google Analytics 4 — replace G-V0RBJMB8WZ ===== -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-V0RBJMB8WZ"></script>
@@ -66,48 +72,198 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Person",
-    "@id": "https://www.harrisonwheeler.com/#person",
-    "mainEntityOfPage": "https://www.harrisonwheeler.com/",
-    "name": "Harrison Wheeler",
-    "givenName": "Harrison",
-    "familyName": "Wheeler",
-    "url": "https://www.harrisonwheeler.com/",
-    "image": "https://www.harrisonwheeler.com/assets/og-image.jpg?v=2",
-    "jobTitle": "Design Leader & Founder",
-    "description": "Design leader who has spent over a decade leading design teams at companies like LinkedIn and Zendesk, scaling organizations and shipping products used by more than a billion people.",
-    "worksFor": {
-      "@type": "Organization",
-      "name": "LeadCraft"
-    },
-    "homeLocation": {
-      "@type": "Place",
-      "name": "San Francisco, California, United States"
-    },
-    "knowsAbout": [
-      "Product Design",
-      "Design Leadership",
-      "Design Systems",
-      "User Experience",
-      "Team Building",
-      "Facilitation",
-      "AI in Design"
-    ],
-    "sameAs": [
-      "https://www.linkedin.com/in/hmwheeler",
-      "https://github.com/hmwheele",
-      "https://medium.com/@hmwheele",
-      "https://technicallyspeakinghw.substack.com",
-      "https://www.threads.com/@hmwheele",
-      "https://bsky.app/profile/hmwheele.bsky.social",
-      "https://www.youtube.com/@TechnicallySpeakingHW"
-    ],
-    "subjectOf": {
-      "@type": "Article",
-      "name": "Amplitude Product 50: The Most Innovative People in Product",
-      "url": "https://amplitude.com/blog/product-50-winner-harrison-wheeler",
-      "publisher": { "@type": "Organization", "name": "Amplitude" }
-    }
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://www.harrisonwheeler.com/#person",
+        "mainEntityOfPage": { "@id": "https://www.harrisonwheeler.com/about#webpage" },
+        "name": "Harrison Wheeler",
+        "givenName": "Harrison",
+        "familyName": "Wheeler",
+        "gender": "Male",
+        "birthDate": "1987",
+        "birthPlace": {
+          "@type": "Place",
+          "name": "Milwaukee, Wisconsin, United States",
+          "sameAs": "https://en.wikipedia.org/wiki/Milwaukee"
+        },
+        "nationality": { "@type": "Country", "name": "United States of America" },
+        "knowsLanguage": "en",
+        "url": "https://www.harrisonwheeler.com/",
+        "image": { "@id": "https://www.harrisonwheeler.com/#headshot" },
+        "description": "Harrison Wheeler is an American design leader, founder, and podcast host. Over a decade leading design at LinkedIn and Zendesk, he scaled design organizations and shipped products used by more than a billion people. He is the founder of LeadCraft and the host and creator of the Technically Speaking podcast.",
+        "disambiguatingDescription": "American product design leader, founder of LeadCraft, and host of the Technically Speaking podcast.",
+        "jobTitle": ["Design Leader", "Founder", "Podcast Host"],
+        "hasOccupation": [
+          {
+            "@type": "Occupation",
+            "name": "Product Design Leader",
+            "occupationLocation": { "@type": "City", "name": "San Francisco" }
+          },
+          { "@type": "Occupation", "name": "Podcaster" }
+        ],
+        "worksFor": { "@id": "https://www.harrisonwheeler.com/#leadcraft" },
+        "alumniOf": [
+          {
+            "@type": "CollegeOrUniversity",
+            "name": "University of Iowa",
+            "sameAs": "https://en.wikipedia.org/wiki/University_of_Iowa"
+          },
+          {
+            "@type": "Organization",
+            "name": "LinkedIn",
+            "url": "https://www.linkedin.com/",
+            "sameAs": "https://en.wikipedia.org/wiki/LinkedIn"
+          },
+          {
+            "@type": "Organization",
+            "name": "Zendesk",
+            "url": "https://www.zendesk.com/",
+            "sameAs": "https://en.wikipedia.org/wiki/Zendesk"
+          },
+          { "@type": "Organization", "name": "Base CRM" }
+        ],
+        "homeLocation": {
+          "@type": "Place",
+          "name": "San Francisco, California, United States",
+          "sameAs": "https://en.wikipedia.org/wiki/San_Francisco"
+        },
+        "workLocation": {
+          "@type": "Place",
+          "name": "San Francisco, California, United States"
+        },
+        "award": [
+          "Amplitude Product 50 — Best Product Design Leader (2026)",
+          "Smashing Magazine Person of the Week"
+        ],
+        "knowsAbout": [
+          "Product Design",
+          "Design Leadership",
+          "Design Management",
+          "Design Systems",
+          "User Experience Design",
+          "Design Organization Strategy",
+          "Team Building",
+          "Facilitation",
+          "AI in Design",
+          "Mentorship and Coaching"
+        ],
+        "sameAs": [
+          "https://www.linkedin.com/in/hmwheeler",
+          "https://github.com/hmwheele",
+          "https://medium.com/@hmwheele",
+          "https://technicallyspeakinghw.substack.com",
+          "https://technicallyspeakinghw.com",
+          "https://www.threads.com/@hmwheele",
+          "https://bsky.app/profile/hmwheele.bsky.social",
+          "https://www.youtube.com/@TechnicallySpeakingHW"
+        ],
+        "subjectOf": [
+          {
+            "@type": "Article",
+            "name": "Amplitude Product 50: The Most Innovative People in Product",
+            "url": "https://amplitude.com/blog/product-50-winner-harrison-wheeler",
+            "publisher": { "@type": "Organization", "name": "Amplitude" }
+          },
+          {
+            "@type": "PodcastEpisode",
+            "name": "The Object-Oriented UX — Introducing object-oriented thinking to LinkedIn",
+            "url": "https://ooux.com/resources/episode022",
+            "partOfSeries": { "@type": "PodcastSeries", "name": "The OOUX Podcast" }
+          },
+          {
+            "@type": "PodcastEpisode",
+            "name": "Awkward Silences — How Storytelling Can Make User Research More Impactful",
+            "url": "https://podcast.userinterviews.com/episodes/52-the-missing-ingredient-how-storytelling-can-make-user-research-more-impactful-with-harrison-wheeler-ux-design-manager-at-linkedin",
+            "partOfSeries": { "@type": "PodcastSeries", "name": "Awkward Silences" }
+          }
+        ],
+        "performerIn": [
+          {
+            "@type": "Event",
+            "name": "Figma Config 2022 — The Design MC: Facilitating Safe and Inclusive Environments for Feedback",
+            "startDate": "2022",
+            "superEvent": { "@type": "Event", "name": "Figma Config" }
+          },
+          {
+            "@type": "Event",
+            "name": "Design Matters Tokyo 2025 — How AI is Reshaping Design Leadership and Culture",
+            "startDate": "2025",
+            "location": { "@type": "Place", "name": "Tokyo, Japan" }
+          },
+          {
+            "@type": "Event",
+            "name": "SmashingConf New York 2022",
+            "startDate": "2022",
+            "location": { "@type": "Place", "name": "New York, New York, United States" }
+          },
+          {
+            "@type": "Event",
+            "name": "SmashingConf Freiburg 2023",
+            "startDate": "2023",
+            "location": { "@type": "Place", "name": "Freiburg, Germany" }
+          },
+          {
+            "@type": "Event",
+            "name": "ConveyUX 2025",
+            "startDate": "2025",
+            "location": { "@type": "Place", "name": "Seattle, Washington, United States" }
+          }
+        ]
+      },
+      {
+        "@type": "ImageObject",
+        "@id": "https://www.harrisonwheeler.com/#headshot",
+        "url": "https://www.harrisonwheeler.com/assets/profile-image.jpg",
+        "contentUrl": "https://www.harrisonwheeler.com/assets/profile-image.jpg",
+        "width": 960,
+        "height": 960,
+        "caption": "Harrison Wheeler"
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://www.harrisonwheeler.com/#leadcraft",
+        "name": "LeadCraft",
+        "description": "A platform for design leaders navigating an era where everything, including how we work with AI, is changing. Frameworks, rituals, and real stories for growing your team and yourself.",
+        "founder": { "@id": "https://www.harrisonwheeler.com/#person" },
+        "url": "https://www.harrisonwheeler.com/"
+      },
+      {
+        "@type": "PodcastSeries",
+        "@id": "https://www.harrisonwheeler.com/#podcast",
+        "name": "Technically Speaking",
+        "url": "https://technicallyspeakinghw.com",
+        "description": "Candid conversations with designers, builders, and leaders on craft, careers, and the human side of building products and teams.",
+        "author": { "@id": "https://www.harrisonwheeler.com/#person" },
+        "creator": { "@id": "https://www.harrisonwheeler.com/#person" },
+        "sameAs": [
+          "https://www.youtube.com/@TechnicallySpeakingHW",
+          "https://technicallyspeakinghw.substack.com"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.harrisonwheeler.com/#website",
+        "url": "https://www.harrisonwheeler.com/",
+        "name": "Harrison Wheeler",
+        "description": "The personal site of Harrison Wheeler, product design leader, founder, and podcast host.",
+        "inLanguage": "en-US",
+        "publisher": { "@id": "https://www.harrisonwheeler.com/#person" },
+        "copyrightHolder": { "@id": "https://www.harrisonwheeler.com/#person" },
+        "about": { "@id": "https://www.harrisonwheeler.com/#person" }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.harrisonwheeler.com/#webpage",
+        "url": "https://www.harrisonwheeler.com/",
+        "name": "Harrison Wheeler — Design leader, builder, community maker",
+        "description": "Harrison Wheeler is a design leader who has spent over a decade leading design teams at companies like LinkedIn and Zendesk, scaling organizations and shipping products used by more than a billion people.",
+        "isPartOf": { "@id": "https://www.harrisonwheeler.com/#website" },
+        "about": { "@id": "https://www.harrisonwheeler.com/#person" },
+        "primaryImageOfPage": { "@id": "https://www.harrisonwheeler.com/#headshot" },
+        "inLanguage": "en-US"
+      }
+    ]
   }
   </script>
 </head>
@@ -151,7 +307,7 @@
         </div>
         <aside class="timeline" aria-label="Career timeline">
           <div class="timeline-photo" data-reveal-up>
-            <img class="timeline-photo-img" src="assets/profile-image.jpg" alt="Harrison Wheeler" loading="lazy" />
+            <img class="timeline-photo-img" src="assets/profile-image.jpg" alt="Harrison Wheeler" loading="lazy" width="960" height="960" />
             <span class="badge-circle" aria-hidden="true">
               <svg class="badge-burst" viewBox="0 0 100 100"><defs><radialGradient id="burst-grad" gradientUnits="userSpaceOnUse" cx="50" cy="50" r="15"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffd8e4"/></radialGradient></defs><g class="badge-spokes" stroke="url(#burst-grad)"><line x1="52.00" y1="50.00" x2="65.00" y2="50.00"/><line x1="51.90" y1="50.62" x2="64.27" y2="54.64"/><line x1="51.62" y1="51.18" x2="62.14" y2="58.82"/><line x1="51.18" y1="51.62" x2="58.82" y2="62.14"/><line x1="50.62" y1="51.90" x2="54.64" y2="64.27"/><line x1="50.00" y1="52.00" x2="50.00" y2="65.00"/><line x1="49.38" y1="51.90" x2="45.36" y2="64.27"/><line x1="48.82" y1="51.62" x2="41.18" y2="62.14"/><line x1="48.38" y1="51.18" x2="37.86" y2="58.82"/><line x1="48.10" y1="50.62" x2="35.73" y2="54.64"/><line x1="48.00" y1="50.00" x2="35.00" y2="50.00"/><line x1="48.10" y1="49.38" x2="35.73" y2="45.36"/><line x1="48.38" y1="48.82" x2="37.86" y2="41.18"/><line x1="48.82" y1="48.38" x2="41.18" y2="37.86"/><line x1="49.38" y1="48.10" x2="45.36" y2="35.73"/><line x1="50.00" y1="48.00" x2="50.00" y2="35.00"/><line x1="50.62" y1="48.10" x2="54.64" y2="35.73"/><line x1="51.18" y1="48.38" x2="58.82" y2="37.86"/><line x1="51.62" y1="48.82" x2="62.14" y2="41.18"/><line x1="51.90" y1="49.38" x2="64.27" y2="45.36"/></g></svg>
               <svg class="badge-ring" viewBox="0 0 100 100">
@@ -163,35 +319,35 @@
           <div class="timeline-group">
             <p class="timeline-year">2026</p>
             <div class="timeline-item">
-              <span class="timeline-logo"><img src="assets/logos/leadcraft.jpg" alt="" loading="lazy" /></span>
+              <span class="timeline-logo"><img src="assets/logos/leadcraft.jpg" alt="" loading="lazy" width="256" height="256" /></span>
               <span><strong>LeadCraft</strong><em>Founder</em></span>
             </div>
           </div>
           <div class="timeline-group">
             <p class="timeline-year">2023</p>
             <div class="timeline-item">
-              <span class="timeline-logo"><img src="assets/logos/srve.jpg" alt="" loading="lazy" /></span>
+              <span class="timeline-logo"><img src="assets/logos/srve.jpg" alt="" loading="lazy" width="256" height="256" /></span>
               <span><strong>SRVE</strong><em>Advisor &amp; Investor</em></span>
             </div>
           </div>
           <div class="timeline-group">
             <p class="timeline-year">2020</p>
             <div class="timeline-item">
-              <span class="timeline-logo"><img src="assets/logos/technicallyspeaking.jpg" alt="" loading="lazy" /></span>
+              <span class="timeline-logo"><img src="assets/logos/technicallyspeaking.jpg" alt="" loading="lazy" width="256" height="256" /></span>
               <span><strong>Technically Speaking</strong><em>Host &amp; Creator</em></span>
             </div>
           </div>
           <div class="timeline-group">
             <p class="timeline-year">2017</p>
             <div class="timeline-item">
-              <span class="timeline-logo"><img src="assets/logos/linkedin.jpg" alt="" loading="lazy" /></span>
+              <span class="timeline-logo"><img src="assets/logos/linkedin.jpg" alt="" loading="lazy" width="256" height="256" /></span>
               <span><strong>LinkedIn</strong><em>Director, Product Design</em></span>
             </div>
           </div>
           <div class="timeline-group">
             <p class="timeline-year">2013</p>
             <div class="timeline-item">
-              <span class="timeline-logo"><img src="assets/logos/zendesk.jpg" alt="" loading="lazy" /></span>
+              <span class="timeline-logo"><img src="assets/logos/zendesk.jpg" alt="" loading="lazy" width="256" height="256" /></span>
               <span><strong>Base CRM</strong><em>Manager, UX Design</em></span>
             </div>
           </div>
@@ -215,7 +371,7 @@
     <section class="container section" id="leadership">
       <div class="card-grid">
         <a class="card" href="#cs=leadcraft" data-cs="leadcraft">
-          <div class="card-media"><img src="assets/case_studies/cs-marketing.jpg" alt="" loading="lazy" /></div>
+          <div class="card-media"><img src="assets/case_studies/cs-marketing.jpg" alt="" loading="lazy" width="3200" height="1861" /></div>
           <div class="card-body">
             <p class="eyebrow">LinkedIn</p>
             <h3>Building a Surface for Growth</h3>
@@ -223,7 +379,7 @@
           </div>
         </a>
         <a class="card" href="#cs=pods" data-cs="pods">
-          <div class="card-media"><img src="assets/case_studies/pods/hero.webp" alt="" loading="lazy" /></div>
+          <div class="card-media"><img src="assets/case_studies/pods/hero.webp" alt="" loading="lazy" width="1200" height="750" /></div>
           <div class="card-body">
             <p class="eyebrow">LinkedIn</p>
             <h3>Pods Over Silos: Restructuring to Build Faster</h3>
@@ -231,7 +387,7 @@
           </div>
         </a>
         <a class="card" href="#cs=events" data-cs="events">
-          <div class="card-media"><img src="assets/case_studies/events/events_hero.webp" alt="" loading="lazy" /></div>
+          <div class="card-media"><img src="assets/case_studies/events/events_hero.webp" alt="" loading="lazy" width="1600" height="1000" /></div>
           <div class="card-body">
             <p class="eyebrow">LinkedIn</p>
             <h3>B2B Events: Reviving a Venture Bet Through Storytelling</h3>
@@ -239,7 +395,7 @@
           </div>
         </a>
         <a class="card" href="#cs=base" data-cs="base">
-          <div class="card-media"><img src="assets/case_studies/base_crm/base_hero_case.webp" alt="" loading="lazy" /></div>
+          <div class="card-media"><img src="assets/case_studies/base_crm/base_hero_case.webp" alt="" loading="lazy" width="1600" height="1000" /></div>
           <div class="card-body">
             <p class="eyebrow">Base CRM → Zendesk</p>
             <h3>Base CRM: Building the Design Organization</h3>
@@ -248,7 +404,7 @@
         </a>
         <!-- Projects continue in the same stack -->
         <a class="card" href="#cs=video-recorder" data-cs="video-recorder">
-          <div class="card-media"><img src="assets/case_studies/dualcreatorcam/dualhero.webp" alt="" loading="lazy" /></div>
+          <div class="card-media"><img src="assets/case_studies/dualcreatorcam/dualhero.webp" alt="" loading="lazy" width="1600" height="1000" /></div>
           <div class="card-body">
             <p class="eyebrow">0&nbsp;→&nbsp;1 / iOS app</p>
             <h3>Dual Creator Cam: One Tap, Two Finished Videos</h3>
@@ -257,7 +413,7 @@
         </a>
         <!-- Holiday case study hidden for now — pending more revisions. Un-comment to restore.
         <a class="card" href="#cs=holiday" data-cs="holiday">
-          <div class="card-media"><img src="assets/case_studies/holiday/holiday_hero.webp" alt="" loading="lazy" /></div>
+          <div class="card-media"><img src="assets/case_studies/holiday/holiday_hero.webp" alt="" loading="lazy" width="1600" height="930" /></div>
           <div class="card-body">
             <p class="eyebrow">0&nbsp;→&nbsp;1 / Built product</p>
             <h3>How Holiday Got Built: A Process Case Study</h3>
@@ -287,13 +443,13 @@
     <section class="podcast section" aria-label="Podcast">
       <div class="podcast-guests" data-podcast-guests aria-hidden="true">
         <div class="podcast-row" data-px="-120">
-          <span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image3.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image4.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image5.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image8.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image9.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image13.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image14.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy"></span>
+          <span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image3.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image4.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image5.jpg" alt="" loading="lazy" width="1080" height="1080"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image8.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image9.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy" width="1080" height="1080"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image13.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image14.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy" width="176" height="176"></span>
         </div>
         <div class="podcast-row" data-px="70">
-          <span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image8.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image9.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image13.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image14.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image3.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image4.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image5.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy"></span>
+          <span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image8.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image9.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy" width="1080" height="1080"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image13.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image14.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image3.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image4.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image5.jpg" alt="" loading="lazy" width="1080" height="1080"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy" width="2160" height="2160"></span>
         </div>
         <div class="podcast-row" data-px="-60">
-          <span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image13.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image14.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image3.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image4.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image5.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image8.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image9.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy"></span>
+          <span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy" width="1080" height="1080"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image13.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image14.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image1.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image2.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image3.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image4.jpg" alt="" loading="lazy" width="176" height="176"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image5.jpg" alt="" loading="lazy" width="1080" height="1080"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image6.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image7.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image8.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image9.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image10.jpg" alt="" loading="lazy" width="2160" height="2160"></span><span class="podcast-guest"><img src="assets/pod-grid/pod-image12.jpg" alt="" loading="lazy" width="1080" height="1080"></span>
         </div>
       </div>
       <div class="podcast-overlay">
@@ -351,23 +507,23 @@
       <div class="community-strip" aria-label="Photos from community events">
         <div class="community-track">
           <figure class="community-photo">
-            <img src="assets/community/community-1.jpeg" alt="Coffee meetup in Tokyo, JP" loading="lazy" />
+            <img src="assets/community/community-1.jpeg" alt="Coffee meetup in Tokyo, JP" loading="lazy" width="2048" height="1365" />
             <figcaption>Coffee meetup in Tokyo, JP</figcaption>
           </figure>
           <figure class="community-photo">
-            <img src="assets/community/community-2.jpeg" alt="Team outing in San Francisco" loading="lazy" />
+            <img src="assets/community/community-2.jpeg" alt="Team outing in San Francisco" loading="lazy" width="2048" height="1536" />
             <figcaption>Team outing in San Francisco</figcaption>
           </figure>
           <figure class="community-photo">
-            <img src="assets/community/community-3.jpg" alt="Smashing Conference in Freiburg, Germany" loading="lazy" />
+            <img src="assets/community/community-3.jpg" alt="Smashing Conference in Freiburg, Germany" loading="lazy" width="3551" height="3551" />
             <figcaption>Smashing Conference in Freiburg, Germany</figcaption>
           </figure>
           <figure class="community-photo">
-            <img src="assets/community/community-4.webp" alt="Meetup in Brooklyn, New York" loading="lazy" />
+            <img src="assets/community/community-4.webp" alt="Meetup in Brooklyn, New York" loading="lazy" width="2048" height="1365" />
             <figcaption>Meetup in Brooklyn, New York</figcaption>
           </figure>
           <figure class="community-photo">
-            <img src="assets/community/community-5.jpg" alt="Running group in Freiburg" loading="lazy" />
+            <img src="assets/community/community-5.jpg" alt="Running group in Freiburg" loading="lazy" width="826" height="620" />
             <figcaption>Running group in Freiburg</figcaption>
           </figure>
         </div>
@@ -455,6 +611,7 @@
     </div>
   </div>
 
+  <script src="assets/js/images.js"></script>
   <script src="assets/js/main.js"></script>
   <script src="assets/js/case-studies.js"></script>
   <script src="assets/js/overlay.js"></script>
