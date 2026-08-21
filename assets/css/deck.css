@@ -1088,7 +1088,8 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
    ═══════════════════════════════════════════════════════════════════ */
 .deck-slide--charts,
 .deck-slide--diagram-full,
-.deck-slide--themesplit {
+.deck-slide--themesplit,
+.deck-slide--agents {
   /* — Purple ramp (light → dark). The one ramp for every surface. — */
   --v-p1: #e0d3ff;
   --v-p2: #c4b2ff;
@@ -1136,10 +1137,12 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
 .viz-svg .v-surface-3 { fill: var(--v-fill-3); stroke: var(--v-p4); stroke-width: var(--v-stroke); }
 
 /* ── Framework diagrams — one per full-page slide ──────────────────── */
-/* --themesplit draws the same diagram vocabulary in a split layout, so it
-   needs the same tokens; without them the nodes fall back to black. */
+/* --themesplit and --agents draw the same diagram vocabulary in a split
+   layout, so they need the same tokens; without them the nodes fall back
+   to black. */
 .deck-slide--diagram-full,
-.deck-slide--themesplit {
+.deck-slide--themesplit,
+.deck-slide--agents {
   --viz-ink: var(--text);
   --viz-ink-muted: var(--text-muted);
   --dgm-line: var(--v-line);   /* solid — see --v-line */
@@ -1300,6 +1303,9 @@ html.deck-reduce .viz-donut-center, html.deck-reduce .viz-donut-sub { opacity: 1
   .deck-vizsplit { grid-template-columns: 1fr; }
 }
 .dgm-node-lbl { fill: var(--viz-ink); font-family: var(--mono); font-size: 13px; font-weight: 400; }
+/* A name sitting ON the pod globe rather than beside it: the sphere is
+   light, so this one inverts to a deep green that holds against the fill. */
+.dgm-globe-lbl { fill: #10291b; font-family: var(--mono); font-size: 14px; font-weight: 500; }
 /* Acquisition map: pill nodes, three tones — the doors, the steps between
    them, and the destination in the deck's accent. */
 .dgm-acq-link {
@@ -2518,11 +2524,15 @@ html.deck-reduce .deck-audit-web::after { opacity: 1; transition: none; }
 html.deck-reduce .deck-triptych-col {
   opacity: 1; transform: none; transition: none; transition-delay: 0s;
 }
+/* Sits under the phone, as an uppercase mono chip — the deck's standard
+   label voice (see .deck-callout-lbl), not running copy. */
 .deck-triptych-cap {
   margin: 0;
-  font-family: var(--serif);
-  font-weight: var(--serif-light);
-  font-size: var(--tc-cap);
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: var(--t-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -3872,32 +3882,53 @@ html.deck-reduce .deck-laptop--gallery .deck-laptop-screen img { transition: non
   padding: 0 8%;
 }
 
-/* Agent roles sit at the four corners around the build placeholder. */
-.deck-agents {
+/* Tools: the right column is a preview well holding a live HTML document.
+   It fills the column and keeps a landscape frame, so the tool reads as a
+   screen sitting beside the point rather than a floating panel. */
+/* The embedded tool paints no ground of its own, so the slide takes on the
+   one the standalone page used — the two now share a single surface. Fixed
+   and behind the content, so it covers the whole viewport rather than
+   stopping at the slide's 1400px max-width; hidden with the slide, so it
+   only shows while this one is up. */
+.deck-slide--tools::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120% 90% at 50% 0%, #191919 0%, #0d0d0d 60%);
+}
+
+.deck-toolpreview {
   position: relative;
+  width: 100%;
+  /* fills the column top to bottom rather than holding a fixed ratio —
+     the tool is the payload of the slide, so it gets the whole well */
+  height: 100%;
+  align-self: stretch;
+  justify-self: stretch;
+  /* No frame and no fill: the embedded page paints nothing of its own
+     (see playground-tool.html), so the tool reads as sitting on the slide
+     rather than inside a panel on it. */
+  background: none;
+  border: 0;
+}
+.deck-toolpreview-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* Agents: the four roles as boxes wired into the build globe at centre. */
+.deck-agents {
   display: grid;
   place-items: center;
   height: 100%;
   min-height: 0;
 }
-.deck-slide--agents .deck-fig-ph {
-  width: min(46%, 300px);
-  aspect-ratio: 4 / 3;
-  height: auto;
-}
-/* Roles ring the build placeholder — inset off the column edges so they
-   read as orbiting it, not as slide furniture pinned to the corners. */
-.deck-agent-lbl {
-  position: absolute;
-  font-size: var(--t-list);
-  line-height: 1.2;
-  color: var(--text);
-  white-space: nowrap;
-}
-.deck-agent-lbl--tl { top: 16%; left: 4%; }
-.deck-agent-lbl--tr { top: 16%; right: 4%; }
-.deck-agent-lbl--bl { bottom: 16%; left: 4%; }
-.deck-agent-lbl--br { bottom: 16%; right: 4%; }
+.deck-agents .viz-svg { width: 100%; max-height: 100%; }
 @media (max-width: 860px) {
   .deck-titlefig { grid-template-columns: minmax(0, 1fr); }
 }
@@ -4193,6 +4224,15 @@ html.deck-reduce .deck-statfig-dir {
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+/* Short cover titles (see CS_DECK_TITLE) step up: --t-cover is sized so a
+   full case-study title still fits its column, which leaves a two-word one
+   small with dead space under it. Capped just under the width that would
+   force a second line, so it fills the column on one. fitCoverTitle still
+   steps it down from here if a narrower viewport needs it. */
+.deck-slide--cs-title-short .deck-cs-paper .cs-main h1 {
+  font-size: clamp(5rem, 12vw, 10.6rem);
+}
+
 /* On the cover, only the title shows in the left column. */
 .deck-slide--cs-title .cs-main > *:not(h1) { display: none; }
 
@@ -4398,6 +4438,47 @@ html.deck-reduce .deck-cs-cover-art { opacity: 1; transform: translateY(-50%); t
 @media (max-width: 860px) {
   .deck-reflect-split { grid-template-columns: minmax(0, 1fr); gap: 22px; }
 }
+/* Column variant: three short takes side by side. No rules at all — the
+   gutter alone separates the columns, so the takes read as three quiet
+   blocks rather than a table. */
+.deck-reflect-grid--cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  align-content: center;
+  gap: clamp(28px, 4vw, 64px);
+  width: 100%;
+}
+.deck-reflect-grid--cols .deck-reflect-card {
+  padding: 0;
+  border: 0;
+  /* the head carries the gap itself, so it can be an exact 16px */
+  gap: 0;
+}
+/* Head and body follow the deck's Merriweather-over-mono pairing, the same
+   one the Notes cards use (.deck-note-head / .deck-note-body) — serif light
+   in white over mono in muted grey. Kept identical on purpose: this is the
+   house pattern, not a variant. */
+.deck-reflect-grid--cols .deck-reflect-head {
+  font-family: var(--serif);
+  font-weight: var(--serif-light);
+  font-size: var(--t-copy);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+.deck-reflect-grid--cols .deck-reflect-body {
+  font-family: var(--mono);
+  font-weight: 400;
+  font-size: var(--t-label);
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+@media (max-width: 860px) {
+  .deck-reflect-grid--cols { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+}
+
 /* Check variant (What good looks like): a mint check circle sits left
    of each row — the qualities read as boxes ticked. */
 .deck-reflect-grid--check .deck-reflect-card {

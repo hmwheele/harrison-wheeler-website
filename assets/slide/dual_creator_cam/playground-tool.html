@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<!-- Copy of DualRecorderMax/Docs/3d-button-showcase.html, embedded in the
+     Dual Creator Cam deck's Tools slide (slideDccTools in deck.js iframes
+     this file). Two deliberate departures from the original: Three.js is
+     vendored locally, and the page paints no background of its own so the
+     slide shows through. Everything else should stay in sync. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dual Creator Cam — Record Button Showcase</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* NOT on :root. `color-scheme: dark` makes the browser paint an opaque
+     dark canvas behind a page with no background of its own, which would
+     punch a solid rectangle through the slide. Scoped to the controls so
+     the colour inputs and scrollbars still render dark. */
+  .controls { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  /* Transparent rather than the standalone page's dark gradient: this runs
+     in an iframe on a deck slide, and the slide paints the background. */
+  html, body { background: transparent; }
+  body {
+    color: #e8e8e8;
+    font-family: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100%;
+    padding: 20px 20px 28px;
+  }
+
+  .topbar {
+    width: 100%; max-width: 900px;
+    display: flex; align-items: center; justify-content: flex-end; gap: 12px;
+  }
+
+  /* stage + arrows (arrows overlay the stage edges so they never overflow) */
+  .viewer {
+    flex: 1; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 0;
+  }
+  .stage { position: relative; }
+  .stage canvas { display: block; }
+  .nav {
+    position: absolute; top: 50%; transform: translateY(-50%); z-index: 5;
+    background: rgba(26,26,26,0.72); border: 1px solid #2c2c2c; color: #e8e8e8;
+    width: 42px; height: 42px; border-radius: 50%; cursor: pointer;
+    font-size: 22px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .nav.prev { left: 6px; }
+  .nav.next { right: 6px; }
+  .nav:hover { background: rgba(46,46,46,0.9); }
+  .nav:active { transform: translateY(-50%) scale(0.9); }
+
+  /* current concept text */
+  .meta { text-align: center; max-width: 460px; min-height: 66px; margin-top: 4px; }
+  .meta h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .meta p { font-size: 13px; color: #8a8a8a; line-height: 1.5; margin-top: 6px; }
+
+  /* concept switcher chips */
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 18px; }
+  .tabs button {
+    background: #1a1a1a; border: 1px solid #2a2a2a; color: #bdbdbd;
+    padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .tabs button:hover { background: #242424; }
+  .tabs button.active { background: #e8e8e8; color: #111; border-color: #e8e8e8; }
+
+  .hint { font-size: 11px; color: #5a5a5a; margin-top: 16px; text-align: center; line-height: 1.6; }
+  .hint kbd {
+    background: #1c1c1c; border: 1px solid #333; border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 6px; font-family: inherit; font-size: 10px; color: #aaa;
+  }
+
+  /* Options menu (top-right) — mirrors the concepts page */
+  .menubar { position: relative; }
+  #menuToggle {
+    background: #1a1a1a; border: 1px solid #2c2c2c; color: #ddd;
+    padding: 8px 16px; border-radius: 20px; font-size: 13px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  #menuToggle:hover { background: #242424; }
+  #menuToggle .chev { transition: transform 0.18s ease; font-size: 10px; opacity: 0.7; }
+  .menu-open #menuToggle { background: #e8e8e8; color: #111; border-color: #e8e8e8; }
+  .menu-open #menuToggle .chev { transform: rotate(180deg); }
+  .controls {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0; z-index: 30;
+    flex-direction: column; align-items: flex-start; gap: 14px;
+    background: #141414; border: 1px solid #2c2c2c; border-radius: 14px;
+    padding: 16px; width: 240px;
+    max-width: calc(100vw - 32px); max-height: calc(100vh - 72px); overflow-y: auto;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.55);
+  }
+  .menu-open .controls { display: flex; }
+  .controls .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .controls button {
+    background: #1c1c1c; border: 1px solid #2c2c2c; color: #ddd;
+    padding: 7px 16px; border-radius: 20px; font-size: 13px; cursor: pointer;
+  }
+  .controls button.active { background: #e8e8e8; color: #111; border-color: #e8e8e8; }
+  .controls label { font-size: 13px; color: #aaa; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .controls input[type="color"] {
+    width: 28px; height: 28px; padding: 0; border: 1px solid #333;
+    border-radius: 6px; background: none; cursor: pointer;
+  }
+  .controls .sep { width: 100%; height: 1px; background: #2c2c2c; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="menubar">
+    <button id="menuToggle" aria-expanded="false">Options <span class="chev">▾</span></button>
+    <div class="controls">
+      <div class="row">
+        <button id="btnFront" class="active">Front</button>
+        <button id="btnProfile">Profile (¾)</button>
+      </div>
+      <span class="sep"></span>
+      <label>Primary <input type="color" id="colPrimary" value="#f1f1f1"></label>
+      <label>Secondary <input type="color" id="colSecondary" value="#2f2f2f"></label>
+      <label>Record icon <input type="color" id="colDot" value="#ff4b33"></label>
+      <button id="btnResetColors">Reset colors</button>
+    </div>
+  </div>
+</div>
+
+<div class="viewer">
+  <div class="stage" id="stage">
+    <button class="nav prev" id="prev" aria-label="Previous button">‹</button>
+    <button class="nav next" id="next" aria-label="Next button">›</button>
+  </div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<!-- Vendored rather than pulled from a CDN: the deck has to run offline
+     in a room with no wifi. -->
+<script src="../../vendor/three.r128.min.js"></script>
+<script src="button-concepts-lib.js"></script>
+<script>
+(function () {
+  var lib = window.RecordButtonConcepts(THREE);
+  var CONCEPTS = lib.CONCEPTS;
+  var VIEW = lib.VIEW;
+  var mats = lib.mats;
+
+  var camT = 0, camTarget = 0; // 0 = front, 1 = three-quarter profile
+  var tiltX = 0, tiltY = 0;
+  var current = 0;
+
+  // ---- single big stage ----
+  var stageEl = document.getElementById('stage');
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.domElement.style.cursor = 'pointer';
+  stageEl.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  var cam = new THREE.OrthographicCamera(-VIEW, VIEW, VIEW, -VIEW, 1, 2000);
+
+  // (No screen-glass slab here — the button floats on the page background so
+  // the stage has no visible square panel behind it.)
+
+  var catcher = new THREE.Mesh(
+    new THREE.PlaneGeometry(219, 219),
+    new THREE.ShadowMaterial({ opacity: 0.45 })
+  );
+  catcher.position.z = 0.05;
+  catcher.receiveShadow = true;
+  scene.add(catcher);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+  var key = new THREE.DirectionalLight(0xffffff, 0.95);
+  key.position.set(-70, 90, 160);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  key.shadow.camera.left = -140; key.shadow.camera.right = 140;
+  key.shadow.camera.top = 140; key.shadow.camera.bottom = -140;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 800;
+  scene.add(key);
+  var rim = new THREE.DirectionalLight(0x99bbff, 0.25);
+  rim.position.set(90, -50, 60);
+  scene.add(rim);
+
+  // sizing: fill the space between the arrows and the text, capped so a
+  // single button never gets uncomfortably large on a big monitor
+  function sizeStage() {
+    var avail = Math.min(window.innerWidth - 24, window.innerHeight - 300);
+    var px = Math.round(Math.max(240, Math.min(600, avail)));
+    renderer.setSize(px, px);
+    stageEl.style.width = px + 'px';
+    stageEl.style.height = px + 'px';
+  }
+  sizeStage();
+  window.addEventListener('resize', sizeStage);
+
+  // ---- active concept management ----
+  var active = null; // { group, st, indicator, update }
+
+  function applyPickerColors() {
+    var p = document.getElementById('colPrimary').value;
+    var s = document.getElementById('colSecondary').value;
+    var d = document.getElementById('colDot').value;
+    mats.primary.forEach(function (m) { m.color.set(p); });
+    mats.primaryShade.forEach(function (m) { m.color.set(p).multiplyScalar(m.userData.shade); });
+    mats.secondary.forEach(function (m) { m.color.set(s); });
+    mats.dot.forEach(function (m) { m.color.set(d); });
+  }
+
+  function selectConcept(i, keepColors) {
+    current = (i + CONCEPTS.length) % CONCEPTS.length;
+    if (active) scene.remove(active.group);
+    lib.resetMats(); // pickers only touch the button now on screen
+    var c = CONCEPTS[current];
+    var group = c.build();
+    scene.add(group);
+    active = {
+      group: group,
+      st: { press: 0, pressT: 0, morph: 0, rec: false },
+      indicator: group.userData.indicator,
+      update: group.userData.update
+    };
+    if (keepColors) applyPickerColors(); // preserve a custom recolor across switches
+
+    tabEls.forEach(function (t, idx) { t.classList.toggle('active', idx === current); });
+  }
+
+  // ---- concept switcher chips ----
+  var tabsWrap = document.getElementById('tabs');
+  var tabEls = CONCEPTS.map(function (c, idx) {
+    var b = document.createElement('button');
+    b.textContent = c.name;
+    b.onclick = function () { selectConcept(idx, colorsTouched); };
+    tabsWrap.appendChild(b);
+    return b;
+  });
+
+  document.getElementById('prev').onclick = function () { selectConcept(current - 1, colorsTouched); };
+  document.getElementById('next').onclick = function () { selectConcept(current + 1, colorsTouched); };
+  // Note: no ←/→ keyboard navigation on purpose — when this is embedded, the
+  // host experience owns the arrow keys. Switch via the ‹ › buttons or chips.
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setMenu(false);
+  });
+
+  // ---- tilt + press interaction ----
+  document.addEventListener('pointermove', function (e) {
+    tiltX = (e.clientX / window.innerWidth) * 2 - 1;
+    tiltY = (e.clientY / window.innerHeight) * 2 - 1;
+    lib.setTilt(tiltX, tiltY); // keep the concept glint updaters in sync
+  });
+  renderer.domElement.addEventListener('pointerdown', function () { if (active) active.st.pressT = 1; });
+  renderer.domElement.addEventListener('pointerup', function () { if (active) { active.st.pressT = 0; active.st.rec = !active.st.rec; } });
+  renderer.domElement.addEventListener('pointerleave', function () { if (active) active.st.pressT = 0; });
+
+  // ---- options menu ----
+  var menuToggle = document.getElementById('menuToggle');
+  var menubar = menuToggle.parentNode;
+  function setMenu(open) {
+    document.body.classList.toggle('menu-open', open);
+    menuToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  menuToggle.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setMenu(!document.body.classList.contains('menu-open'));
+  });
+  document.addEventListener('click', function (e) {
+    if (!menubar.contains(e.target)) setMenu(false);
+  });
+
+  // Front / Profile toggle (each can be toggled off -> default front)
+  var btnFront = document.getElementById('btnFront');
+  var btnProfile = document.getElementById('btnProfile');
+  function setView(view) {
+    camTarget = view === 'profile' ? 1 : 0;
+    btnFront.classList.toggle('active', view === 'front');
+    btnProfile.classList.toggle('active', view === 'profile');
+  }
+  btnFront.onclick = function () { setView(btnFront.classList.contains('active') ? null : 'front'); };
+  btnProfile.onclick = function () { setView(btnProfile.classList.contains('active') ? null : 'profile'); };
+
+  // colors
+  var colorsTouched = false;
+  function bindColor(id, listName, shade) {
+    document.getElementById(id).addEventListener('input', function (e) {
+      colorsTouched = true;
+      mats[listName].forEach(function (m) {
+        if (shade) m.color.set(e.target.value).multiplyScalar(m.userData.shade);
+        else m.color.set(e.target.value);
+      });
+    });
+  }
+  document.getElementById('colPrimary').addEventListener('input', function (e) {
+    colorsTouched = true;
+    mats.primary.forEach(function (m) { m.color.set(e.target.value); });
+    mats.primaryShade.forEach(function (m) { m.color.set(e.target.value).multiplyScalar(m.userData.shade); });
+  });
+  bindColor('colSecondary', 'secondary', false);
+  bindColor('colDot', 'dot', false);
+  document.getElementById('btnResetColors').onclick = function () {
+    colorsTouched = false;
+    ['primary', 'secondary', 'dot', 'primaryShade'].forEach(function (k) {
+      mats[k].forEach(function (m) { m.color.setHex(m.userData.orig); });
+    });
+  };
+
+  // ---- render loop ----
+  var FRONT = new THREE.Vector3(0, 10, 400);
+  var SIDE = new THREE.Vector3(345, 60, 195); // three-quarter cross-section
+  function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+  function frame() {
+    var time = performance.now() / 1000;
+    camT += (camTarget - camT) * 0.08;
+    var t = ease(Math.max(0, Math.min(1, camT)));
+    cam.position.copy(FRONT.clone().lerp(SIDE, t));
+    cam.lookAt(0, 0, 10);
+
+    if (active) {
+      var damp = 1 - t * 0.8;
+      active.group.rotation.y = tiltX * 0.14 * damp;
+      active.group.rotation.x = tiltY * 0.14 * damp;
+      key.position.set(-70 - tiltX * 60, 90 + tiltY * -40, 160);
+
+      var st = active.st;
+      st.press += (st.pressT - st.press) * 0.3;
+      st.morph += ((st.rec ? 1 : 0) - st.morph) * 0.16;
+      active.group.scale.set(1, 1, 1 - 0.32 * st.press);
+      if (active.indicator) {
+        var cs = Math.max(0.001, 1 - st.morph);
+        var qs = Math.max(0.001, st.morph);
+        active.indicator.userData.circle.scale.set(cs, cs, 1);
+        active.indicator.userData.square.scale.set(qs, qs, 1);
+      }
+      if (active.update) active.update(time);
+    }
+    renderer.render(scene, cam);
+    requestAnimationFrame(frame);
+  }
+
+  selectConcept(0, false);
+  frame();
+})();
+</script>
+</body>
+</html>

@@ -1218,8 +1218,10 @@
       ])
     ]));
     k.push(sEl('g', { 'clip-path': 'url(#dgm-roadmap-clip)' }, bars));
-    // Beta marker sits above the timeline bar, at its start.
+    // Markers above the timeline bar: where it starts on the left, what it
+    // bought on the right.
     k.push(sEl('text', { x: x0 + 2, y: top - 14, 'text-anchor': 'start', class: 'dgm-chev-lbl', text: "Beta · Feb '24" }));
+    k.push(sEl('text', { x: W - pad - 2, y: top - 14, 'text-anchor': 'end', class: 'dgm-chev-lbl', text: '3 quarters of XFN funding' }));
 
     var callouts = [
       { title: 'Live Event Format', below: true, bx: 40, bw: 300, dotX: 200,
@@ -1880,11 +1882,12 @@
 
   var HOME_BUILDERS = [
     // the photo wall closes the About run rather than sitting after How I lead
-    slideTitle, slideBelief, slidePlaces, slideAboutVideos, slidePhotoWall, slideHowILead, slideWork,
+    slideTitle, slideBelief, slidePlaces, slidePhotoWall, slideHowILead, slideWork,
     slideCTA
   ];
   /* Cut from the main flow (the builders are still defined and can be
      dropped back into the list above at any point):
+       slideAboutVideos 'About video'  the facts list again, over video
        slidePodcast     'Podcast'      Technically Speaking
        slideAboutCards  'How I work'   the three how-I-work cards
        slideOrgTreeHome 'Org'          org tree (still opens the Pods deck)
@@ -2723,9 +2726,11 @@
     return el('section.deck-slide.deck-slide--triptych', { 'data-label': 'Event ad experience' }, [
       el('h2.deck-title', null, ['Event Ad Experience']),
       el('div.deck-triptych', null, AD_MOMENTS.map(function (m) {
+        // caption under the phone: the screens carry the slide, the label
+        // just names each moment
         return el('div.deck-triptych-col', null, [
-          el('p.deck-triptych-cap', null, [m.cap]),
-          phoneFrame(m.cap + ' ad unit', m.shot)
+          phoneFrame(m.cap + ' ad unit', m.shot),
+          el('p.deck-triptych-cap', null, [m.cap])
         ]);
       }))
     ]);
@@ -2825,7 +2830,10 @@
   /* The pod as a 3D globe: a radially lit sphere in the pod green —
      light falling from the upper left, a soft specular glint, a ground
      shadow beneath — with the four member dots riding the surface. */
-  function podGlobe(k, defs, cx, cy, r) {
+  /* `o.dots: false` drops the four pods on the sphere — for uses where the
+     globe stands for one thing rather than a set (see diagramAgents). */
+  function podGlobe(k, defs, cx, cy, r, o) {
+    o = o || {};
     var id = 'pod-globe-' + (++noiseSeq);
     defs.appendChild(sEl('radialGradient', {
       id: id, cx: '33%', cy: '28%', r: '78%'
@@ -2862,9 +2870,10 @@
       fill: 'rgba(255, 255, 255, 0.3)',
       transform: 'rotate(-28 ' + (cx - r * 0.34) + ' ' + (cy - r * 0.44) + ')'
     }));
+    if (o.dots === false) return;
     var d = r * 0.32, dr = r * 0.18;
-    [[-d, -d], [d, -d], [-d, d], [d, d]].forEach(function (o) {
-      k.push(sEl('circle', { cx: cx + o[0], cy: cy + o[1], r: dr, fill: 'rgba(235, 253, 241, 0.8)' }));
+    [[-d, -d], [d, -d], [-d, d], [d, d]].forEach(function (pt) {
+      k.push(sEl('circle', { cx: cx + pt[0], cy: cy + pt[1], r: dr, fill: 'rgba(235, 253, 241, 0.8)' }));
     });
   }
 
@@ -3306,26 +3315,82 @@
       'assets/slide/dual_creator_cam/claude.png'));
   }
 
-  /* The agents slide: the four standing roles I delegate to, arranged
-     around the build at the centre. */
-  var DCC_AGENTS = [
-    { t: 'Performance',       pos: 'tl' },
-    { t: 'Bug Bash',          pos: 'tr' },
-    { t: 'Code Review',       pos: 'bl' },
-    { t: 'Product Marketing', pos: 'br' }
-  ];
+  /* Tools: the same point as the playgrounds slide taken one step further —
+     purpose-built tools for trying a concept before it earns a place in the
+     app. The right column is a live preview well: it iframes a standalone
+     HTML document out of assets/, so the tool itself can be dropped in
+     wholesale without touching the deck. */
+  var DCC_TOOL_SRC = 'assets/slide/dual_creator_cam/playground-tool.html';
+
+  function slideDccTools() {
+    return dccNote(el('section.deck-slide.deck-slide--titlefig.deck-slide--tools.deck-slide--dccnote', { 'data-label': 'Tools' }, [
+      el('div.deck-titlefig', null, [
+        el('div.deck-titlefig-copy', null, [
+          el('h2.deck-title', null, ['Building tools to test ideas'])
+        ]),
+        el('div.deck-toolpreview', null, [
+          el('iframe.deck-toolpreview-frame', {
+            src: DCC_TOOL_SRC, loading: 'lazy', title: 'Concept tool preview'
+          })
+        ])
+      ])
+    ]));
+  }
+
+  /* The agents slide: the four standing roles I delegate to, drawn as
+     boxes at the corners with the build — the pods globe — at the centre,
+     so the roles read as feeding one thing rather than floating free. */
+  var DCC_AGENTS = ['Performance', 'Bug Bash', 'Code Review', 'Product Marketing'];
+
+  /* Four bounding boxes wired into a central globe. Same vocabulary as
+     diagramPods: dgmBox chips, --dgm-line connectors, podGlobe hub. */
+  function diagramAgents() {
+    var W = 620, H = 360, cx = 310, cy = 168, hubR = 58;
+    var boxW = 176, boxH = 38, padX = 6;
+    var rowY = [30, H - boxH - 42];
+    var defs = sEl('defs', null, [vizNoiseFilter()]);
+    var k = [];
+
+    DCC_AGENTS.forEach(function (t, i) {
+      var right = i % 2 === 1;
+      var x = right ? W - boxW - padX : padX;
+      var y = rowY[i < 2 ? 0 : 1];
+      // anchor on the box edge that faces the hub, so the wire leaves the
+      // chip rather than crossing it
+      var ax = right ? x : x + boxW, ay = y + boxH / 2;
+      // land on the hub's rim along the line from its centre to the anchor
+      var dx = ax - cx, dy = ay - cy, len = Math.sqrt(dx * dx + dy * dy) || 1;
+      var hx = cx + (dx / len) * hubR, hy = cy + (dy / len) * hubR;
+      // both controls run horizontally: the wire leaves the chip flat and
+      // arrives at the rim flat, which keeps it clear of the label sitting
+      // under the globe
+      var c1 = ax + (right ? -1 : 1) * 62;
+      var c2 = hx + (right ? 1 : -1) * 46;
+      k.push(sEl('path', {
+        d: 'M' + ax + ',' + ay + ' C' + c1 + ',' + ay + ' ' + c2 + ',' + hy + ' ' + hx + ',' + hy,
+        fill: 'none', stroke: 'var(--dgm-line)', 'stroke-width': 2
+      }));
+      k.push(dgmBox(x, y, boxW, boxH, t));
+    });
+
+    // no pods on the sphere here — it stands for the one build, not a set —
+    // and the name sits on it rather than under it
+    podGlobe(k, defs, cx, cy, hubR, { dots: false });
+    k.push(sEl('text', {
+      x: cx, y: cy + 5, 'text-anchor': 'middle',
+      class: 'dgm-globe-lbl', text: 'The build'
+    }));
+    k.unshift(defs);
+    return svgRoot(W, H, k);
+  }
 
   function slideDccAgents() {
     return el('section.deck-slide.deck-slide--titlefig.deck-slide--agents.deck-slide--dccnote', { 'data-label': 'Agents as a team' }, [
       el('div.deck-titlefig', null, [
         el('div.deck-titlefig-copy', null, [
-          el('h2.deck-title', null, ['Running agents that are a product development team']),
-          el('p.deck-body', null, ['I delegate, review, and redirect the same way I would with engineers, ' +
-            'switching models by task. Treating them as a team, not a single tool, is what made the workflow scale.'])
+          el('h2.deck-title', null, ['Running agents that are a product development team'])
         ]),
-        el('div.deck-agents', null, DCC_AGENTS.map(function (a) {
-          return el('span.deck-agent-lbl.deck-agent-lbl--' + a.pos, null, [a.t]);
-        }).concat([figurePlaceholder('screen', 'The build')]))
+        el('div.deck-agents', null, [diagramAgents()])
       ])
     ]);
   }
@@ -3516,8 +3581,16 @@
       { after: 'Craft & Personalization', build: slideDccFigma },
       { after: 'Craft & Personalization', build: slideDccPlaygrounds },
       { after: 'Craft & Personalization', build: slideDccClaudeXcode },
+      { after: 'Craft & Personalization', build: slideDccTools },
       { after: 'Craft & Personalization', build: slideDccAgents }
     ]
+  };
+
+  /* Deck-only cover titles. The written case study keeps its full title —
+     it does the work of explaining the piece to someone who arrived cold —
+     but on a slide, presented live, the short form is enough. */
+  var CS_DECK_TITLE = {
+    events: 'B2B Events'
   };
 
   /* Deck-only cover art, per case study. Without an entry here the cover
@@ -4492,6 +4565,10 @@
     pods: 'From scarcity to value'
   };
 
+  /* Studies whose reflection reads as columns rather than a stacked list:
+     three short takes side by side, each still heading + one sentence. */
+  var CS_REFLECT_COLUMNS = { 'video-recorder': 1, events: 1 };
+
   function reflectionSlideFrom(nodes, label, key) {
     var skip = CS_REFLECT_SKIP[key] || [];
     var splitTitle = CS_REFLECT_SPLIT[key];
@@ -4527,9 +4604,10 @@
           ])
         ]);
     }
-    return el('section.deck-slide.deck-slide--cs.deck-slide--reflect', { 'data-label': label }, [
+    var cols = CS_REFLECT_COLUMNS[key];
+    return el('section.deck-slide.deck-slide--cs.deck-slide--reflect' + (cols ? '.deck-slide--reflectcols' : ''), { 'data-label': label }, [
       el('h2.deck-title', null, ['Reflection']),
-      el('div.deck-reflect-grid', null, cards)
+      el('div.deck-reflect-grid' + (cols ? '.deck-reflect-grid--cols' : ''), null, cards)
     ]);
   }
 
@@ -4540,6 +4618,10 @@
   /* Studies whose role slide drops the byline over the list — the list is
      the point, and the title rail already says "Role". */
   var CS_ROLE_NO_BYLINE = { pods: 1 };
+
+  /* Studies whose Role bullet stays put: no separate Role slide, the bullet
+     reads in the Overview list alongside Partners, Audience, and Outcome. */
+  var CS_ROLE_INLINE = { events: 1 };
 
   function roleSlideFrom(nodes, label, key) {
     var li = null;
@@ -4619,7 +4701,7 @@
         else textNodes.push(n);
       });
 
-      var label = i === 0 ? (data.title || 'Overview') : (g.label || ('Section ' + (i + 1)));
+      var label = i === 0 ? (CS_DECK_TITLE[key] || data.title || 'Overview') : (g.label || ('Section ' + (i + 1)));
       if (i === 0) {
         // Cover: title in the left column; the description sits bottom-right
         // in front of the device placeholder, over a scrim that fades up so
@@ -4630,6 +4712,9 @@
           if (n.tagName === 'H1' && !h1n) h1n = n;
           else if (n.classList && n.classList.contains('cs-deck') && !deckn) deckn = n;
         });
+        // the node is a clone of the study's own <h1>, so retitling it here
+        // never reaches the written case study
+        if (h1n && CS_DECK_TITLE[key]) h1n.textContent = CS_DECK_TITLE[key];
         /* A deck-only cover image when the study has one (CS_COVER_ART),
            otherwise the device mock. The study's own hero art stays where
            it is in the body — it still gets its own slide. */
@@ -4658,11 +4743,16 @@
           el('div.deck-cs-paper', null, [el('div.cs-main', null, [h1n].filter(Boolean))])
         ];
         if (deckn) coverKids.push(el('div.deck-cs-cover-desc', null, [deckn]));
-        slides.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-title', { 'data-label': label }, coverKids));
+        // A study cut down to a deck-only short title gets the bigger cover
+        // type — the long titles are sized to fit three lines, and that step
+        // leaves a two-word title floating in the column.
+        slides.push(el('section.deck-slide.deck-slide--cs.deck-slide--cs-title'
+          + (CS_DECK_TITLE[key] ? '.deck-slide--cs-title-short' : ''),
+          { 'data-label': label }, coverKids));
       } else {
         // Lift the Role bullet out before the section slide is built, so it
         // isn't listed twice — it becomes its own slide immediately after.
-        if (label === 'Overview') roleSlide = roleSlideFrom(textNodes, 'Role', key);
+        if (label === 'Overview' && !CS_ROLE_INLINE[key]) roleSlide = roleSlideFrom(textNodes, 'Role', key);
         // Reflection lays out as columns rather than a wall of paragraphs.
         var reflect = label === 'Reflection' ? reflectionSlideFrom(textNodes, label, key) : null;
         if (reflect) {
@@ -4839,10 +4929,21 @@
      only as far as needed to fit the slide. A 45-character title in a
      half-width column can't carry the same display size as a short one,
      so each cover lands at its own best size instead of clipping. */
+  /* Neudron is a condensed display face; the fallback stack is not. Fitting
+     before it loads measures the fallback's much wider text, shrinks to suit
+     it, and then leaves the title stuck at that size once the real face
+     swaps in. So refit once the fonts land. */
+  var coverFontsReady = !(document.fonts && document.fonts.ready);
   function fitCoverTitle(slide) {
     if (!slide) return;
     var h1 = slide.querySelector('.cs-main h1');
     if (!h1) return;
+    if (!coverFontsReady) {
+      document.fonts.ready.then(function () {
+        coverFontsReady = true;
+        fitCoverTitle(slide);
+      });
+    }
     h1.style.fontSize = '';           // back to the CSS size before measuring
     var scs = getComputedStyle(slide);
     var avail = slide.clientHeight -
