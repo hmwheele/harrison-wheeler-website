@@ -525,3 +525,11 @@
   }
 })();
 
+/* ── Event banner: remove once the event has ended ─────────────── */
+(function () {
+  var b = document.querySelector('.event-banner');
+  if (!b) return;
+  var ends = Date.parse(b.getAttribute('data-ends') || '');
+  if (ends && Date.now() > ends) { b.remove(); return; }
+  document.body.classList.add('has-event-banner');
+})();
