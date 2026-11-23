@@ -152,7 +152,7 @@ ul { list-style: none; }
 
 /* ── Nav ────────────────────────────────────────────────────────── */
 .nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  position: fixed; top: var(--nav-offset, 0px); left: 0; right: 0; z-index: 200;
   background: transparent;
   transition: opacity .5s ease;
 }
@@ -2006,11 +2006,12 @@ body.cs-lock::before { opacity: 1; }
 
 /* ── Event banner (marquee) ───────────────────────────────────────
    Full-width Technically Speaking yellow strip at the very top of the
-   fixed header. The track holds four copies of the message and slides
+   page (scrolls away with the page; the fixed nav sits just below it
+   until it has scrolled off — see main.js). The track holds four copies of the message and slides
    by one quarter of its width, so the loop is seamless. */
 .event-banner {
   display: block; position: relative; overflow: hidden;
-  height: 48px; background: #FFFF55; color: #000;
+  height: 34px; background: #FFFF55; color: #000;
   font-family: var(--mono); font-size: .82rem; letter-spacing: .02em;
   text-decoration: none; white-space: nowrap;
 }
@@ -2023,14 +2024,14 @@ body.cs-lock::before { opacity: 1; }
 }
 .event-banner:hover .event-banner-track,
 .event-banner:focus-visible .event-banner-track { animation-play-state: paused; }
-.event-banner-item { display: inline-flex; align-items: center; flex: 0 0 auto; padding-left: 36px; }
-.event-banner-item strong { font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.event-banner-sep { margin: 0 36px; font-size: .7rem; }
+.event-banner-item { display: inline-flex; align-items: center; flex: 0 0 auto; padding-left: 28px; }
+.event-banner-item strong { font-weight: inherit; }
+.event-banner-sep { margin: 0 28px; font-size: .7rem; }
 @keyframes event-marquee { from { transform: translateX(0); } to { transform: translateX(-25%); } }
 @media (prefers-reduced-motion: reduce) {
   .event-banner-track { animation: none; }
 }
 @media (max-width: 860px) {
-  .event-banner { height: 42px; font-size: .78rem; }
-  .event-banner-sep { margin: 0 26px; }
+  .event-banner { height: 32px; font-size: .78rem; }
+  .event-banner-sep { margin: 0 20px; }
 }

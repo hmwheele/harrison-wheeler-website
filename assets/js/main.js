@@ -532,4 +532,17 @@
   var ends = Date.parse(b.getAttribute('data-ends') || '');
   if (ends && Date.now() > ends) { b.remove(); return; }
   document.body.classList.add('has-event-banner');
+  // The banner scrolls with the page; keep the fixed nav just below it
+  // until it has scrolled away, then let the nav sit at the very top.
+  var root = document.documentElement, ticking = false;
+  function place() {
+    var off = Math.max(0, b.offsetHeight - window.scrollY);
+    root.style.setProperty('--nav-offset', off + 'px');
+    ticking = false;
+  }
+  place();
+  window.addEventListener('scroll', function () {
+    if (!ticking) { requestAnimationFrame(place); ticking = true; }
+  }, { passive: true });
+  window.addEventListener('resize', place, { passive: true });
 })();
