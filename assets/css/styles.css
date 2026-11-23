@@ -2010,7 +2010,7 @@ body.cs-lock::before { opacity: 1; }
    by one quarter of its width, so the loop is seamless. */
 .event-banner {
   display: block; position: relative; overflow: hidden;
-  height: 34px; background: #FFFF55; color: #000;
+  height: 48px; background: #FFFF55; color: #000;
   font-family: var(--mono); font-size: .82rem; letter-spacing: .02em;
   text-decoration: none; white-space: nowrap;
 }
@@ -2023,14 +2023,14 @@ body.cs-lock::before { opacity: 1; }
 }
 .event-banner:hover .event-banner-track,
 .event-banner:focus-visible .event-banner-track { animation-play-state: paused; }
-.event-banner-item { display: inline-flex; align-items: center; flex: 0 0 auto; padding-left: 28px; }
+.event-banner-item { display: inline-flex; align-items: center; flex: 0 0 auto; padding-left: 36px; }
 .event-banner-item strong { font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
-.event-banner-sep { margin: 0 28px; font-size: .7rem; }
+.event-banner-sep { margin: 0 36px; font-size: .7rem; }
 @keyframes event-marquee { from { transform: translateX(0); } to { transform: translateX(-25%); } }
 @media (prefers-reduced-motion: reduce) {
   .event-banner-track { animation: none; }
 }
 @media (max-width: 860px) {
-  .event-banner { height: 32px; font-size: .78rem; }
-  .event-banner-sep { margin: 0 20px; }
+  .event-banner { height: 42px; font-size: .78rem; }
+  .event-banner-sep { margin: 0 26px; }
 }
